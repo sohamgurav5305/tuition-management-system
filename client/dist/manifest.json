@@ -1,0 +1,19 @@
+{
+  "short_name": "Apex",
+  "name": "Apex Tuition & Coaching Institute",
+  "description": "Comprehensive ERP & LMS for Coaching Institutes, Faculty, Students and Parents",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "categories": ["education", "productivity"]
+}

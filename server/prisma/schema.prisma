@@ -1,0 +1,384 @@
+// Enterprise-grade Coaching Institute Management System Prisma Schema (Allen / Aakash / PW / FIITJEE Architecture)
+// Fully compatible with SQLite (Development) and Amazon RDS PostgreSQL (Production) with zero code changes.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. User & Authentication (RBAC)
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  email        String    @unique
+  passwordHash String
+  role         String    // ADMINISTRATOR, ACCOUNTANT, TEACHER, STUDENT
+  avatarUrl    String?
+  status       String    @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  faculty      Faculty?
+  student      Student?
+}
+
+// 2. Academic Programs & Target Streams
+model Course {
+  id          String    @id @default(uuid())
+  courseId    String    @unique // e.g. CRS-2026-0001
+  name        String    // e.g. "JEE Advanced Leader 2-Year Program"
+  targetExam  String    // JEE, NEET, FOUNDATION, OLYMPIAD, BOARDS
+  gradeLevel  String    // 11th, 12th, Dropper, 9th, 10th
+  description String
+  duration    String    // e.g. "2 Years", "1 Year Crash Course"
+  fee         Float
+  subjects    String?   // JSON array or comma-separated list of subjects
+  status      String    @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  batches     Batch[]
+  students    Student[]
+  exams       Examination[]
+  materials   StudyMaterial[]
+}
+
+// 3. Faculty & Subject Specialists
+model Faculty {
+  id              String    @id @default(uuid())
+  facultyId       String    @unique // e.g. FAC-2026-0001
+  userId          String?   @unique
+  firstName       String
+  lastName        String
+  phone           String
+  email           String    @unique
+  subjectTaught   String    // Physics, Chemistry, Mathematics, Botany, Zoology, Computer Science
+  qualification   String    // e.g. "B.Tech (IIT Bombay), 10+ yrs exp"
+  experienceYears Int       @default(0)
+  joiningDate     String    // YYYY-MM-DD
+  salary          Float     @default(0.0)
+  status          String    @default("ACTIVE") // ACTIVE, INACTIVE
+  avatarUrl       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  batches         Batch[]
+  doubtsAnswered  Doubt[]
+  attendanceSessions Attendance[]
+  assignmentsCreated Assignment[]
+}
+
+// 4. Cohort Batches & Sections
+model Batch {
+  id              String    @id @default(uuid())
+  batchId         String    @unique // e.g. BAT-2026-0001
+  name            String    // e.g. "JEE Advanced Target-1 Batch (Alpha)"
+  courseId        String
+  facultyId       String
+  subjectTeachers String?   // JSON string mapping subjects to faculty IDs e.g. '{"Physics":"fac-1","Chemistry":"fac-2"}'
+  classroom       String    // e.g. "Lecture Hall 101"
+  startDate       String    // YYYY-MM-DD
+  endDate         String    // YYYY-MM-DD
+  startTime       String    // e.g. "08:30"
+  endTime         String    // e.g. "11:30"
+  daysOfWeek      String    // JSON string array e.g. '["Mon","Wed","Fri"]'
+  syllabusPct     Float     @default(0.0) // Overall syllabus covered %
+  status          String    @default("ACTIVE") // ACTIVE, UPCOMING, COMPLETED, CANCELLED
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  course          Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  faculty         Faculty   @relation(fields: [facultyId], references: [id], onDelete: Restrict)
+  students        Student[]
+  attendance      Attendance[]
+  exams           Examination[]
+  assignments     Assignment[]
+  materials       StudyMaterial[]
+}
+
+// 5. Enrolled Students & Academic Records
+model Student {
+  id               String    @id @default(uuid())
+  studentId        String    @unique // e.g. STU-2026-0001
+  rollNumber       String?   // e.g. "26JEE049"
+  userId           String?   @unique
+  firstName        String
+  lastName         String
+  dateOfBirth      String    // YYYY-MM-DD
+  gender           String    // Male, Female, Other
+  phone            String
+  email            String    @unique
+  address          String
+  guardianName     String
+  guardianRelation String    // Father, Mother, Guardian
+  guardianPhone    String
+  emergencyContact String
+  courseId         String?
+  batchId          String?
+  admissionDate    String    // YYYY-MM-DD
+  scholarshipPct   Float     @default(0.0) // Scholarship discount awarded
+  status           String    @default("ACTIVE") // ACTIVE, INACTIVE, COMPLETED, DROPPED
+  avatarUrl        String?
+  totalFee         Float     @default(0.0)
+  paidFee          Float     @default(0.0)
+  pendingFee       Float     @default(0.0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user             User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  course           Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  batch            Batch?    @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  attendance       Attendance[]
+  results          Result[]
+  payments         Payment[]
+  installments     FeeInstallment[]
+  leaveRequests    LeaveRequest[]
+  doubts           Doubt[]
+  submissions      AssignmentSubmission[]
+}
+
+// 6. Structured Fee Installments Schedule
+model FeeInstallment {
+  id            String    @id @default(uuid())
+  studentId     String
+  installmentNo Int       // 1, 2, 3, 4
+  title         String    // e.g. "1st Term Admission & Tuition", "2nd Installment"
+  amount        Float
+  dueDate       String    // YYYY-MM-DD
+  status        String    @default("PENDING") // PENDING, PAID, OVERDUE
+  paidDate      String?
+  paidAmount    Float     @default(0.0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  student       Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+// 7. Payment Ledger & Official Tax Invoices
+model Payment {
+  id                   String    @id @default(uuid())
+  receiptId            String    @unique // e.g. REC-2026-0001
+  studentId            String
+  amount               Float
+  taxAmount            Float     @default(0.0) // GST / Tax breakdown
+  paymentDate          String    // YYYY-MM-DD
+  paymentMode          String    // CASH, UPI, BANK_TRANSFER, CHEQUE, ONLINE_GATEWAY
+  transactionReference String?
+  remarks              String?
+  recordedById         String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  student              Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+// 8. Attendance Tracking (Session Rollcall & Fast Check-in)
+model Attendance {
+  id         String    @id @default(uuid())
+  batchId    String
+  studentId  String
+  subject    String    @default("General") // e.g. Physics, Chemistry, Mathematics
+  facultyId  String?
+  date       String    // YYYY-MM-DD
+  status     String    // PRESENT, LATE, ABSENT
+  remarks    String?
+  markedById String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  batch      Batch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  student    Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  faculty    Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+
+  @@unique([batchId, studentId, date, subject])
+}
+
+// 9. Student Leave Requests & Approvals
+model LeaveRequest {
+  id         String    @id @default(uuid())
+  studentId  String
+  startDate  String    // YYYY-MM-DD
+  endDate    String    // YYYY-MM-DD
+  reason     String
+  status     String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  reviewedBy String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  student    Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+// 10. National Pattern Test Series & Examinations (JEE / NEET / Foundation)
+model Examination {
+  id             String    @id @default(uuid())
+  examId         String    @unique // e.g. EXM-2026-0001
+  title          String    // e.g. "All-India Open Mock Test #3 - Full Syllabus JEE Main"
+  examPattern    String    @default("JEE_MAIN") // JEE_MAIN, JEE_ADVANCED, NEET_UG, BOARD_TERM, OLYMPIAD
+  examDate       String    // YYYY-MM-DD
+  courseId       String
+  batchId        String
+  subject        String    // Full Mock / Physics / Chemistry / Math / Biology
+  totalMarks     Float
+  passingMarks   Float
+  correctMarks   Float     @default(4.0) // +4 marks per correct answer
+  negativeMarks  Float     @default(1.0) // -1 negative penalty per incorrect answer
+  status         String    @default("UPCOMING") // UPCOMING, ONGOING, COMPLETED
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  course         Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  batch          Batch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  results        Result[]
+}
+
+// 11. Examination Results, Percentile & All India / Batch Ranks
+model Result {
+  id              String      @id @default(uuid())
+  resultId        String      @unique // e.g. RES-2026-0001
+  examId          String
+  studentId       String
+  marksObtained   Float
+  negativePenalty Float       @default(0.0)
+  percentage      Float
+  percentile      Float       @default(0.0) // e.g. 98.45 %ile
+  batchRank       Int         @default(1)
+  instituteRank   Int         @default(1)
+  grade           String      // A+, A, B+, B, C, D
+  isPassed        Boolean
+  subjectScores   String?     // JSON string breakdown e.g. '{"physics": 85, "chemistry": 90, "math": 95}'
+  remarks         String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  exam            Examination @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student         Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, studentId])
+}
+
+// 12. Study Material, Lecture Notes & DPPs (Daily Practice Problems)
+model StudyMaterial {
+  id            String    @id @default(uuid())
+  materialId    String    @unique // e.g. MAT-2026-0001
+  title         String    // e.g. "Electrostatics & Gauss Law - Comprehensive Theory & DPP #01"
+  materialType  String    // DPP, CLASS_NOTES, FORMULA_SHEET, QUESTION_BANK, TEST_SOLUTION
+  subject       String
+  courseId      String?
+  batchId       String?
+  chapterName   String
+  fileUrl       String?
+  downloadCount Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  course        Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  batch         Batch?    @relation(fields: [batchId], references: [id], onDelete: SetNull)
+}
+
+// 13. Academic Coursework & Problem Set Assignments
+model Assignment {
+  id            String    @id @default(uuid())
+  assignmentId  String    @unique // e.g. ASN-2026-0001
+  title         String
+  description   String
+  subject       String
+  batchId       String
+  createdById   String?
+  facultyId     String?
+  dueDate       String    // YYYY-MM-DD
+  totalMarks    Float     @default(100.0)
+  status        String    @default("OPEN") // OPEN, CLOSED
+  attachmentUrl String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  batch         Batch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  faculty       Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  submissions   AssignmentSubmission[]
+}
+
+// 13b. Student Assignment Submissions & Grading
+model AssignmentSubmission {
+  id             String      @id @default(uuid())
+  submissionId   String      @unique // e.g. SUB-2026-0001
+  assignmentId   String
+  studentId      String
+  fileUrl        String?
+  submissionText String?
+  submittedAt    DateTime    @default(now())
+  isLate         Boolean     @default(false)
+  timingText     String?     // e.g. "Submitted 2 hours early" or "Submitted 1 day late"
+  status         String      @default("SUBMITTED") // SUBMITTED, GRADED
+  score          Float?      // Marks obtained
+  feedback       String?     // Teacher feedback notes
+  gradedById     String?
+  gradedAt       DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  assignment     Assignment  @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student        Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, studentId])
+}
+
+// 14. Student Doubt Resolution Forum
+model Doubt {
+  id            String    @id @default(uuid())
+  doubtId       String    @unique // e.g. DBT-2026-0001
+  studentId     String
+  facultyId     String?
+  subject       String
+  topic         String
+  questionText  String
+  attachmentUrl String?
+  status        String    @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED
+  answerText    String?
+  answeredAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  student       Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  faculty       Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+}
+
+// 15. Broadcast Announcements & Urgent Alerts
+model Notification {
+  id           String    @id @default(uuid())
+  title        String
+  message      String
+  type         String    // WARNING, INFORMATION, SUCCESS, URGENT, EXAM, FEE
+  targetRole   String    @default("ALL") // ADMINISTRATOR, ACCOUNTANT, TEACHER, STUDENT, ALL
+  targetUserId String?
+  isRead       Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+}
+
+// 16. Institute Profile, Tax & Academic Policy Settings
+model Setting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+// 17. Institute Physical Classrooms, Lecture Halls & Labs
+model Classroom {
+  id          String    @id @default(uuid())
+  roomId      String    @unique // e.g. CLR-2026-0001
+  name        String    @unique // e.g. "Lecture Hall 101"
+  capacity    Int       @default(60)
+  roomType    String    @default("LECTURE_HALL") // LECTURE_HALL, SMART_CLASS, SCIENCE_LAB, COMPUTER_LAB, AUDITORIUM
+  building    String?   // e.g. "Main Wing - Floor 2"
+  facilities  String?   // e.g. "Projector, AC, Smart Board, Sound System"
+  status      String    @default("AVAILABLE") // AVAILABLE, MAINTENANCE, OCCUPIED
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
