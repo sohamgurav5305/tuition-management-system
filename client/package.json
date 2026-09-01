@@ -3,11 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
-  },
+ "scripts": {
+  "build": "node ./node_modules/typescript/bin/tsc -b && node ./node_modules/vite/bin/vite.js build"
+},
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "axios": "^1.7.9",
