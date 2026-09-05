@@ -22,6 +22,7 @@ import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { useToast } from '../../context/ToastContext';
 import { formatDate, formatDateTime } from '../../utils/date';
+import { getMediaUrl, downloadMediaFile } from '../../utils/media';
 
 export const MyAssignments: React.FC = () => {
   const { success, error } = useToast();
@@ -243,7 +244,7 @@ export const MyAssignments: React.FC = () => {
                             </span>
                             <div className="flex items-center gap-1 ml-1 border-l border-blue-200 pl-1.5">
                               <a
-                                href={attUrl}
+                                href={getMediaUrl(attUrl)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100/80 rounded-md transition-colors flex items-center gap-1"
@@ -252,16 +253,14 @@ export const MyAssignments: React.FC = () => {
                                 <Eye className="w-3.5 h-3.5" />
                                 <span className="text-[11px] font-bold">View</span>
                               </a>
-                              <a
-                                href={attUrl}
-                                download={cleanName}
-                                target="_blank"
-                                rel="noreferrer"
+                              <button
+                                type="button"
+                                onClick={() => downloadMediaFile(attUrl, cleanName)}
                                 className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-100/80 rounded-md transition-colors"
                                 title="Download File"
                               >
                                 <Download className="w-3.5 h-3.5" />
-                              </a>
+                              </button>
                             </div>
                           </div>
                         );
@@ -344,7 +343,7 @@ export const MyAssignments: React.FC = () => {
                                   </span>
                                   <div className="flex items-center gap-1 ml-1 border-l border-slate-200 pl-1.5">
                                     <a
-                                      href={sUrl}
+                                      href={getMediaUrl(sUrl)}
                                       target="_blank"
                                       rel="noreferrer"
                                       className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors flex items-center gap-1"
@@ -353,16 +352,14 @@ export const MyAssignments: React.FC = () => {
                                       <Eye className="w-3.5 h-3.5" />
                                       <span className="text-[11px] font-bold">View</span>
                                     </a>
-                                    <a
-                                      href={sUrl}
-                                      download={cleanName}
-                                      target="_blank"
-                                      rel="noreferrer"
+                                    <button
+                                      type="button"
+                                      onClick={() => downloadMediaFile(sUrl, cleanName)}
                                       className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                                       title="Download File"
                                     >
                                       <Download className="w-3.5 h-3.5" />
-                                    </a>
+                                    </button>
                                   </div>
                                 </div>
                               );

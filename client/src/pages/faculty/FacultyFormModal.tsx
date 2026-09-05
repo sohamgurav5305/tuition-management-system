@@ -7,6 +7,7 @@ import { Modal } from '../../components/common/Modal';
 import { facultyApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { Faculty } from '../../types';
+import { getMediaUrl } from '../../utils/media';
 
 const facultySchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -137,7 +138,7 @@ export const FacultyFormModal: React.FC<FacultyFormModalProps> = ({
             {selectedFile ? (
               <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="w-full h-full object-cover" />
             ) : initialFaculty?.avatarUrl ? (
-              <img src={initialFaculty.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={getMediaUrl(initialFaculty.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <Upload className="w-5 h-5" />
             )}

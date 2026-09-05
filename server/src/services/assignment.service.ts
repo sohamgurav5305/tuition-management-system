@@ -359,13 +359,15 @@ export class AssignmentService {
 
     // Notify student of grading result
     try {
-      await notificationService.createNotification({
-        title: `Assignment Graded: ${submission.assignment.title}`,
-        message: `Your submission for "${submission.assignment.title}" has been graded: ${params.score}/${submission.assignment.totalMarks} marks.${params.feedback ? ` Feedback: "${params.feedback}"` : ''}`,
-        type: 'SUCCESS',
-        targetUserId: (submission as any).student?.userId || undefined,
-        targetRole: 'STUDENT',
-      });
+      const studentUserId = (submission as any).student?.userId;
+      if (studentUserId) {
+        await notificationService.createNotification({
+          title: `Assignment Graded: ${submission.assignment.title}`,
+          message: `Your submission for "${submission.assignment.title}" has been graded: ${params.score}/${submission.assignment.totalMarks} marks.${params.feedback ? ` Feedback: "${params.feedback}"` : ''}`,
+          type: 'SUCCESS',
+          targetUserId: studentUserId,
+        });
+      }
     } catch (e) {
       console.error('Failed to send grading notification', e);
     }

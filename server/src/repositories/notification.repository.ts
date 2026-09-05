@@ -9,12 +9,14 @@ export class NotificationRepository {
   }
 
   async findForUser(role: string, userId?: string) {
+    const isRoleAdmin = role.toUpperCase() === 'ADMINISTRATOR';
     const notifications = await prisma.notification.findMany({
       where: {
         OR: [
-          { targetRole: 'ALL' },
-          { targetRole: role.toUpperCase() },
+          { targetRole: 'ALL', targetUserId: null },
+          { targetRole: role.toUpperCase(), targetUserId: null },
           ...(userId ? [{ targetUserId: userId }] : []),
+          ...(isRoleAdmin ? [{ targetRole: { not: 'ALL' } }] : []),
         ],
       },
       orderBy: { createdAt: 'desc' },
@@ -81,12 +83,14 @@ export class NotificationRepository {
       return { success: true };
     }
 
+    const isRoleAdmin = role.toUpperCase() === 'ADMINISTRATOR';
     const notifications = await prisma.notification.findMany({
       where: {
         OR: [
-          { targetRole: 'ALL' },
-          { targetRole: role.toUpperCase() },
+          { targetRole: 'ALL', targetUserId: null },
+          { targetRole: role.toUpperCase(), targetUserId: null },
           { targetUserId: userId },
+          ...(isRoleAdmin ? [{ targetRole: { not: 'ALL' } }] : []),
         ],
       },
       select: { id: true },
@@ -117,38 +121,33 @@ export class NotificationRepository {
   }
 
   async countUnread(role: string, userId?: string): Promise<number> {
+    const isRoleAdmin = role.toUpperCase() === 'ADMINISTRATOR';
+    const filterCondition: Prisma.NotificationWhereInput = {
+      OR: [
+        { targetRole: 'ALL', targetUserId: null },
+        { targetRole: role.toUpperCase(), targetUserId: null },
+        ...(userId ? [{ targetUserId: userId }] : []),
+        ...(isRoleAdmin ? [{ targetRole: { not: 'ALL' } }] : []),
+      ],
+    };
+
     if (!userId) {
       return prisma.notification.count({
         where: {
-          OR: [
-            { targetRole: 'ALL' },
-            { targetRole: role.toUpperCase() },
-          ],
+          ...filterCondition,
           isRead: false,
         },
       });
     }
 
     const totalCount = await prisma.notification.count({
-      where: {
-        OR: [
-          { targetRole: 'ALL' },
-          { targetRole: role.toUpperCase() },
-          { targetUserId: userId },
-        ],
-      },
+      where: filterCondition,
     });
 
     const readCount = await prisma.notificationRead.count({
       where: {
         userId,
-        notification: {
-          OR: [
-            { targetRole: 'ALL' },
-            { targetRole: role.toUpperCase() },
-            { targetUserId: userId },
-          ],
-        },
+        notification: filterCondition,
       },
     });
 

@@ -87,7 +87,7 @@ export class LeaveService {
         title: `Student Leave Application: ${studentName}`,
         message: `${studentName}${batchName} applied for leave from ${data.startDate} to ${data.endDate}. Reason: "${data.reason}".`,
         type: 'WARNING',
-        targetRole: 'TEACHER',
+        targetRole: 'ADMINISTRATOR',
       });
     } catch (e) {
       console.error('Failed to send student leave notification', e);
@@ -121,20 +121,21 @@ export class LeaveService {
       reviewedBy,
     });
 
-    // Dispatch role-specific notification to applicant
+    // Dispatch direct personalized notification to applicant
     if (existing.applicantType === 'FACULTY' || existing.facultyId) {
       try {
         const faculty = await prisma.faculty.findUnique({
           where: { id: existing.facultyId || undefined },
         });
 
-        await notificationService.createNotification({
-          title: `Faculty Leave Request ${status === 'APPROVED' ? 'Approved' : 'Rejected'}`,
-          message: `Your faculty leave application for ${existing.startDate} to ${existing.endDate} has been ${status.toLowerCase()} by Institute Administrator (${reviewedBy}).`,
-          type: status === 'APPROVED' ? 'SUCCESS' : 'WARNING',
-          targetUserId: faculty?.userId || undefined,
-          targetRole: 'TEACHER',
-        });
+        if (faculty?.userId) {
+          await notificationService.createNotification({
+            title: `Faculty Leave Request ${status === 'APPROVED' ? 'Approved' : 'Rejected'}`,
+            message: `Your faculty leave application for ${existing.startDate} to ${existing.endDate} has been ${status.toLowerCase()} by Institute Administrator (${reviewedBy}).`,
+            type: status === 'APPROVED' ? 'SUCCESS' : 'WARNING',
+            targetUserId: faculty.userId,
+          });
+        }
       } catch (e) {
         console.error('Failed to send faculty leave update notification', e);
       }
@@ -144,13 +145,14 @@ export class LeaveService {
           where: { id: existing.studentId || undefined },
         });
 
-        await notificationService.createNotification({
-          title: `Leave Request ${status === 'APPROVED' ? 'Approved' : 'Rejected'}`,
-          message: `Your student leave request for ${existing.startDate} to ${existing.endDate} has been ${status.toLowerCase()} by academic administration (${reviewedBy}).`,
-          type: status === 'APPROVED' ? 'SUCCESS' : 'WARNING',
-          targetUserId: student?.userId || undefined,
-          targetRole: 'STUDENT',
-        });
+        if (student?.userId) {
+          await notificationService.createNotification({
+            title: `Leave Request ${status === 'APPROVED' ? 'Approved' : 'Rejected'}`,
+            message: `Your student leave request for ${existing.startDate} to ${existing.endDate} has been ${status.toLowerCase()} by academic administration (${reviewedBy}).`,
+            type: status === 'APPROVED' ? 'SUCCESS' : 'WARNING',
+            targetUserId: student.userId,
+          });
+        }
       } catch (e) {
         console.error('Failed to send student leave update notification', e);
       }

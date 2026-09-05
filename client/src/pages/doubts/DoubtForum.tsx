@@ -29,6 +29,7 @@ import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { formatDate } from '../../utils/date';
+import { getMediaUrl, downloadMediaFile } from '../../utils/media';
 
 interface BatchFacultyOption {
   id: string;
@@ -354,7 +355,7 @@ export const DoubtForum: React.FC = () => {
                             </span>
                             <div className="flex items-center gap-1 ml-1 border-l border-blue-200 pl-1.5">
                               <a
-                                href={url}
+                                href={getMediaUrl(url)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100/80 rounded-md transition-colors flex items-center gap-1"
@@ -363,16 +364,14 @@ export const DoubtForum: React.FC = () => {
                                 <Eye className="w-3.5 h-3.5" />
                                 <span className="text-[11px] font-bold">View</span>
                               </a>
-                              <a
-                                href={url}
-                                download={cleanName}
-                                target="_blank"
-                                rel="noreferrer"
+                              <button
+                                type="button"
+                                onClick={() => downloadMediaFile(url, cleanName)}
                                 className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-100/80 rounded-md transition-colors"
                                 title="Download Document"
                               >
                                 <Download className="w-3.5 h-3.5" />
-                              </a>
+                              </button>
                             </div>
                           </div>
                         );
@@ -429,7 +428,7 @@ export const DoubtForum: React.FC = () => {
                               </span>
                               <div className="flex items-center gap-1 ml-1 border-l border-emerald-200 pl-1.5">
                                 <a
-                                  href={url}
+                                  href={getMediaUrl(url)}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="p-1 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-100/80 rounded-md transition-colors flex items-center gap-1"
@@ -438,16 +437,14 @@ export const DoubtForum: React.FC = () => {
                                   <Eye className="w-3.5 h-3.5" />
                                   <span className="text-[11px] font-bold">View</span>
                                 </a>
-                                <a
-                                  href={url}
-                                  download={cleanName}
-                                  target="_blank"
-                                  rel="noreferrer"
+                                <button
+                                  type="button"
+                                  onClick={() => downloadMediaFile(url, cleanName)}
                                   className="p-1 text-slate-500 hover:text-emerald-600 hover:bg-emerald-100/80 rounded-md transition-colors"
                                   title="Download Solution"
                                 >
                                   <Download className="w-3.5 h-3.5" />
-                                </a>
+                                </button>
                               </div>
                             </div>
                           );
@@ -505,8 +502,12 @@ export const DoubtForum: React.FC = () => {
                       : 'border-slate-200 hover:bg-slate-50 text-slate-700'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
-                    {f.firstName[0]}{f.lastName[0]}
+                  <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs flex-shrink-0 overflow-hidden">
+                    {f.avatarUrl ? (
+                      <img src={getMediaUrl(f.avatarUrl)} alt="Mentor" className="w-full h-full object-cover" />
+                    ) : (
+                      `${f.firstName[0]}${f.lastName[0]}`
+                    )}
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold truncate">

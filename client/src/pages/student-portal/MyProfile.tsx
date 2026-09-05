@@ -6,7 +6,10 @@ import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { ChangePasswordModal } from '../../components/common/ChangePasswordModal';
+import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import { formatDate } from '../../utils/date';
+import { getMediaUrl } from '../../utils/media';
 
 export const MyProfile: React.FC = () => {
   const [student, setStudent] = useState<Student | null>(null);
@@ -58,7 +61,7 @@ export const MyProfile: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-slate-100 text-center sm:text-left">
           <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white text-3xl font-black overflow-hidden flex-shrink-0 shadow-lg shadow-blue-500/20">
             {student.avatarUrl ? (
-              <img src={student.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={getMediaUrl(student.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               `${student.firstName[0]}${student.lastName[0]}`
             )}

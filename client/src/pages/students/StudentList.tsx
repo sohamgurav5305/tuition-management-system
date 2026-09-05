@@ -11,6 +11,7 @@ import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { useSettings } from '../../context/SettingsContext';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { getMediaUrl } from '../../utils/media';
 import { StudentFormModal } from './StudentFormModal';
 
 export const StudentList: React.FC = () => {
@@ -101,7 +102,7 @@ export const StudentList: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs overflow-hidden flex-shrink-0">
             {s.avatarUrl ? (
-              <img src={s.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={getMediaUrl(s.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               `${s.firstName?.[0] || 'S'}${s.lastName?.[0] || ''}`
             )}

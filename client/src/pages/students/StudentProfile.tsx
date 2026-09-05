@@ -21,8 +21,10 @@ import { Student, Payment, Attendance, Result } from '../../types';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
-import { useSettings } from '../../context/SettingsContext';
+import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { useSettings } from '../../context/SettingsContext';
+import { getMediaUrl } from '../../utils/media';
 import { StudentFormModal } from './StudentFormModal';
 import { CollectPaymentModal } from '../fees/CollectPaymentModal';
 import { AssignFeeModal } from '../fees/AssignFeeModal';
@@ -144,7 +146,7 @@ export const StudentProfile: React.FC = () => {
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
           <div className="w-20 h-20 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-2xl font-black overflow-hidden flex-shrink-0 shadow-sm">
             {student.avatarUrl ? (
-              <img src={student.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={getMediaUrl(student.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               `${student.firstName[0]}${student.lastName[0]}`
             )}

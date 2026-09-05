@@ -19,6 +19,7 @@ import { useRealtimeEvent } from '../../context/RealtimeContext';
 import { notificationApi } from '../../services/api';
 import { Notification } from '../../types';
 import { Badge } from '../common/Badge';
+import { getMediaUrl } from '../../utils/media';
 
 interface HeaderProps {
   onToggleMobileMenu?: () => void;
@@ -209,47 +210,70 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
 
         {/* User Profile Pill & Dropdown Menu */}
         <div className="relative" ref={profileMenuRef}>
-          <button
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors text-left group"
-          >
-            <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs flex-shrink-0 group-hover:bg-blue-500 transition-colors">
-              {user?.username?.[0]?.toUpperCase() || 'U'}
-            </div>
-            <div className="hidden sm:block text-left">
-              <span className="text-xs font-bold text-slate-900 block leading-tight">
-                {user?.username || 'User'}
-              </span>
-              <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider block">
-                {user?.role === 'STUDENT'
-                  ? 'Student'
-                  : user?.role === 'TEACHER'
-                  ? 'Faculty'
-                  : user?.role === 'ACCOUNTANT'
-                  ? 'Accountant'
-                  : 'Administrator'}
-              </span>
-            </div>
-            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
-          </button>
+          {(() => {
+            const userAvatar = user?.avatarUrl || user?.student?.avatarUrl || user?.faculty?.avatarUrl;
+            return (
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors text-left group"
+              >
+                <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs flex-shrink-0 group-hover:bg-blue-500 transition-colors overflow-hidden">
+                  {userAvatar ? (
+                    <img src={getMediaUrl(userAvatar)} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    user?.username?.[0]?.toUpperCase() || 'U'
+                  )}
+                </div>
+                <div className="hidden sm:block text-left">
+                  <span className="text-xs font-bold text-slate-900 block leading-tight">
+                    {user?.username || 'User'}
+                  </span>
+                  <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider block">
+                    {user?.role === 'STUDENT'
+                      ? 'Student'
+                      : user?.role === 'TEACHER'
+                      ? 'Faculty'
+                      : user?.role === 'ACCOUNTANT'
+                      ? 'Accountant'
+                      : 'Administrator'}
+                  </span>
+                </div>
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
+              </button>
+            );
+          })()}
 
           {/* Profile Dropdown Popover */}
           {showProfileMenu && (
             <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
               {/* User Header Summary */}
-              <div className="px-4 py-2 border-b border-slate-100">
-                <p className="text-xs font-bold text-slate-900 truncate">
-                  {user?.username}
-                </p>
-                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">
-                  {user?.role === 'STUDENT'
-                    ? 'Student'
-                    : user?.role === 'TEACHER'
-                    ? 'Faculty Mentor'
-                    : user?.role === 'ACCOUNTANT'
-                    ? 'Accountant'
-                    : 'Administrator'}
-                </span>
+              <div className="px-4 py-2 border-b border-slate-100 flex items-center gap-2.5">
+                {(() => {
+                  const userAvatar = user?.avatarUrl || user?.student?.avatarUrl || user?.faculty?.avatarUrl;
+                  return (
+                    <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs flex-shrink-0 overflow-hidden">
+                      {userAvatar ? (
+                        <img src={getMediaUrl(userAvatar)} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        user?.username?.[0]?.toUpperCase() || 'U'
+                      )}
+                    </div>
+                  );
+                })()}
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-900 truncate">
+                    {user?.username}
+                  </p>
+                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">
+                    {user?.role === 'STUDENT'
+                      ? 'Student'
+                      : user?.role === 'TEACHER'
+                      ? 'Faculty Mentor'
+                      : user?.role === 'ACCOUNTANT'
+                      ? 'Accountant'
+                      : 'Administrator'}
+                  </span>
+                </div>
               </div>
 
               <div className="py-1">

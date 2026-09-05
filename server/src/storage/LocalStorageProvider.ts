@@ -51,11 +51,14 @@ export class LocalStorageProvider implements StorageProvider {
 
   getUrl(filePath: string): string {
     if (!filePath) return '';
-    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+    if (filePath.startsWith('http://') || filePath.startsWith('https://') || filePath.startsWith('data:')) {
       return filePath;
     }
-    // Normalizes to /uploads/profile-images/xyz.jpg
     const cleanedPath = filePath.replace(/^\/+/, '');
+    const appUrl = (process.env.APP_URL || process.env.BASE_URL || '').trim().replace(/\/+$/, '');
+    if (appUrl) {
+      return `${appUrl}/uploads/${cleanedPath}`;
+    }
     return `/uploads/${cleanedPath}`;
   }
 }

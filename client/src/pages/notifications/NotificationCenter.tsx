@@ -25,6 +25,7 @@ import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { useRealtimeEvent } from '../../context/RealtimeContext';
 import { formatDateTime } from '../../utils/date';
+import { getMediaUrl } from '../../utils/media';
 
 export const NotificationCenter: React.FC = () => {
   const { success, error } = useToast();
@@ -278,7 +279,7 @@ export const NotificationCenter: React.FC = () => {
                               </span>
                               <div className="flex items-center gap-1 ml-1 border-l border-blue-200 pl-1.5">
                                 <a
-                                  href={url}
+                                  href={getMediaUrl(url)}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100/80 rounded-md transition-colors flex items-center gap-1"
@@ -288,7 +289,7 @@ export const NotificationCenter: React.FC = () => {
                                   <span className="text-[11px] font-bold">View</span>
                                 </a>
                                 <a
-                                  href={url}
+                                  href={getMediaUrl(url)}
                                   download={cleanName}
                                   target="_blank"
                                   rel="noreferrer"

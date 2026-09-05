@@ -104,13 +104,14 @@ export class PaymentService {
 
     // Notify student of fee payment confirmation
     try {
-      await notificationService.createNotification({
-        title: `Fee Payment Confirmed: ₹${amount.toLocaleString('en-IN')}`,
-        message: `Tuition fee payment of ₹${amount.toLocaleString('en-IN')} via ${data.paymentMode} recorded (Receipt #${receiptId}). Remaining dues: ₹${updatedStudent.pendingFee.toLocaleString('en-IN')}.`,
-        type: 'SUCCESS',
-        targetUserId: student.userId || undefined,
-        targetRole: 'STUDENT',
-      });
+      if (student.userId) {
+        await notificationService.createNotification({
+          title: `Fee Payment Confirmed: ₹${amount.toLocaleString('en-IN')}`,
+          message: `Tuition fee payment of ₹${amount.toLocaleString('en-IN')} via ${data.paymentMode} recorded (Receipt #${receiptId}). Remaining dues: ₹${updatedStudent.pendingFee.toLocaleString('en-IN')}.`,
+          type: 'SUCCESS',
+          targetUserId: student.userId,
+        });
+      }
     } catch (e) {
       console.error('Failed to send payment notification', e);
     }
@@ -283,7 +284,6 @@ export class PaymentService {
             message: `A new fee charge of ₹${amount.toLocaleString('en-IN')} (${categoryTitle}) has been added to your account. Due date: ${dueDate}.`,
             type: 'FEE',
             targetUserId: s.userId,
-            targetRole: 'STUDENT',
           });
         }
       } else {

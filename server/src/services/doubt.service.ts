@@ -93,14 +93,15 @@ export class DoubtService {
 
     // Notify faculty mentor of new student question
     try {
-      const studentName = student ? `${student.firstName} ${student.lastName}` : 'A student';
-      await notificationService.createNotification({
-        title: `New Student Doubt: ${data.subject}`,
-        message: `${studentName} submitted a doubt in ${data.subject} (${data.topic || 'General'}): "${questionText.slice(0, 100)}..."`,
-        type: 'INFORMATION',
-        targetUserId: faculty?.userId || undefined,
-        targetRole: 'TEACHER',
-      });
+      if (faculty?.userId) {
+        const studentName = student ? `${student.firstName} ${student.lastName}` : 'A student';
+        await notificationService.createNotification({
+          title: `New Student Doubt: ${data.subject}`,
+          message: `${studentName} submitted a doubt in ${data.subject} (${data.topic || 'General'}): "${questionText.slice(0, 100)}..."`,
+          type: 'INFORMATION',
+          targetUserId: faculty.userId,
+        });
+      }
     } catch (e) {
       console.error('Failed to send doubt notification', e);
     }
@@ -148,13 +149,14 @@ export class DoubtService {
         where: { id: existing.studentId },
       });
 
-      await notificationService.createNotification({
-        title: `Doubt Resolved: ${existing.subject}`,
-        message: `Your mentor answered your question on ${existing.topic || existing.subject}. Check your Doubts forum for the solution.`,
-        type: 'SUCCESS',
-        targetUserId: student?.userId || undefined,
-        targetRole: 'STUDENT',
-      });
+      if (student?.userId) {
+        await notificationService.createNotification({
+          title: `Doubt Resolved: ${existing.subject}`,
+          message: `Your mentor answered your question on ${existing.topic || existing.subject}. Check your Doubts forum for the solution.`,
+          type: 'SUCCESS',
+          targetUserId: student.userId,
+        });
+      }
     } catch (e) {
       console.error('Failed to send doubt resolved notification', e);
     }

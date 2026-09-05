@@ -20,6 +20,7 @@ import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { Badge } from '../../components/common/Badge';
 import { formatDate, formatDateTime } from '../../utils/date';
+import { getMediaUrl, downloadMediaFile } from '../../utils/media';
 
 interface AssignmentSubmissionsModalProps {
   isOpen: boolean;
@@ -267,7 +268,7 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs overflow-hidden flex-shrink-0">
                         {sub.student?.avatarUrl ? (
-                          <img src={sub.student.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                          <img src={getMediaUrl(sub.student.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
                         ) : (
                           `${sub.student?.firstName?.[0] || ''}${sub.student?.lastName?.[0] || ''}`
                         )}
@@ -346,7 +347,7 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
                               </span>
                               <div className="flex items-center gap-1 ml-1 border-l border-blue-200 pl-1.5">
                                 <a
-                                  href={fUrl}
+                                  href={getMediaUrl(fUrl)}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100/80 rounded-md transition-colors flex items-center gap-1"
@@ -355,16 +356,14 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
                                   <Eye className="w-3.5 h-3.5" />
                                   <span className="text-[11px] font-bold">View</span>
                                 </a>
-                                <a
-                                  href={fUrl}
-                                  download={cleanName}
-                                  target="_blank"
-                                  rel="noreferrer"
+                                <button
+                                  type="button"
+                                  onClick={() => downloadMediaFile(fUrl, cleanName)}
                                   className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-100/80 rounded-md transition-colors"
                                   title="Download File"
                                 >
                                   <Download className="w-3.5 h-3.5" />
-                                </a>
+                                </button>
                               </div>
                             </div>
                           );
@@ -381,7 +380,7 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
                               </span>
                               <div className="flex items-center gap-1 ml-1 border-l border-blue-200 pl-1.5">
                                 <a
-                                  href={sub.fileUrl}
+                                  href={getMediaUrl(sub.fileUrl)}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100/80 rounded-md transition-colors flex items-center gap-1"
@@ -390,16 +389,14 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
                                   <Eye className="w-3.5 h-3.5" />
                                   <span className="text-[11px] font-bold">View</span>
                                 </a>
-                                <a
-                                  href={sub.fileUrl}
-                                  download={cleanName}
-                                  target="_blank"
-                                  rel="noreferrer"
+                                <button
+                                  type="button"
+                                  onClick={() => downloadMediaFile(sub.fileUrl!, cleanName)}
                                   className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-100/80 rounded-md transition-colors"
                                   title="Download File"
                                 >
                                   <Download className="w-3.5 h-3.5" />
-                                </a>
+                                </button>
                               </div>
                             </div>
                           );

@@ -10,6 +10,7 @@ import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { useSettings } from '../../context/SettingsContext';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { getMediaUrl } from '../../utils/media';
 import { FacultyFormModal } from './FacultyFormModal';
 import { FacultyWorkloadModal } from './FacultyWorkloadModal';
 
@@ -72,7 +73,7 @@ export const FacultyList: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 font-bold flex items-center justify-center text-xs overflow-hidden flex-shrink-0">
             {f.avatarUrl ? (
-              <img src={f.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={getMediaUrl(f.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               `${f.firstName?.[0] || 'F'}${f.lastName?.[0] || ''}`
             )}

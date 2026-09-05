@@ -8,6 +8,7 @@ import { studentApi, courseApi, batchApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { useSettings } from '../../context/SettingsContext';
 import { Course, Batch, Student } from '../../types';
+import { getMediaUrl } from '../../utils/media';
 
 const studentSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -208,7 +209,7 @@ export const StudentFormModal: React.FC<StudentFormModalProps> = ({
               />
             ) : initialStudent?.avatarUrl ? (
               <img
-                src={initialStudent.avatarUrl}
+                src={getMediaUrl(initialStudent.avatarUrl)}
                 alt="Avatar"
                 className="w-full h-full object-cover"
               />

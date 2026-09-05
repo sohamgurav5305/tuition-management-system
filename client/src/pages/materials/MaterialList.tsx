@@ -21,6 +21,7 @@ import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { MaterialUploadModal } from './MaterialUploadModal';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
+import { getMediaUrl, downloadMediaFile } from '../../utils/media';
 
 export const MaterialList: React.FC = () => {
   const { user } = useAuth();
@@ -73,7 +74,9 @@ export const MaterialList: React.FC = () => {
       success('Download Started', `Downloading: ${m.title}`);
       const targetUrl = fileUrl || (m.files && m.files[0]) || m.fileUrl;
       if (targetUrl) {
-        window.open(targetUrl, '_blank');
+        const rawName = targetUrl.split('/').pop() || `${m.title}.pdf`;
+        const cleanName = rawName.match(/^[0-9a-fA-F-]{36,}-(.*)$/)?.[1] || rawName;
+        downloadMediaFile(targetUrl, cleanName);
       } else {
         const blob = new Blob(
           [
@@ -269,7 +272,7 @@ export const MaterialList: React.FC = () => {
                             </span>
                             <div className="flex items-center gap-1">
                               <a
-                                href={fUrl}
+                                href={getMediaUrl(fUrl)}
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={() => materialApi.trackDownload(m.id)}
@@ -296,7 +299,7 @@ export const MaterialList: React.FC = () => {
                 ) : (
                   <div className="flex items-center gap-2">
                     <a
-                      href={m.files?.[0] || m.fileUrl || '#'}
+                      href={m.files?.[0] || m.fileUrl ? getMediaUrl(m.files?.[0] || m.fileUrl) : '#'}
                       target="_blank"
                       rel="noreferrer"
                       onClick={() => materialApi.trackDownload(m.id)}
