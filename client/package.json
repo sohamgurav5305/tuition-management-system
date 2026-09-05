@@ -9,7 +9,7 @@
     "dev:faculty": "vite --port 3001",
     "dev:student": "vite --port 3002",
     "dev:accountant": "vite --port 3003",
-    "build": "tsc -b && vite build",
+    "build": "node ./node_modules/typescript/bin/tsc -b && node ./node_modules/vite/bin/vite.js build",
     "preview": "vite preview"
   },
   "dependencies": {
