@@ -26,7 +26,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshProfile } = useAuth();
   const { settings, formatDate, formatDateTime } = useSettings();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -56,6 +56,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
 
   useEffect(() => {
     fetchNotifications();
+    if (refreshProfile) refreshProfile();
     const interval = setInterval(fetchNotifications, 15000);
     return () => clearInterval(interval);
   }, []);
@@ -217,11 +218,19 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors text-left group"
               >
-                <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs flex-shrink-0 group-hover:bg-blue-500 transition-colors overflow-hidden">
-                  {userAvatar ? (
-                    <img src={getMediaUrl(userAvatar)} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    user?.username?.[0]?.toUpperCase() || 'U'
+                <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs flex-shrink-0 group-hover:bg-blue-500 transition-colors overflow-hidden relative">
+                  <span className="select-none">
+                    {user?.username?.[0]?.toUpperCase() || 'U'}
+                  </span>
+                  {userAvatar && (
+                    <img
+                      src={getMediaUrl(userAvatar)}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
                   )}
                 </div>
                 <div className="hidden sm:block text-left">
@@ -251,11 +260,19 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
                 {(() => {
                   const userAvatar = user?.avatarUrl || user?.student?.avatarUrl || user?.faculty?.avatarUrl;
                   return (
-                    <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs flex-shrink-0 overflow-hidden">
-                      {userAvatar ? (
-                        <img src={getMediaUrl(userAvatar)} alt="Avatar" className="w-full h-full object-cover" />
-                      ) : (
-                        user?.username?.[0]?.toUpperCase() || 'U'
+                    <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs flex-shrink-0 overflow-hidden relative">
+                      <span className="select-none">
+                        {user?.username?.[0]?.toUpperCase() || 'U'}
+                      </span>
+                      {userAvatar && (
+                        <img
+                          src={getMediaUrl(userAvatar)}
+                          alt=""
+                          className="absolute inset-0 w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = 'none';
+                          }}
+                        />
                       )}
                     </div>
                   );

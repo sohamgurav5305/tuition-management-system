@@ -11,6 +11,7 @@ interface AuthContextType {
   login: (identifier: string, password: string) => Promise<void>;
   quickLogin: (role: UserRole) => Promise<void>;
   logout: () => void;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +26,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { success, error } = useToast();
+
+  const refreshProfile = async () => {
+    const savedToken = localStorage.getItem('tuition_token');
+    if (savedToken) {
+      try {
+        const res = await authApi.getProfile();
+        if (res.data?.data) {
+          setUser(res.data.data);
+          localStorage.setItem('tuition_user', JSON.stringify(res.data.data));
+        }
+      } catch (err) {
+        // ignore
+      }
+    }
+  };
 
   useEffect(() => {
     const initAuth = async () => {
@@ -100,6 +116,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         login,
         quickLogin,
         logout,
+        refreshProfile,
       }}
     >
       {children}

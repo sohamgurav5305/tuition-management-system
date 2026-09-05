@@ -20,7 +20,7 @@ export function getMediaUrl(url: string | null | undefined): string {
 
   // Derive live backend server host
   const apiEnv = ((import.meta as any).env?.VITE_API_URL || '').trim();
-  let backendOrigin = '';
+  let backendOrigin = 'https://tuition-management-api-s1ab.onrender.com';
 
   if (apiEnv && apiEnv !== '/api') {
     try {
@@ -31,7 +31,11 @@ export function getMediaUrl(url: string | null | undefined): string {
     }
   }
 
-  const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  // Normalize path
+  let cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  if (!cleanPath.startsWith('/uploads/')) {
+    cleanPath = `/uploads${cleanPath}`;
+  }
 
   if (backendOrigin) {
     return `${backendOrigin}${cleanPath}`;

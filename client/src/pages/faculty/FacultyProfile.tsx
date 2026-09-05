@@ -61,11 +61,17 @@ export const FacultyProfile: React.FC = () => {
       {/* Main Profile Header Card */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-slate-100 text-center sm:text-left">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white text-3xl font-black overflow-hidden flex-shrink-0 shadow-lg shadow-purple-500/20">
-            {faculty.avatarUrl ? (
-              <img src={getMediaUrl(faculty.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              initials
+          <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white text-3xl font-black overflow-hidden flex-shrink-0 shadow-lg shadow-purple-500/20 relative">
+            <span className="select-none">{initials}</span>
+            {faculty.avatarUrl && (
+              <img
+                src={getMediaUrl(faculty.avatarUrl)}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
             )}
           </div>
           <div className="flex-1 min-w-0">

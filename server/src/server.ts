@@ -23,6 +23,12 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Static uploads serving (Local storage driver)
 const uploadsPath = path.resolve(process.cwd(), process.env.UPLOAD_PATH || 'uploads');
 app.use('/uploads', express.static(uploadsPath));
+app.use('/profile-images', express.static(path.resolve(uploadsPath, 'profile-images')));
+app.use('/documents', express.static(path.resolve(uploadsPath, 'documents')));
+app.use('/assignments', express.static(path.resolve(uploadsPath, 'assignments')));
+app.use('/doubts', express.static(path.resolve(uploadsPath, 'doubts')));
+app.use('/notifications', express.static(path.resolve(uploadsPath, 'notifications')));
+app.use('/general', express.static(path.resolve(uploadsPath, 'general')));
 
 // API master routes
 app.use('/api', apiRoutes);

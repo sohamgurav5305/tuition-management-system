@@ -109,7 +109,7 @@ export class FacultyService {
       avatarUrl = await storage.upload(file, 'profile-images');
     }
 
-    return facultyRepository.update(id, {
+    const updated = await facultyRepository.update(id, {
       firstName: data.firstName ?? existing.firstName,
       lastName: data.lastName ?? existing.lastName,
       phone: data.phone ?? existing.phone,
@@ -122,6 +122,19 @@ export class FacultyService {
       status: data.status ?? existing.status,
       avatarUrl,
     });
+
+    if (existing.userId && avatarUrl) {
+      try {
+        await prisma.user.update({
+          where: { id: existing.userId },
+          data: { avatarUrl },
+        });
+      } catch {
+        // ignore
+      }
+    }
+
+    return updated;
   }
 
   async deleteFaculty(id: string) {

@@ -224,6 +224,17 @@ export class StudentService {
       pendingFee,
     });
 
+    if (existing.userId && avatarUrl) {
+      try {
+        await prisma.user.update({
+          where: { id: existing.userId },
+          data: { avatarUrl },
+        });
+      } catch {
+        // ignore
+      }
+    }
+
     try {
       realtimeHub.broadcast('student:updated', { studentId: updated.id, action: 'updated' });
     } catch {}

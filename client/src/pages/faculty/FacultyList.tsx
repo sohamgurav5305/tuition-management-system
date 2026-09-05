@@ -71,11 +71,19 @@ export const FacultyList: React.FC = () => {
       header: 'Faculty Member',
       cell: (f) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 font-bold flex items-center justify-center text-xs overflow-hidden flex-shrink-0">
-            {f.avatarUrl ? (
-              <img src={getMediaUrl(f.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              `${f.firstName?.[0] || 'F'}${f.lastName?.[0] || ''}`
+          <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 font-bold flex items-center justify-center text-xs overflow-hidden flex-shrink-0 relative">
+            <span className="select-none">
+              {f.firstName?.[0] || 'F'}{f.lastName?.[0] || ''}
+            </span>
+            {f.avatarUrl && (
+              <img
+                src={getMediaUrl(f.avatarUrl)}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
             )}
           </div>
           <div className="min-w-0">
