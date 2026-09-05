@@ -75,7 +75,24 @@ export class NotificationService {
         realtimeHub.sendToUser(data.targetUserId, 'notification:new', result);
         realtimeHub.sendToRole('ADMINISTRATOR', 'notification:new', result);
       } else if (data.targetRole && data.targetRole !== 'ALL') {
-        realtimeHub.sendToRole(data.targetRole, 'notification:new', result);
+        const parts = data.targetRole.split('_');
+        const uniqueRoles = new Set<string>();
+        for (const p of parts) {
+          const upper = p.toUpperCase();
+          if (upper === 'FACULTY' || upper === 'TEACHER') {
+            uniqueRoles.add('TEACHER');
+          } else if (upper === 'STUDENT') {
+            uniqueRoles.add('STUDENT');
+          } else if (upper === 'ACCOUNTANT') {
+            uniqueRoles.add('ACCOUNTANT');
+          } else {
+            uniqueRoles.add(upper);
+          }
+        }
+        uniqueRoles.add('ADMINISTRATOR');
+        for (const r of uniqueRoles) {
+          realtimeHub.sendToRole(r, 'notification:new', result);
+        }
       } else {
         realtimeHub.broadcast('notification:new', result);
       }

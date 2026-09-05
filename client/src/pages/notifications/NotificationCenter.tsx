@@ -251,12 +251,29 @@ export const NotificationCenter: React.FC = () => {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-xs sm:text-sm font-bold text-slate-900">
                       {n.title}
                     </h3>
                     {!n.isRead && (
                       <Badge variant="primary" size="xs">New</Badge>
+                    )}
+                    {n.targetRole && n.targetRole !== 'ALL' && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                        {n.targetRole === 'TEACHER_STUDENT' || n.targetRole === 'FACULTY_STUDENT'
+                          ? 'Faculty + Student'
+                          : n.targetRole === 'ACCOUNTANT_STUDENT'
+                          ? 'Accountant + Student'
+                          : n.targetRole === 'TEACHER_ACCOUNTANT' || n.targetRole === 'FACULTY_ACCOUNTANT'
+                          ? 'Faculty + Accountant'
+                          : n.targetRole === 'STUDENT'
+                          ? 'Students Only'
+                          : n.targetRole === 'TEACHER' || n.targetRole === 'FACULTY'
+                          ? 'Faculty Only'
+                          : n.targetRole === 'ACCOUNTANT'
+                          ? 'Accounts Desk Only'
+                          : n.targetRole}
+                      </span>
                     )}
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">
@@ -376,6 +393,9 @@ export const NotificationCenter: React.FC = () => {
                 <option value="STUDENT">Students Only</option>
                 <option value="TEACHER">Faculty Only</option>
                 <option value="ACCOUNTANT">Accounts Desk Only</option>
+                <option value="TEACHER_STUDENT">Faculty + Student</option>
+                <option value="ACCOUNTANT_STUDENT">Accountant + Student</option>
+                <option value="TEACHER_ACCOUNTANT">Faculty + Accountant</option>
               </select>
             </div>
           </div>

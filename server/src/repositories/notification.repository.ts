@@ -1,6 +1,19 @@
 import prisma from '../prisma/client';
 import { Prisma, Notification } from '@prisma/client';
 
+function getTargetRolesForUserRole(role: string): string[] {
+  const upper = role.toUpperCase();
+  const matched = ['ALL', upper];
+  if (upper === 'STUDENT') {
+    matched.push('TEACHER_STUDENT', 'FACULTY_STUDENT', 'ACCOUNTANT_STUDENT');
+  } else if (upper === 'TEACHER') {
+    matched.push('TEACHER_STUDENT', 'FACULTY_STUDENT', 'TEACHER_ACCOUNTANT', 'FACULTY_ACCOUNTANT');
+  } else if (upper === 'ACCOUNTANT') {
+    matched.push('ACCOUNTANT_STUDENT', 'TEACHER_ACCOUNTANT', 'FACULTY_ACCOUNTANT');
+  }
+  return matched;
+}
+
 export class NotificationRepository {
   async findById(id: string) {
     return prisma.notification.findUnique({
@@ -9,12 +22,14 @@ export class NotificationRepository {
   }
 
   async findForUser(role: string, userId?: string) {
-    const isRoleAdmin = role.toUpperCase() === 'ADMINISTRATOR';
+    const userRole = role.toUpperCase();
+    const isRoleAdmin = userRole === 'ADMINISTRATOR';
+    const applicableRoles = getTargetRolesForUserRole(userRole);
+
     const notifications = await prisma.notification.findMany({
       where: {
         OR: [
-          { targetRole: 'ALL', targetUserId: null },
-          { targetRole: role.toUpperCase(), targetUserId: null },
+          { targetRole: { in: applicableRoles }, targetUserId: null },
           ...(userId ? [{ targetUserId: userId }] : []),
           ...(isRoleAdmin ? [{ targetRole: { not: 'ALL' } }] : []),
         ],
@@ -83,12 +98,14 @@ export class NotificationRepository {
       return { success: true };
     }
 
-    const isRoleAdmin = role.toUpperCase() === 'ADMINISTRATOR';
+    const userRole = role.toUpperCase();
+    const isRoleAdmin = userRole === 'ADMINISTRATOR';
+    const applicableRoles = getTargetRolesForUserRole(userRole);
+
     const notifications = await prisma.notification.findMany({
       where: {
         OR: [
-          { targetRole: 'ALL', targetUserId: null },
-          { targetRole: role.toUpperCase(), targetUserId: null },
+          { targetRole: { in: applicableRoles }, targetUserId: null },
           { targetUserId: userId },
           ...(isRoleAdmin ? [{ targetRole: { not: 'ALL' } }] : []),
         ],
@@ -121,11 +138,13 @@ export class NotificationRepository {
   }
 
   async countUnread(role: string, userId?: string): Promise<number> {
-    const isRoleAdmin = role.toUpperCase() === 'ADMINISTRATOR';
+    const userRole = role.toUpperCase();
+    const isRoleAdmin = userRole === 'ADMINISTRATOR';
+    const applicableRoles = getTargetRolesForUserRole(userRole);
+
     const filterCondition: Prisma.NotificationWhereInput = {
       OR: [
-        { targetRole: 'ALL', targetUserId: null },
-        { targetRole: role.toUpperCase(), targetUserId: null },
+        { targetRole: { in: applicableRoles }, targetUserId: null },
         ...(userId ? [{ targetUserId: userId }] : []),
         ...(isRoleAdmin ? [{ targetRole: { not: 'ALL' } }] : []),
       ],
