@@ -7,6 +7,7 @@ import { Modal } from '../../components/common/Modal';
 import { assignmentApi, batchApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { Batch, Assignment } from '../../types';
+import { getMediaUrl } from '../../utils/media';
 
 const assignmentSchema = z.object({
   title: z.string().min(1, 'Assignment title is required'),
@@ -375,7 +376,7 @@ export const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({
                           {displayName}
                         </span>
                         <a
-                          href={url}
+                          href={getMediaUrl(url)}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex items-center gap-1 p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100/80 rounded-md transition-colors text-[11px] font-bold ml-0.5"

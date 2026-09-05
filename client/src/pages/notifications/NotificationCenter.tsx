@@ -25,7 +25,7 @@ import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { useRealtimeEvent } from '../../context/RealtimeContext';
 import { formatDateTime } from '../../utils/date';
-import { getMediaUrl } from '../../utils/media';
+import { getMediaUrl, downloadMediaFile } from '../../utils/media';
 
 export const NotificationCenter: React.FC = () => {
   const { success, error } = useToast();
@@ -288,16 +288,14 @@ export const NotificationCenter: React.FC = () => {
                                   <Eye className="w-3.5 h-3.5" />
                                   <span className="text-[11px] font-bold">View</span>
                                 </a>
-                                <a
-                                  href={getMediaUrl(url)}
-                                  download={cleanName}
-                                  target="_blank"
-                                  rel="noreferrer"
+                                <button
+                                  type="button"
+                                  onClick={() => downloadMediaFile(url, cleanName)}
                                   className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-100/80 rounded-md transition-colors"
                                   title="Download File"
                                 >
                                   <Download className="w-3.5 h-3.5" />
-                                </a>
+                                </button>
                               </div>
                             </div>
                           );
