@@ -37,8 +37,30 @@ export const CollectPaymentModal: React.FC<CollectPaymentModalProps> = ({
   const { formatCurrency } = useSettings();
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(propStudent || null);
+  const [studentSearch, setStudentSearch] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [overpaymentError, setOverpaymentError] = useState<string | null>(null);
+
+  const searchTokens = studentSearch.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  const filteredStudents = searchTokens.length > 0
+    ? students.filter((s) => {
+        const parts = [
+          s.firstName,
+          s.lastName,
+          `${s.firstName || ''} ${s.lastName || ''}`,
+          `${s.lastName || ''} ${s.firstName || ''}`,
+          s.studentId,
+          s.rollNumber,
+          s.email,
+          s.phone,
+          s.batch?.name,
+          s.course?.name,
+        ].filter(Boolean).map((str) => String(str).toLowerCase());
+
+        const combinedText = parts.join(' ');
+        return searchTokens.every((token) => combinedText.includes(token));
+      })
+    : students;
 
   const {
     register,
@@ -58,6 +80,15 @@ export const CollectPaymentModal: React.FC<CollectPaymentModalProps> = ({
       remarks: 'Tuition installment',
     },
   });
+
+  // Auto-select if only 1 student matches search
+  useEffect(() => {
+    if (!propStudent && studentSearch.trim() && filteredStudents.length === 1) {
+      setValue('studentId', filteredStudents[0].id);
+      setSelectedStudent(filteredStudents[0]);
+      setValue('amount', filteredStudents[0].pendingFee);
+    }
+  }, [studentSearch, filteredStudents, propStudent, setValue]);
 
   const studentIdWatch = watch('studentId');
   const amountWatch = watch('amount');
@@ -150,7 +181,7 @@ export const CollectPaymentModal: React.FC<CollectPaymentModalProps> = ({
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {overpaymentError && (
-          <div className="p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 rounded-xl flex items-start gap-2.5 text-xs text-rose-800 dark:text-rose-200">
+          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-xs text-rose-800">
             <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-bold">Overpayment Validation</p>
@@ -161,18 +192,31 @@ export const CollectPaymentModal: React.FC<CollectPaymentModalProps> = ({
 
         {/* Student Selector / Details */}
         {!propStudent ? (
-          <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-medium text-slate-600">
               Select Student *
             </label>
+            <input
+              type="text"
+              value={studentSearch}
+              onChange={(e) => setStudentSearch(e.target.value)}
+              placeholder="Search by student name , roll, or ID..."
+              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 placeholder:text-slate-400"
+            />
             <select
               {...register('studentId')}
-              className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100"
+              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900"
             >
-              <option value="">Choose Student with Pending Dues</option>
-              {students.map((s) => (
+              <option value="">
+                {studentSearch.trim()
+                  ? filteredStudents.length === 0
+                    ? `No students found matching "${studentSearch}"`
+                    : `Choose Student (${filteredStudents.length} matching)`
+                  : 'Choose Student with Pending Dues'}
+              </option>
+              {filteredStudents.slice(0, 100).map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.firstName} {s.lastName} ({s.studentId}) — Due: ${s.pendingFee}
+                  {s.firstName} {s.lastName} ({s.studentId}) — Due: {formatCurrency(s.pendingFee)}
                 </option>
               ))}
             </select>
@@ -181,16 +225,16 @@ export const CollectPaymentModal: React.FC<CollectPaymentModalProps> = ({
         ) : null}
 
         {selectedStudent && (
-          <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-800 text-xs flex justify-between items-center">
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 text-xs flex justify-between items-center">
             <div>
-              <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+              <p className="font-bold text-slate-900 text-sm">
                 {selectedStudent.firstName} {selectedStudent.lastName}
               </p>
               <p className="text-slate-500 font-mono">{selectedStudent.studentId}</p>
             </div>
             <div className="text-right">
               <span className="text-slate-400">Pending Balance:</span>
-              <p className="text-base font-black text-rose-600 dark:text-rose-400">
+              <p className="text-base font-black text-rose-600">
                 {formatCurrency(selectedStudent.pendingFee)}
               </p>
             </div>
@@ -199,25 +243,25 @@ export const CollectPaymentModal: React.FC<CollectPaymentModalProps> = ({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-              Amount to Collect ($) *
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              Amount to Collect (₹) *
             </label>
             <input
               type="number"
               step="any"
               {...register('amount')}
-              className="w-full px-3 py-2 text-sm font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100"
+              className="w-full px-3 py-2 text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900"
             />
             {errors.amount && <p className="text-xs text-rose-500 mt-1">{errors.amount.message}</p>}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+            <label className="block text-xs font-medium text-slate-600 mb-1">
               Payment Mode *
             </label>
             <select
               {...register('paymentMode')}
-              className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100"
+              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900"
             >
               <option value="UPI">UPI / Digital QR</option>
               <option value="CASH">Cash Deposit</option>
@@ -226,46 +270,46 @@ export const CollectPaymentModal: React.FC<CollectPaymentModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+            <label className="block text-xs font-medium text-slate-600 mb-1">
               Payment Date *
             </label>
             <input
               type="date"
               {...register('paymentDate')}
-              className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100"
+              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+            <label className="block text-xs font-medium text-slate-600 mb-1">
               Transaction / Reference #
             </label>
             <input
               type="text"
               {...register('transactionReference')}
-              placeholder="e.g. UPI-98437298 / CHQ-1049"
-              className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100"
+              placeholder=""
+              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+          <label className="block text-xs font-medium text-slate-600 mb-1">
             Payment Remarks / Note
           </label>
           <input
             type="text"
             {...register('remarks')}
-            placeholder="e.g. Second quarterly tuition installment"
-            className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100"
+            placeholder=""
+            className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900"
           />
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl"
+            className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-xl"
           >
             Cancel
           </button>

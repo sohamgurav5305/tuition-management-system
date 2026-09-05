@@ -23,6 +23,26 @@ export class AttendanceRepository {
     });
   }
 
+  async findByBatchAndDateRange(batchId: string, startDate: string, endDate: string) {
+    return prisma.attendance.findMany({
+      where: {
+        batchId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      include: {
+        student: true,
+        faculty: true,
+      },
+      orderBy: [
+        { date: 'asc' },
+        { subject: 'asc' },
+      ],
+    });
+  }
+
   async findByStudent(studentId: string, subject?: string) {
     const where: Prisma.AttendanceWhereInput = { studentId };
     if (subject && subject !== 'ALL') {
@@ -90,13 +110,12 @@ export class AttendanceRepository {
 
     const total = records.length;
     if (total === 0) {
-      return { total: 0, present: 0, late: 0, absent: 0, percentage: 0, subjects: {} };
+      return { total: 0, present: 0, absent: 0, percentage: 0, subjects: {} };
     }
 
     const present = records.filter((r) => r.status === 'PRESENT').length;
-    const late = records.filter((r) => r.status === 'LATE').length;
     const absent = records.filter((r) => r.status === 'ABSENT').length;
-    const percentage = Number((((present + late * 0.8) / total) * 100).toFixed(1));
+    const percentage = total > 0 ? Number(((present / total) * 100).toFixed(1)) : 0;
 
     // Subject-wise stats breakdown
     const subjectGroups: { [subj: string]: typeof records } = {};
@@ -110,7 +129,6 @@ export class AttendanceRepository {
       [subj: string]: {
         total: number;
         present: number;
-        late: number;
         absent: number;
         percentage: number;
         facultyName?: string;
@@ -120,15 +138,13 @@ export class AttendanceRepository {
     for (const [subj, subList] of Object.entries(subjectGroups)) {
       const subTotal = subList.length;
       const subPres = subList.filter((r) => r.status === 'PRESENT').length;
-      const subLt = subList.filter((r) => r.status === 'LATE').length;
       const subAbs = subList.filter((r) => r.status === 'ABSENT').length;
-      const subPct = subTotal > 0 ? Number((((subPres + subLt * 0.8) / subTotal) * 100).toFixed(1)) : 0;
+      const subPct = subTotal > 0 ? Number(((subPres / subTotal) * 100).toFixed(1)) : 0;
       const faculty = subList.find((r) => r.faculty)?.faculty;
 
       subjects[subj] = {
         total: subTotal,
         present: subPres,
-        late: subLt,
         absent: subAbs,
         percentage: subPct,
         facultyName: faculty ? `${faculty.firstName} ${faculty.lastName}` : undefined,
@@ -138,7 +154,6 @@ export class AttendanceRepository {
     return {
       total,
       present,
-      late,
       absent,
       percentage,
       subjects,
@@ -146,19 +161,18 @@ export class AttendanceRepository {
   }
 
   async getInstituteAttendanceStats() {
-    const records = await prisma.attendance.findMany();
-    const total = records.length;
-    if (total === 0) return { total: 0, present: 0, late: 0, absent: 0, averagePercentage: 0 };
+    const [total, present, absent] = await Promise.all([
+      prisma.attendance.count(),
+      prisma.attendance.count({ where: { status: 'PRESENT' } }),
+      prisma.attendance.count({ where: { status: 'ABSENT' } }),
+    ]);
 
-    const present = records.filter((r) => r.status === 'PRESENT').length;
-    const late = records.filter((r) => r.status === 'LATE').length;
-    const absent = records.filter((r) => r.status === 'ABSENT').length;
-    const averagePercentage = Number((((present + late * 0.8) / total) * 100).toFixed(1));
+    if (total === 0) return { total: 0, present: 0, absent: 0, averagePercentage: 0 };
+    const averagePercentage = Number(((present / total) * 100).toFixed(1));
 
     return {
       total,
       present,
-      late,
       absent,
       averagePercentage,
     };
@@ -166,3 +180,4 @@ export class AttendanceRepository {
 }
 
 export const attendanceRepository = new AttendanceRepository();
+

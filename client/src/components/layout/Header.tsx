@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  Sun,
-  Moon,
   Bell,
   CheckCheck,
   Menu,
   Shield,
   Calendar,
   Building,
+  User,
+  LogOut,
+  ChevronDown,
+  KeyRound,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import { useSettings } from '../../context/SettingsContext';
+import { useRealtimeEvent } from '../../context/RealtimeContext';
 import { notificationApi } from '../../services/api';
 import { Notification } from '../../types';
 import { Badge } from '../common/Badge';
@@ -21,15 +25,16 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
-  const { user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
-  const { settings } = useSettings();
+  const { user, logout } = useAuth();
+  const { settings, formatDate, formatDateTime } = useSettings();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const notifRef = useRef<HTMLDivElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
   const fetchNotifications = async () => {
     try {
@@ -43,17 +48,25 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
     }
   };
 
+  // Instant real-time update on notification events
+  useRealtimeEvent(['notification:new', 'notification:read'], () => {
+    fetchNotifications();
+  });
+
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
+    const interval = setInterval(fetchNotifications, 15000);
     return () => clearInterval(interval);
   }, []);
 
-  // Handle outside click to close notification popover
+  // Handle outside click to close popovers
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
         setShowNotifications(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -70,64 +83,70 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
     }
   };
 
+  const handleNotificationClick = async (n: Notification) => {
+    if (!n.isRead) {
+      try {
+        await notificationApi.markAsRead(n.id);
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+        setNotifications((prev) =>
+          prev.map((item) => (item.id === n.id ? { ...item, isRead: true } : item))
+        );
+      } catch {
+        // ignore
+      }
+    }
+  };
+
   return (
-    <header className="h-16 bg-white dark:bg-[#0E131F] border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20 select-none">
+    <header className="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20 select-none">
       {/* Left: Mobile Menu Trigger & Institute Identity */}
       <div className="flex items-center gap-3 min-w-0">
         {onToggleMobileMenu && (
           <button
             onClick={onToggleMobileMenu}
-            className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100"
             title="Toggle Menu"
           >
             <Menu className="w-5 h-5" />
           </button>
         )}
 
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="p-1.5 bg-blue-50 dark:bg-blue-950/60 rounded-lg text-blue-600 dark:text-blue-400 hidden sm:flex">
-            <Building className="w-4 h-4" />
+        <Link to="/dashboard" className="flex items-center gap-3 min-w-0 hover:opacity-90 transition-opacity">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 border border-blue-200">
+            <Building className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100 truncate tracking-tight">
-                {settings.instituteName || 'Apex Career Institute'}
-              </span>
-              <Badge variant="primary" size="xs">
-                Session {settings.academicYear || '2026-2027'}
-              </Badge>
-            </div>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 hidden md:block">
-              Centrally Managed Tuition & Coaching Administration System
-            </p>
+            <span className="text-base sm:text-lg lg:text-xl font-black text-slate-900 truncate tracking-tight uppercase">
+              {settings.instituteName || 'Apex Career Institute'}
+            </span>
           </div>
-        </div>
+        </Link>
       </div>
 
-      {/* Right: Notifications, Theme Toggle, Administrator Profile */}
-      <div className="flex items-center gap-2.5">
-        {/* Notifications Popover */}
+      {/* Right Controls: Notifications, Theme Toggle & Profile Menu */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Notification Popover */}
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors relative"
-            title="Institute Notifications & Alerts"
+            className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl relative transition-colors"
+            title={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
           >
             <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white dark:ring-[#0E131F]" />
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center ring-2 ring-white leading-none shadow-xs">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
             )}
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-[#111827] rounded-2xl shadow-xl border border-slate-200/80 dark:border-slate-800 z-50 overflow-hidden">
-              <div className="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+              <div className="p-3.5 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    Institute Notifications
-                  </span>
+                  <h3 className="font-bold text-slate-900 text-xs">Notifications</h3>
                   {unreadCount > 0 && (
-                    <Badge variant="danger" size="xs">
+                    <Badge variant="primary" size="xs">
                       {unreadCount} New
                     </Badge>
                   )}
@@ -135,77 +154,157 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu }) => {
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllRead}
-                    className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold"
+                    className="text-[11px] font-bold text-blue-600 hover:underline flex items-center gap-1"
                   >
                     <CheckCheck className="w-3.5 h-3.5" /> Mark all read
                   </button>
                 )}
               </div>
 
-              <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+              <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 text-xs">
                 {notifications.length === 0 ? (
-                  <div className="p-8 text-center text-xs text-slate-400">
-                    No new announcements or alerts.
+                  <div className="p-6 text-center text-slate-400 text-xs">
+                    No recent broadcast announcements.
                   </div>
                 ) : (
-                  notifications.slice(0, 5).map((n) => (
+                  notifications.map((n) => (
                     <div
                       key={n.id}
-                      className={`p-3.5 text-xs transition-colors ${
-                        n.isRead
-                          ? 'bg-white dark:bg-[#111827]'
-                          : 'bg-blue-50/40 dark:bg-blue-950/20'
+                      onClick={() => handleNotificationClick(n)}
+                      className={`p-3.5 hover:bg-slate-50 cursor-pointer transition-colors ${
+                        !n.isRead ? 'bg-blue-50/40' : ''
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-bold text-slate-900 dark:text-slate-100 text-[11px]">
-                          {n.title}
+                        <h4 className="font-bold text-slate-900 text-[11px] flex items-center gap-1.5">
+                          {!n.isRead && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-600 flex-shrink-0" />
+                          )}
+                          <span>{n.title}</span>
                         </h4>
                         <span className="text-[9px] text-slate-400 font-mono flex-shrink-0">
-                          {new Date(n.createdAt).toLocaleDateString()}
+                          {formatDateTime(n.createdAt)}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 line-clamp-2">
+                      <p className="text-[11px] text-slate-600 mt-1 line-clamp-2">
                         {n.message}
                       </p>
                     </div>
                   ))
                 )}
               </div>
+
+              <div className="p-2.5 bg-slate-50 border-t border-slate-100 text-center">
+                <Link
+                  to="/notifications"
+                  onClick={() => setShowNotifications(false)}
+                  className="text-[11px] font-bold text-blue-600 hover:underline"
+                >
+                  View All Announcements & Circulars →
+                </Link>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Dark/Light Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
-          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
-        >
-          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-        </button>
+        {/* User Profile Pill & Dropdown Menu */}
+        <div className="relative" ref={profileMenuRef}>
+          <button
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors text-left group"
+          >
+            <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs flex-shrink-0 group-hover:bg-blue-500 transition-colors">
+              {user?.username?.[0]?.toUpperCase() || 'U'}
+            </div>
+            <div className="hidden sm:block text-left">
+              <span className="text-xs font-bold text-slate-900 block leading-tight">
+                {user?.username || 'User'}
+              </span>
+              <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider block">
+                {user?.role === 'STUDENT'
+                  ? 'Student'
+                  : user?.role === 'TEACHER'
+                  ? 'Faculty'
+                  : user?.role === 'ACCOUNTANT'
+                  ? 'Accountant'
+                  : 'Administrator'}
+              </span>
+            </div>
+            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
+          </button>
 
-        <div className="h-5 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
+          {/* Profile Dropdown Popover */}
+          {showProfileMenu && (
+            <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+              {/* User Header Summary */}
+              <div className="px-4 py-2 border-b border-slate-100">
+                <p className="text-xs font-bold text-slate-900 truncate">
+                  {user?.username}
+                </p>
+                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">
+                  {user?.role === 'STUDENT'
+                    ? 'Student'
+                    : user?.role === 'TEACHER'
+                    ? 'Faculty Mentor'
+                    : user?.role === 'ACCOUNTANT'
+                    ? 'Accountant'
+                    : 'Administrator'}
+                </span>
+              </div>
 
-        {/* User Profile Pill */}
-        <div className="flex items-center gap-2.5 pl-1">
-          <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs flex-shrink-0">
-            {user?.username?.[0]?.toUpperCase() || 'U'}
-          </div>
-          <div className="hidden sm:block text-left">
-            <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block leading-tight">
-              {user?.username || 'User'}
-            </span>
-            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block">
-              {user?.role === 'STUDENT'
-                ? 'Student'
-                : user?.role === 'TEACHER'
-                ? 'Faculty'
-                : user?.role === 'ACCOUNTANT'
-                ? 'Accountant'
-                : 'Superadmin'}
-            </span>
-          </div>
+              <div className="py-1">
+                {/* My Profile for Student */}
+                {user?.role === 'STUDENT' && (
+                  <Link
+                    to="/student/profile"
+                    onClick={() => setShowProfileMenu(false)}
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-blue-500" />
+                    <span>My Profile</span>
+                  </Link>
+                )}
+
+                {/* My Profile for Faculty / Teacher */}
+                {user?.role === 'TEACHER' && (
+                  <Link
+                    to="/faculty/profile"
+                    onClick={() => setShowProfileMenu(false)}
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-purple-500" />
+                    <span>My Profile</span>
+                  </Link>
+                )}
+
+                {/* Settings Option (Administrator Only) */}
+                {user?.role === 'ADMINISTRATOR' && (
+                  <Link
+                    to="/settings"
+                    onClick={() => setShowProfileMenu(false)}
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-blue-500" />
+                    <span>Settings</span>
+                  </Link>
+                )}
+
+                <div className="my-1 border-t border-slate-100" />
+
+                {/* Log Out Option (All Roles) */}
+                <button
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    logout();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors text-left"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Log Out</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

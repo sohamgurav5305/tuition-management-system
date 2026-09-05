@@ -53,14 +53,24 @@ export class FacultyRepository {
   async findAll(search?: string) {
     const where: Prisma.FacultyWhereInput = {};
 
-    if (search) {
-      where.OR = [
-        { firstName: { contains: search } },
-        { lastName: { contains: search } },
-        { facultyId: { contains: search } },
-        { email: { contains: search } },
-        { subjectTaught: { contains: search } },
-      ];
+    if (search?.trim()) {
+      const words = search.trim().split(/\s+/).filter(Boolean);
+      if (words.length > 0) {
+        where.AND = [
+          ...(Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []),
+          ...words.map((word) => ({
+            OR: [
+              { firstName: { contains: word, mode: 'insensitive' as const } },
+              { lastName: { contains: word, mode: 'insensitive' as const } },
+              { facultyId: { contains: word, mode: 'insensitive' as const } },
+              { email: { contains: word, mode: 'insensitive' as const } },
+              { phone: { contains: word, mode: 'insensitive' as const } },
+              { subjectTaught: { contains: word, mode: 'insensitive' as const } },
+              { qualification: { contains: word, mode: 'insensitive' as const } },
+            ],
+          })),
+        ];
+      }
     }
 
     return prisma.faculty.findMany({

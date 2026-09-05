@@ -125,14 +125,7 @@ export class BatchService {
       const hasTimeConflict = this.checkTimeOverlap(params.startTime, params.endTime, other.startTime, other.endTime);
 
       if (hasDayConflict && hasTimeConflict) {
-        // Classroom collision
-        if (other.classroom.trim().toLowerCase() === params.classroom.trim().toLowerCase()) {
-          throw new Error(
-            `Classroom Conflict: Classroom '${params.classroom}' is already occupied by batch '${other.name}' (${other.startTime} - ${other.endTime} on ${otherDays.join(', ')}).`
-          );
-        }
-
-        // Faculty collision
+        // Faculty collision check
         if (other.facultyId === params.facultyId) {
           throw new Error(
             `Faculty Conflict: Instructor is already assigned to teach batch '${other.name}' during this time (${other.startTime} - ${other.endTime} on ${otherDays.join(', ')}).`

@@ -33,15 +33,15 @@ export const BatchList: React.FC = () => {
   const canEdit = user?.role === 'ADMINISTRATOR';
   const canDelete = user?.role === 'ADMINISTRATOR';
 
-  const fetchBatches = async () => {
+  const fetchBatches = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await batchApi.getAll({ courseId: selectedCourse || undefined });
       setBatches(res.data.data);
     } catch (err) {
       console.error('Failed to load batches', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -58,7 +58,11 @@ export const BatchList: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchBatches();
+    fetchBatches(true);
+    const interval = setInterval(() => {
+      fetchBatches(false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, [selectedCourse]);
 
   const handleDelete = async () => {
@@ -87,12 +91,12 @@ export const BatchList: React.FC = () => {
 
   const columns: Column<Batch>[] = [
     {
-      header: 'Batch / Cohort',
+      header: 'Batch',
       cell: (b) => (
         <div>
           <span
             onClick={() => handleOpenDetail(b)}
-            className="font-bold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer block text-xs sm:text-sm truncate"
+            className="font-bold text-slate-900 hover:text-blue-600 cursor-pointer block text-xs sm:text-sm truncate"
           >
             {b.name}
           </span>
@@ -101,9 +105,9 @@ export const BatchList: React.FC = () => {
       ),
     },
     {
-      header: 'Course Program',
+      header: 'Course',
       cell: (b) => (
-        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+        <span className="text-xs font-semibold text-slate-800">
           {b.course?.name}
         </span>
       ),
@@ -126,7 +130,7 @@ export const BatchList: React.FC = () => {
             {instructors.map((inst, idx) => (
               <span
                 key={idx}
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 text-[10px] font-semibold border border-purple-200/60 dark:border-purple-800/60"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-semibold border border-purple-200/60"
                 title={`${inst.subject}: ${inst.facultyName}`}
               >
                 <span className="font-bold">{inst.subject}:</span> {inst.facultyName}
@@ -137,7 +141,7 @@ export const BatchList: React.FC = () => {
       },
     },
     {
-      header: 'Venue & Schedule',
+      header: 'Class Schedule',
       cell: (b) => {
         let days: string[] = [];
         try {
@@ -147,8 +151,8 @@ export const BatchList: React.FC = () => {
         }
         return (
           <div className="text-xs space-y-0.5">
-            <p className="font-semibold text-slate-800 dark:text-slate-200">
-              {b.classroom} ({b.startTime} - {b.endTime})
+            <p className="font-semibold text-slate-800">
+              {b.startTime} - {b.endTime}
             </p>
             <p className="text-[11px] text-slate-400">{days.join(', ')}</p>
           </div>
@@ -160,7 +164,7 @@ export const BatchList: React.FC = () => {
       cell: (b) => {
         const enrolled = b._count?.students || 0;
         return (
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+          <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-900 tabular-nums">
             <Users className="w-3.5 h-3.5 text-slate-400" />
             <span>{enrolled} Students</span>
           </span>
@@ -175,7 +179,7 @@ export const BatchList: React.FC = () => {
           <button
             onClick={() => handleOpenDetail(b)}
             title="View Enrolled Students"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
           >
             <Users className="w-4 h-4" />
           </button>
@@ -187,14 +191,14 @@ export const BatchList: React.FC = () => {
                   setIsFormOpen(true);
                 }}
                 title="Edit Batch"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
               >
                 <Edit className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setDeletingId(b.id)}
                 title="Delete Batch"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -209,13 +213,8 @@ export const BatchList: React.FC = () => {
     <div className="space-y-6">
       {/* Top Banner */}
       <PageHeader
-        title={user?.role === 'TEACHER' ? 'My Assigned Batches & Cohorts' : 'Batches & Cohorts'}
-        subtitle={
-          user?.role === 'TEACHER'
-            ? 'Your assigned class cohorts, subject lectures, and active student enrollments.'
-            : 'Organize enrolled student cohorts, faculty schedule assignments, classroom limits, and conflict prevention.'
-        }
-        badge={`${batches.length} Cohorts`}
+        title={user?.role === 'TEACHER' ? 'My Assigned Batches' : 'Batches'}
+        badge={`${batches.length} Batches`}
         actions={
           canEdit && (
             <Button
@@ -227,7 +226,7 @@ export const BatchList: React.FC = () => {
                 setIsFormOpen(true);
               }}
             >
-              Create Class Batch
+              Create Batch
             </Button>
           )
         }
@@ -235,14 +234,14 @@ export const BatchList: React.FC = () => {
 
       {/* Filter Bar */}
       {courses.length > 0 && (
-        <div className="p-3.5 bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl flex items-center gap-3 shadow-xs">
+        <div className="p-3.5 bg-white border border-slate-200/80 rounded-2xl flex items-center gap-3 shadow-xs">
           <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Filter Course:</span>
           <select
             value={selectedCourse}
             onChange={(e) => setSelectedCourse(e.target.value)}
-            className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none"
+            className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none"
           >
-            <option value="">All Academic Programs</option>
+            <option value="">All Courses</option>
             {courses.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -252,7 +251,7 @@ export const BatchList: React.FC = () => {
           {selectedCourse && (
             <button
               onClick={() => setSelectedCourse('')}
-              className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+              className="text-xs text-blue-600 font-semibold hover:underline"
             >
               Clear
             </button>
@@ -265,14 +264,14 @@ export const BatchList: React.FC = () => {
         data={batches}
         columns={columns}
         keyExtractor={(b) => b.id}
-        searchPlaceholder="Search batches by title, classroom, batch ID..."
-        searchableFields={['name', 'batchId', 'classroom']}
+        searchPlaceholder="Search Batches"
+        searchableFields={['name', 'batchId', 'course', 'faculty', 'subjectTeachers']}
         emptyTitle="No batches created yet"
-        emptySubtitle="Create your first class batch and assign classroom venues and subject specialist instructors."
+        emptySubtitle="Create your first batch and assign faculty."
         emptyAction={
           canEdit
             ? {
-                label: '+ Create Class Batch',
+                label: '+ Create Batch',
                 onClick: () => {
                   setEditingBatch(null);
                   setIsFormOpen(true);
@@ -305,7 +304,7 @@ export const BatchList: React.FC = () => {
         isOpen={!!deletingId}
         onClose={() => setDeletingId(null)}
         onConfirm={handleDelete}
-        title="Delete Class Batch"
+        title="Delete Batch"
         message="Are you sure you want to delete this batch? All assigned student enrollments must be moved prior to deletion."
         isLoading={isDeleting}
       />

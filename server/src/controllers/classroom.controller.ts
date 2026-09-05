@@ -5,8 +5,7 @@ import { sendSuccess, sendError } from '../utils/response.util';
 export class ClassroomController {
   async getAll(req: Request, res: Response): Promise<void> {
     try {
-      const { status } = req.query;
-      const classrooms = await classroomService.getAllClassrooms(status as string);
+      const classrooms = await classroomService.getAllClassrooms();
       sendSuccess(res, classrooms, 'Classrooms retrieved successfully');
     } catch (error: any) {
       sendError(res, error.message, 400, error);

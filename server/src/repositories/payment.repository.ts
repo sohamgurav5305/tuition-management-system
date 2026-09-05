@@ -55,14 +55,24 @@ export class PaymentRepository {
       if (filters.endDate) where.paymentDate.lte = filters.endDate;
     }
 
-    if (filters?.search) {
-      where.OR = [
-        { receiptId: { contains: filters.search } },
-        { transactionReference: { contains: filters.search } },
-        { student: { firstName: { contains: filters.search } } },
-        { student: { lastName: { contains: filters.search } } },
-        { student: { studentId: { contains: filters.search } } },
-      ];
+    if (filters?.search?.trim()) {
+      const words = filters.search.trim().split(/\s+/).filter(Boolean);
+      if (words.length > 0) {
+        where.AND = [
+          ...(Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []),
+          ...words.map((word) => ({
+            OR: [
+              { receiptId: { contains: word, mode: 'insensitive' as const } },
+              { transactionReference: { contains: word, mode: 'insensitive' as const } },
+              { student: { firstName: { contains: word, mode: 'insensitive' as const } } },
+              { student: { lastName: { contains: word, mode: 'insensitive' as const } } },
+              { student: { studentId: { contains: word, mode: 'insensitive' as const } } },
+              { student: { rollNumber: { contains: word, mode: 'insensitive' as const } } },
+              { student: { phone: { contains: word, mode: 'insensitive' as const } } },
+            ],
+          })),
+        ];
+      }
     }
 
     return prisma.payment.findMany({

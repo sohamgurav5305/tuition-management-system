@@ -29,11 +29,7 @@ export interface Classroom {
   id: string;
   roomId: string;
   name: string;
-  capacity: number;
-  roomType: 'LECTURE_HALL' | 'SMART_CLASS' | 'SCIENCE_LAB' | 'COMPUTER_LAB' | 'AUDITORIUM';
-  building?: string | null;
-  facilities?: string | null;
-  status: 'AVAILABLE' | 'MAINTENANCE' | 'OCCUPIED';
+  floor: string;
   createdAt: string;
   activeBatchesCount?: number;
   assignedBatches?: any[];
@@ -162,14 +158,12 @@ export interface Student {
   attendanceStats?: {
     total: number;
     present: number;
-    late: number;
     absent: number;
     percentage: number;
     subjects?: {
       [subj: string]: {
         total: number;
         present: number;
-        late: number;
         absent: number;
         percentage: number;
         facultyName?: string;
@@ -190,7 +184,7 @@ export interface Attendance {
   subject: string;
   facultyId?: string | null;
   date: string;
-  status: 'PRESENT' | 'LATE' | 'ABSENT';
+  status: 'PRESENT' | 'ABSENT';
   remarks?: string | null;
   markedById?: string | null;
   createdAt: string;
@@ -199,9 +193,12 @@ export interface Attendance {
   faculty?: Faculty;
 }
 
+
 export interface LeaveRequest {
   id: string;
-  studentId: string;
+  studentId?: string | null;
+  facultyId?: string | null;
+  applicantType?: 'STUDENT' | 'FACULTY';
   startDate: string;
   endDate: string;
   reason: string;
@@ -209,6 +206,7 @@ export interface LeaveRequest {
   reviewedBy?: string | null;
   createdAt: string;
   student?: Student;
+  faculty?: Faculty;
 }
 
 export interface Examination {
@@ -264,6 +262,8 @@ export interface StudyMaterial {
   courseId?: string | null;
   batchId?: string | null;
   fileUrl?: string | null;
+  fileUrls?: string | null;
+  files?: string[];
   downloadCount: number;
   createdAt: string;
   course?: Course;
@@ -279,8 +279,11 @@ export interface Doubt {
   topic: string;
   questionText: string;
   attachmentUrl?: string | null;
-  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
+  attachments?: string[];
   answerText?: string | null;
+  answerAttachmentUrl?: string | null;
+  answerAttachments?: string[];
+  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
   answeredAt?: string | null;
   createdAt: string;
   student?: Student;
@@ -308,6 +311,8 @@ export interface AssignmentSubmission {
   assignmentId: string;
   studentId: string;
   fileUrl?: string | null;
+  fileUrls?: string | null;
+  files?: string[];
   submissionText?: string | null;
   submittedAt: string;
   isLate: boolean;
@@ -334,6 +339,8 @@ export interface Assignment {
   totalMarks: number;
   status: 'OPEN' | 'CLOSED';
   attachmentUrl?: string | null;
+  fileUrls?: string | null;
+  attachments?: string[];
   createdAt: string;
   batch?: Batch;
   faculty?: Faculty;
@@ -364,6 +371,8 @@ export interface Notification {
   type: 'WARNING' | 'INFORMATION' | 'SUCCESS' | 'URGENT' | 'EXAM' | 'FEE';
   targetRole: string;
   targetUserId?: string | null;
+  attachmentUrl?: string | null;
+  attachments?: string[];
   isRead: boolean;
   createdAt: string;
 }

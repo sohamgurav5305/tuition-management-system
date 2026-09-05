@@ -2,16 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { AlertCircle, BookOpen, GraduationCap, MapPin, Clock, Calendar, Users, Layers } from 'lucide-react';
+import { AlertCircle, BookOpen, GraduationCap, Clock, Calendar, Users, Layers } from 'lucide-react';
 import { Modal } from '../../components/common/Modal';
-import { batchApi, courseApi, facultyApi, classroomApi } from '../../services/api';
+import { batchApi, courseApi, facultyApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
-import { Course, Faculty, Batch, Classroom } from '../../types';
+import { Course, Faculty, Batch } from '../../types';
 
 const batchSchema = z.object({
   name: z.string().min(1, 'Batch name is required'),
   courseId: z.string().min(1, 'Please select a course'),
-  classroom: z.string().min(1, 'Classroom identifier is required'),
+  classroom: z.string().default('General'),
   startDate: z.string().min(1, 'Start date is required'),
   endDate: z.string().min(1, 'End date is required'),
   startTime: z.string().min(1, 'Start time is required'),
@@ -39,7 +39,6 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
   const { success, error } = useToast();
   const [courses, setCourses] = useState<Course[]>([]);
   const [faculty, setFaculty] = useState<Faculty[]>([]);
-  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [selectedDays, setSelectedDays] = useState<string[]>(['Mon', 'Wed', 'Fri']);
   const [conflictError, setConflictError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,7 +59,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
     defaultValues: {
       name: '',
       courseId: '',
-      classroom: '',
+      classroom: 'General',
       startDate: '2026-09-01',
       endDate: '2027-05-31',
       startTime: '09:00',
@@ -74,14 +73,12 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
   useEffect(() => {
     const loadDependencies = async () => {
       try {
-        const [crsRes, facRes, clrRes] = await Promise.all([
+        const [crsRes, facRes] = await Promise.all([
           courseApi.getAll('ACTIVE'),
           facultyApi.getAll(),
-          classroomApi.getAll(),
         ]);
         setCourses(crsRes.data.data);
         setFaculty(facRes.data.data);
-        setClassrooms(clrRes.data.data);
       } catch (err) {
         console.error('Failed to load batch form data', err);
       }
@@ -250,13 +247,13 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={initialBatch ? `Edit Batch: ${initialBatch.batchId}` : 'Create New Class Batch'}
-      subtitle="Select program course, assign faculty per subject, allocate classroom, and set weekly schedule"
+      title={initialBatch ? `Edit Batch: ${initialBatch.batchId}` : 'Create Batch'}
+      subtitle="Select course, assign faculty per subject, and set weekly schedule"
       maxWidth="2xl"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {conflictError && (
-          <div className="p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 rounded-xl flex items-start gap-2.5 text-xs text-rose-800 dark:text-rose-200">
+          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-xs text-rose-800">
             <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-bold">Schedule Conflict or Validation Error</p>
@@ -266,20 +263,20 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
         )}
 
         {/* 1. Step 1: Course Selection & Batch Name */}
-        <div className="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 space-y-3">
+        <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-blue-900 dark:text-blue-300 mb-1">
-                1. Select Program / Course *
+              <label className="block text-xs font-black uppercase tracking-wider text-blue-900 mb-1">
+                Select Course *
               </label>
               <select
                 {...register('courseId')}
-                className="w-full px-3 py-2.5 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 font-bold"
+                className="w-full px-3 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 font-bold"
               >
-                <option value="">-- Choose Academic Course --</option>
+                <option value="">-- Choose Course --</option>
                 {courses.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} ({c.targetExam})
+                    {c.name}
                   </option>
                 ))}
               </select>
@@ -287,14 +284,14 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-blue-900 dark:text-blue-300 mb-1">
-                Batch Name / Section *
+              <label className="block text-xs font-black uppercase tracking-wider text-blue-900 mb-1">
+                Batch Name *
               </label>
               <input
                 type="text"
                 {...register('name')}
-                placeholder="e.g. Alpha-1 Morning Batch"
-                className="w-full px-3 py-2.5 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 font-bold"
+                placeholder="Enter batch name"
+                className="w-full px-3 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 font-bold"
               />
               {errors.name && <p className="text-xs text-rose-500 mt-1">{errors.name.message}</p>}
             </div>
@@ -303,13 +300,13 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
 
         {/* 2. Step 2: Subject-Wise Faculty Allocation */}
         {selectedCourseId && courseSubjects.length > 0 && (
-          <div className="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900/40 space-y-3">
+          <div className="p-4 rounded-2xl bg-purple-50/50 border border-purple-100 space-y-3">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-black uppercase tracking-wider text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
+              <label className="block text-xs font-black uppercase tracking-wider text-purple-900 flex items-center gap-1.5">
                 <GraduationCap className="w-4 h-4 text-purple-600" />
-                2. Assign Faculty to Course Subjects *
+                Assign Faculty to Subjects *
               </label>
-              <span className="text-xs text-purple-700 dark:text-purple-400 font-semibold">
+              <span className="text-xs text-purple-700 font-semibold">
                 {courseSubjects.length} Subjects to assign
               </span>
             </div>
@@ -320,14 +317,14 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
                 return (
                   <div
                     key={subj}
-                    className="p-3 bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl space-y-1.5 shadow-xs"
+                    className="p-3 bg-white border border-purple-200 rounded-xl space-y-1.5 shadow-xs"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                         <BookOpen className="w-3.5 h-3.5 text-purple-600" />
                         {subj}
                       </span>
-                      <span className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold bg-purple-50 dark:bg-purple-950 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] text-purple-600 font-semibold bg-purple-50 px-2 py-0.5 rounded-full">
                         Subject Specialist
                       </span>
                     </div>
@@ -335,7 +332,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
                     <select
                       value={assignedFacId}
                       onChange={(e) => handleSubjectFacultyChange(subj, e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 font-semibold focus:outline-none"
+                      className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-semibold focus:outline-none"
                     >
                       <option value="">-- Assign Faculty --</option>
                       {faculty.map((f) => (
@@ -351,77 +348,11 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
           </div>
         )}
 
-        {/* 3. Step 3: Classroom & Facility Allocation */}
-        <div className="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="block text-xs font-black uppercase tracking-wider text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-amber-600" />
-              3. Classroom / Lecture Hall Allocation *
-            </label>
-            <span className="text-xs text-amber-700 dark:text-amber-400 font-semibold">
-              {classrooms.length} Registered Venues
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">
-                Select Registered Classroom:
-              </label>
-              <select
-                value={watch('classroom')}
-                onChange={(e) => setValue('classroom', e.target.value)}
-                className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-bold"
-              >
-                <option value="">-- Choose Classroom Venue --</option>
-                {classrooms.map((c) => (
-                  <option key={c.id} value={c.name}>
-                    {c.name} ({c.capacity} Seats - {c.building || 'Main Block'})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">
-                Or Type Custom Room / Lab:
-              </label>
-              <input
-                type="text"
-                {...register('classroom')}
-                placeholder="e.g. Lecture Hall 101 / Science Lab B"
-                className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-semibold"
-              />
-            </div>
-          </div>
-          {errors.classroom && <p className="text-xs text-rose-500 mt-1">{errors.classroom.message}</p>}
-
-          {/* Quick Classroom chips from DB */}
-          {classrooms.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {classrooms.slice(0, 8).map((room) => (
-                <button
-                  key={room.id}
-                  type="button"
-                  onClick={() => setValue('classroom', room.name)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
-                    watch('classroom') === room.name
-                      ? 'bg-amber-600 text-white shadow-xs'
-                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-amber-400'
-                  }`}
-                >
-                  {room.name} ({room.capacity} seats)
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* 4. Step 4: Schedule Timetable (Days & Class Hours) */}
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 space-y-3">
-          <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+        {/* 3. Step 3: Schedule & Class Hours */}
+        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+          <label className="block text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
             <Clock className="w-4 h-4 text-blue-600" />
-            4. Weekly Schedule & Timetable Hours *
+            3. Class Schedule (Days & Class Hours) *
           </label>
 
           {/* Days of Week Selection */}
@@ -438,7 +369,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
                     className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                       isSelected
                         ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
-                        : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
                     {day}
@@ -454,7 +385,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
               <input
                 type="time"
                 {...register('startTime')}
-                className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 font-bold"
+                className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-900 font-bold"
               />
             </div>
             <div>
@@ -462,7 +393,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
               <input
                 type="time"
                 {...register('endTime')}
-                className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 font-bold"
+                className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-900 font-bold"
               />
             </div>
             <div>
@@ -470,7 +401,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
               <input
                 type="date"
                 {...register('startDate')}
-                className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100"
+                className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-900"
               />
             </div>
             <div>
@@ -478,18 +409,18 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
               <input
                 type="date"
                 {...register('endDate')}
-                className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100"
+                className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-900"
               />
             </div>
           </div>
         </div>
 
         {/* Modal Actions */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200"
+            className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200"
           >
             Cancel
           </button>
@@ -498,7 +429,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
             disabled={isSubmitting}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-md transition-all disabled:opacity-50"
           >
-            {isSubmitting ? 'Validating...' : initialBatch ? 'Save Batch Changes' : 'Create Class Batch'}
+            {isSubmitting ? 'Validating...' : initialBatch ? 'Save Changes' : 'Create Batch'}
           </button>
         </div>
       </form>

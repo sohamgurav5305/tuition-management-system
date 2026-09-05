@@ -1,72 +1,79 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { AuthProvider } from './context/AuthContext';
+import { RealtimeProvider } from './context/RealtimeContext';
 
 import { ProtectedRoute } from './components/guards/ProtectedRoute';
 import { RoleGuard } from './components/guards/RoleGuard';
 import { MainLayout } from './components/layout/MainLayout';
+import { LoadingSkeleton } from './components/common/LoadingSkeleton';
 
 // Auth
-import { Login } from './pages/auth/Login';
+const Login = lazy(() => import('./pages/auth/Login').then((m) => ({ default: m.Login })));
 
 // Dashboards
-import { DashboardRouter } from './pages/dashboard/DashboardRouter';
+const DashboardRouter = lazy(() => import('./pages/dashboard/DashboardRouter').then((m) => ({ default: m.DashboardRouter })));
 
 // Functional Modules
-import { StudentList } from './pages/students/StudentList';
-import { StudentProfile } from './pages/students/StudentProfile';
-import { FacultyList } from './pages/faculty/FacultyList';
-import { CourseList } from './pages/courses/CourseList';
-import { BatchList } from './pages/batches/BatchList';
-import { ClassroomList } from './pages/classrooms/ClassroomList';
-import { AttendanceSheet } from './pages/attendance/AttendanceSheet';
-import { TimetableView } from './pages/timetable/TimetableView';
-import { ExamList } from './pages/exams/ExamList';
-import { ResultsEntry } from './pages/results/ResultsEntry';
-import { AssignmentList } from './pages/assignments/AssignmentList';
-import { FeeDashboard } from './pages/fees/FeeDashboard';
-import { ReportsPage } from './pages/reports/ReportsPage';
-import { NotificationCenter } from './pages/notifications/NotificationCenter';
-import { SettingsPage } from './pages/settings/SettingsPage';
+const StudentList = lazy(() => import('./pages/students/StudentList').then((m) => ({ default: m.StudentList })));
+const StudentProfile = lazy(() => import('./pages/students/StudentProfile').then((m) => ({ default: m.StudentProfile })));
+const FacultyList = lazy(() => import('./pages/faculty/FacultyList').then((m) => ({ default: m.FacultyList })));
+const CourseList = lazy(() => import('./pages/courses/CourseList').then((m) => ({ default: m.CourseList })));
+const BatchList = lazy(() => import('./pages/batches/BatchList').then((m) => ({ default: m.BatchList })));
+const AttendanceSheet = lazy(() => import('./pages/attendance/AttendanceSheet').then((m) => ({ default: m.AttendanceSheet })));
+const AssignmentList = lazy(() => import('./pages/assignments/AssignmentList').then((m) => ({ default: m.AssignmentList })));
+const FeeDashboard = lazy(() => import('./pages/fees/FeeDashboard').then((m) => ({ default: m.FeeDashboard })));
+const ReceiptsAuditPage = lazy(() => import('./pages/fees/ReceiptsAuditPage').then((m) => ({ default: m.ReceiptsAuditPage })));
+const NotificationCenter = lazy(() => import('./pages/notifications/NotificationCenter').then((m) => ({ default: m.NotificationCenter })));
+const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 
 // Real-World Coaching Modules
-import { MaterialList } from './pages/materials/MaterialList';
-import { DoubtForum } from './pages/doubts/DoubtForum';
-import { LeaveManagement } from './pages/leaves/LeaveManagement';
+const MaterialList = lazy(() => import('./pages/materials/MaterialList').then((m) => ({ default: m.MaterialList })));
+const DoubtForum = lazy(() => import('./pages/doubts/DoubtForum').then((m) => ({ default: m.DoubtForum })));
+const LeaveManagement = lazy(() => import('./pages/leaves/LeaveManagement').then((m) => ({ default: m.LeaveManagement })));
 
 // Student Portal Modules
-import { MyBatch } from './pages/student-portal/MyBatch';
-import { MyAttendance } from './pages/student-portal/MyAttendance';
-import { MyFees } from './pages/student-portal/MyFees';
-import { MyExams } from './pages/student-portal/MyExams';
-import { MyAssignments } from './pages/student-portal/MyAssignments';
-import { MyProfile } from './pages/student-portal/MyProfile';
+const MyBatch = lazy(() => import('./pages/student-portal/MyBatch').then((m) => ({ default: m.MyBatch })));
+const MyAttendance = lazy(() => import('./pages/student-portal/MyAttendance').then((m) => ({ default: m.MyAttendance })));
+const MyFees = lazy(() => import('./pages/student-portal/MyFees').then((m) => ({ default: m.MyFees })));
+const MyAssignments = lazy(() => import('./pages/student-portal/MyAssignments').then((m) => ({ default: m.MyAssignments })));
+const MyProfile = lazy(() => import('./pages/student-portal/MyProfile').then((m) => ({ default: m.MyProfile })));
+const FacultyProfile = lazy(() => import('./pages/faculty/FacultyProfile').then((m) => ({ default: m.FacultyProfile })));
+
+const PageFallback = () => (
+  <div className="p-6 max-w-7xl mx-auto space-y-6 animate-pulse">
+    <div className="h-8 bg-slate-200 rounded-xl w-64"></div>
+    <LoadingSkeleton count={5} />
+  </div>
+);
 
 export const App: React.FC = () => {
   return (
     <ThemeProvider>
       <ToastProvider>
         <AuthProvider>
-          <SettingsProvider>
-            <BrowserRouter>
-              <Routes>
-                {/* Public Auth Route */}
-                <Route path="/login" element={<Login />} />
+          <RealtimeProvider>
+            <SettingsProvider>
+              <BrowserRouter>
+                <Suspense fallback={<PageFallback />}>
+                  <Routes>
+                    {/* Public Auth Route */}
+                    <Route path="/login" element={<Login />} />
 
-                {/* Authenticated Application Layout */}
-                <Route
-                  element={
-                    <ProtectedRoute>
-                      <MainLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  {/* Dynamic Dashboard based on User Role */}
-                  <Route path="/" element={<DashboardRouter />} />
-                  <Route path="/dashboard" element={<DashboardRouter />} />
+                    {/* Authenticated Application Layout */}
+                    <Route
+                      element={
+                        <ProtectedRoute>
+                          <MainLayout />
+                        </ProtectedRoute>
+                      }
+                    >
+                      {/* Dynamic Dashboard based on User Role */}
+                      <Route path="/" element={<DashboardRouter />} />
+                      <Route path="/dashboard" element={<DashboardRouter />} />
 
                   {/* Student Management */}
                   <Route
@@ -116,14 +123,6 @@ export const App: React.FC = () => {
                     }
                   />
                   <Route
-                    path="/classrooms"
-                    element={
-                      <RoleGuard allowedRoles={['ADMINISTRATOR']}>
-                        <ClassroomList />
-                      </RoleGuard>
-                    }
-                  />
-                  <Route
                     path="/teacher/batches"
                     element={
                       <RoleGuard allowedRoles={['TEACHER']}>
@@ -132,7 +131,7 @@ export const App: React.FC = () => {
                     }
                   />
 
-                  {/* Study Materials & DPPs */}
+                  {/* Study Materials */}
                   <Route
                     path="/materials"
                     element={
@@ -142,7 +141,7 @@ export const App: React.FC = () => {
                     }
                   />
 
-                  {/* 1-on-1 Doubt Forum */}
+                  {/* Doubt Forum */}
                   <Route
                     path="/doubts"
                     element={
@@ -152,7 +151,7 @@ export const App: React.FC = () => {
                     }
                   />
 
-                  {/* Attendance Management (Admin Rollcall) */}
+                  {/* Attendance Management (Admin Attendance) */}
                   <Route
                     path="/attendance"
                     element={
@@ -168,36 +167,6 @@ export const App: React.FC = () => {
                     element={
                       <RoleGuard allowedRoles={['ADMINISTRATOR', 'TEACHER', 'STUDENT']}>
                         <LeaveManagement />
-                      </RoleGuard>
-                    }
-                  />
-
-                  {/* Timetable / Schedule */}
-                  <Route
-                    path="/timetable"
-                    element={
-                      <RoleGuard allowedRoles={['ADMINISTRATOR', 'TEACHER', 'STUDENT']}>
-                        <TimetableView />
-                      </RoleGuard>
-                    }
-                  />
-
-                  {/* Examination Management */}
-                  <Route
-                    path="/exams"
-                    element={
-                      <RoleGuard allowedRoles={['ADMINISTRATOR', 'TEACHER']}>
-                        <ExamList />
-                      </RoleGuard>
-                    }
-                  />
-
-                  {/* Results & Grading */}
-                  <Route
-                    path="/results"
-                    element={
-                      <RoleGuard allowedRoles={['ADMINISTRATOR', 'TEACHER']}>
-                        <ResultsEntry />
                       </RoleGuard>
                     }
                   />
@@ -221,13 +190,11 @@ export const App: React.FC = () => {
                       </RoleGuard>
                     }
                   />
-
-                  {/* Reports & Financial Analytics (Accountant Financial Core) */}
                   <Route
-                    path="/reports"
+                    path="/receipts"
                     element={
                       <RoleGuard allowedRoles={['ADMINISTRATOR', 'ACCOUNTANT']}>
-                        <ReportsPage />
+                        <ReceiptsAuditPage />
                       </RoleGuard>
                     }
                   />
@@ -278,26 +245,10 @@ export const App: React.FC = () => {
                     }
                   />
                   <Route
-                    path="/student/exams"
-                    element={
-                      <RoleGuard allowedRoles={['STUDENT']}>
-                        <MyExams />
-                      </RoleGuard>
-                    }
-                  />
-                  <Route
                     path="/student/assignments"
                     element={
                       <RoleGuard allowedRoles={['STUDENT']}>
                         <MyAssignments />
-                      </RoleGuard>
-                    }
-                  />
-                  <Route
-                    path="/student/results"
-                    element={
-                      <RoleGuard allowedRoles={['STUDENT']}>
-                        <Navigate to="/student/exams" replace />
                       </RoleGuard>
                     }
                   />
@@ -309,17 +260,28 @@ export const App: React.FC = () => {
                       </RoleGuard>
                     }
                   />
+                  <Route
+                    path="/faculty/profile"
+                    element={
+                      <RoleGuard allowedRoles={['TEACHER']}>
+                        <FacultyProfile />
+                      </RoleGuard>
+                    }
+                  />
                 </Route>
 
                 {/* 404 Catch-all */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
-            </BrowserRouter>
-          </SettingsProvider>
-        </AuthProvider>
-      </ToastProvider>
-    </ThemeProvider>
+            </Suspense>
+          </BrowserRouter>
+        </SettingsProvider>
+      </RealtimeProvider>
+    </AuthProvider>
+  </ToastProvider>
+</ThemeProvider>
   );
 };
 
 export default App;
+

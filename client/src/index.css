@@ -4,22 +4,56 @@
 
 @layer base {
   :root {
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
 
   body {
     font-family: var(--font-sans);
-    @apply bg-slate-100/70 text-slate-900 antialiased dark:bg-[#0B0F17] dark:text-slate-100;
+    @apply bg-slate-50 text-slate-900 antialiased;
   }
 
-  /* Crisp, clearly visible borders in bright / light mode */
+  /* Crisp, distinctly visible borders across every element */
   *, ::before, ::after {
-    border-color: #E2E8F0;
+    border-color: #cbd5e1;
   }
+}
 
-  .dark *, .dark ::before, .dark ::after {
-    border-color: #1F2937;
-  }
+/* Enhanced high-contrast borders for structural cards, tables, inputs, and containers */
+.border-slate-100, .border-gray-100 {
+  border-color: #cbd5e1 !important;
+}
+
+.border-slate-200, .border-gray-200, .border-slate-200\/80, .border-slate-200\/90, .border-slate-200\/60 {
+  border-color: #94a3b8 !important;
+}
+
+.border-slate-300, .border-gray-300 {
+  border-color: #64748b !important;
+}
+
+/* Table boundaries and cell dividers */
+table, th, td {
+  border-color: #cbd5e1 !important;
+}
+
+/* Divide utilities */
+.divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #cbd5e1 !important;
+}
+
+.divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+.divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #94a3b8 !important;
+}
+
+/* Inputs, textareas & select dropdowns */
+input, select, textarea {
+  border-color: #94a3b8 !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #2563eb !important;
 }
 
 /* Clean, crisp SaaS scrollbars */
@@ -33,34 +67,30 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 dark:bg-slate-800 rounded-full transition-colors;
+  @apply bg-slate-400 rounded-full transition-colors;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-400 dark:bg-slate-700;
+  @apply bg-slate-500;
 }
 
 /* Clear, distinct card surfaces */
 .saas-card {
-  @apply bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm transition-all;
+  @apply bg-white rounded-2xl shadow-sm transition-all;
+  border: 1px solid #cbd5e1 !important;
 }
 
 .saas-card-subtle {
-  @apply bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/60 rounded-xl;
+  @apply bg-slate-50 rounded-xl;
+  border: 1px solid #cbd5e1 !important;
 }
 
-/* Print Invoice Styles */
+/* Print Styles */
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  #printable-receipt, #printable-receipt * {
-    visibility: visible;
-  }
-  #printable-receipt {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+  html, body {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
   }
 }
+

@@ -51,6 +51,33 @@ export class AuthService {
     const { passwordHash, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      throw new Error('User account not found');
+    }
+
+    if (user.status !== 'ACTIVE') {
+      throw new Error('Account is inactive. Please contact administrator.');
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch) {
+      throw new Error('Current password is incorrect');
+    }
+
+    if (currentPassword === newPassword) {
+      throw new Error('New password cannot be identical to your current password');
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('New password must be at least 6 characters long');
+    }
+
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    await userRepository.update(userId, { passwordHash: newPasswordHash });
+  }
 }
 
 export const authService = new AuthService();

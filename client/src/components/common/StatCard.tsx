@@ -17,25 +17,25 @@ export interface StatCardProps {
 
 const colorMaps = {
   blue: {
-    iconBg: 'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50',
+    iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
   },
   indigo: {
-    iconBg: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50',
+    iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
   },
   emerald: {
-    iconBg: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50',
+    iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
   },
   amber: {
-    iconBg: 'bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-100 dark:border-amber-900/50',
+    iconBg: 'bg-amber-50 text-amber-600 border border-amber-100',
   },
   rose: {
-    iconBg: 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50',
+    iconBg: 'bg-rose-50 text-rose-600 border border-rose-100',
   },
   purple: {
-    iconBg: 'bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400 border border-purple-100 dark:border-purple-900/50',
+    iconBg: 'bg-purple-50 text-purple-600 border border-purple-100',
   },
   slate: {
-    iconBg: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700',
+    iconBg: 'bg-slate-100 text-slate-600 border border-slate-200',
   },
 };
 
@@ -54,12 +54,12 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs transition-all ${
-        onClick ? 'cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm active:scale-[0.99]' : ''
+      className={`bg-white border border-slate-200 rounded-2xl p-5 shadow-xs transition-all ${
+        onClick ? 'cursor-pointer hover:border-slate-300 hover:shadow-sm active:scale-[0.99]' : ''
       } ${className}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate tracking-normal">
+        <span className="text-xs font-semibold text-slate-500 truncate tracking-normal">
           {title}
         </span>
         <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${conf.iconBg}`}>
@@ -68,20 +68,20 @@ export const StatCard: React.FC<StatCardProps> = ({
       </div>
 
       <div className="mt-3">
-        <p className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50 tabular-nums">
+        <p className="text-2xl font-black tracking-tight text-slate-900 tabular-nums">
           {value}
         </p>
       </div>
 
       {(subtitle || trend) && (
-        <div className="mt-2.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+        <div className="mt-2.5 flex items-center justify-between text-[11px] text-slate-500">
           {subtitle && <span className="truncate">{subtitle}</span>}
           {trend && (
             <span
               className={`inline-flex items-center gap-1 font-semibold ml-auto flex-shrink-0 ${
                 trend.isPositive
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-rose-600 dark:text-rose-400'
+                  ? 'text-emerald-600'
+                  : 'text-rose-600'
               }`}
             >
               {trend.isPositive ? (

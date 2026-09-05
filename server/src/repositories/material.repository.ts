@@ -17,12 +17,21 @@ export class MaterialRepository {
     if (filters?.materialType) where.materialType = filters.materialType;
     if (filters?.subject) where.subject = filters.subject;
 
-    if (filters?.search) {
-      where.OR = [
-        { title: { contains: filters.search } },
-        { chapterName: { contains: filters.search } },
-        { materialId: { contains: filters.search } },
-      ];
+    if (filters?.search?.trim()) {
+      const words = filters.search.trim().split(/\s+/).filter(Boolean);
+      if (words.length > 0) {
+        where.AND = [
+          ...(Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []),
+          ...words.map((word) => ({
+            OR: [
+              { title: { contains: word, mode: 'insensitive' as const } },
+              { chapterName: { contains: word, mode: 'insensitive' as const } },
+              { materialId: { contains: word, mode: 'insensitive' as const } },
+              { subject: { contains: word, mode: 'insensitive' as const } },
+            ],
+          })),
+        ];
+      }
     }
 
     return prisma.studyMaterial.findMany({

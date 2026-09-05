@@ -14,14 +14,8 @@ export class ClassroomRepository {
     });
   }
 
-  async findAll(status?: string): Promise<Classroom[]> {
-    const where: Prisma.ClassroomWhereInput = {};
-    if (status) {
-      where.status = status;
-    }
-
+  async findAll(): Promise<Classroom[]> {
     return prisma.classroom.findMany({
-      where,
       orderBy: { name: 'asc' },
     });
   }

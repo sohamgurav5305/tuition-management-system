@@ -3,6 +3,7 @@ import {
   FileText,
   Clock,
   Download,
+  Eye,
   CheckCircle2,
   AlertCircle,
   Award,
@@ -10,12 +11,15 @@ import {
   User,
   ExternalLink,
   Search,
+  Paperclip,
 } from 'lucide-react';
 import { Modal } from '../../components/common/Modal';
 import { assignmentApi } from '../../services/api';
 import { Assignment, AssignmentSubmission } from '../../types';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import { Badge } from '../../components/common/Badge';
+import { formatDate, formatDateTime } from '../../utils/date';
 
 interface AssignmentSubmissionsModalProps {
   isOpen: boolean;
@@ -31,6 +35,9 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
   onGraded,
 }) => {
   const { success, error } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMINISTRATOR';
+
   const [submissions, setSubmissions] = useState<AssignmentSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -96,11 +103,12 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
   if (!assignment) return null;
 
   const filtered = submissions.filter((s) => {
-    const term = search.toLowerCase();
-    const name = `${s.student?.firstName || ''} ${s.student?.lastName || ''}`.toLowerCase();
-    const roll = (s.student?.rollNumber || '').toLowerCase();
-    const customId = (s.student?.studentId || '').toLowerCase();
-    return name.includes(term) || roll.includes(term) || customId.includes(term);
+    if (!search.trim()) return true;
+    const words = search.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) return true;
+
+    const combined = `${s.student?.firstName || ''} ${s.student?.lastName || ''} ${s.student?.rollNumber || ''} ${s.student?.studentId || ''} ${s.student?.email || ''}`.toLowerCase();
+    return words.every((word) => combined.includes(word));
   });
 
   const gradedCount = submissions.filter((s) => s.status === 'GRADED').length;
@@ -110,12 +118,12 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
       isOpen={isOpen}
       onClose={onClose}
       title={`Submissions: ${assignment.title}`}
-      subtitle={`Due: ${assignment.dueDate} • Max Score: ${assignment.totalMarks} pts • ${submissions.length} Total Submissions (${gradedCount} Graded)`}
+      subtitle={`Due: ${formatDate(assignment.dueDate)} • Max Score: ${assignment.totalMarks} pts`}
       maxWidth="4xl"
     >
       <div className="space-y-5">
         {/* Search & Summary Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
           <div className="relative w-full sm:w-72">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
@@ -123,51 +131,141 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by student name or roll..."
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
           <div className="flex items-center gap-3 text-xs">
-            <span className="font-semibold text-slate-600 dark:text-slate-300">
-              Submitted: <strong className="text-blue-600 dark:text-blue-400">{submissions.length}</strong>
+            <span className="font-semibold text-slate-600">
+              Submitted: <strong className="text-blue-600">{submissions.length}</strong>
             </span>
-            <span className="font-semibold text-slate-600 dark:text-slate-300">
-              Graded: <strong className="text-emerald-600 dark:text-emerald-400">{gradedCount}</strong>
+            <span className="font-semibold text-slate-600">
+              Graded: <strong className="text-emerald-600">{gradedCount}</strong>
             </span>
-            <span className="font-semibold text-slate-600 dark:text-slate-300">
-              Pending: <strong className="text-amber-600 dark:text-amber-400">{submissions.length - gradedCount}</strong>
+            <span className="font-semibold text-slate-600">
+              Pending: <strong className="text-amber-600">{submissions.length - gradedCount}</strong>
             </span>
           </div>
         </div>
 
         {/* Submissions List */}
-        <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
-          {loading ? (
-            <div className="p-12 text-center text-slate-400 text-xs">Loading student submissions...</div>
-          ) : filtered.length === 0 ? (
-            <div className="p-12 text-center bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-200/60 dark:border-slate-800">
-              <FileText className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-              <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No Student Submissions Found</p>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                {submissions.length === 0
-                  ? 'No students from this batch have submitted their solutions yet.'
-                  : 'No submissions match your search query.'}
-              </p>
-            </div>
-          ) : (
-            filtered.map((sub) => {
+        {loading ? (
+          <div className="p-12 text-center text-slate-400 text-xs">Loading student submissions...</div>
+        ) : filtered.length === 0 ? (
+          <div className="p-12 text-center bg-slate-50 rounded-2xl border border-slate-200/60">
+            <FileText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-xs font-bold text-slate-700">No Student Submissions Found</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {submissions.length === 0
+                ? 'No students from this batch have submitted their solutions yet.'
+                : 'No submissions match your search query.'}
+            </p>
+          </div>
+        ) : isAdmin ? (
+          <div className="overflow-x-auto rounded-2xl border border-slate-200/80 max-h-[55vh] overflow-y-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 sticky top-0 z-10">
+                <tr>
+                  <th className="py-3 px-4 w-10 text-center">#</th>
+                  <th className="py-3 px-4">Student Name</th>
+                  <th className="py-3 px-4">Timeline</th>
+                  <th className="py-3 px-4 text-center">Grade Status</th>
+                  <th className="py-3 px-4 text-center">Grade</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium">
+                {filtered.map((sub, idx) => {
+                  const isGraded = sub.status === 'GRADED';
+                  const pct =
+                    isGraded && typeof sub.score === 'number'
+                      ? Math.round((sub.score / assignment.totalMarks) * 100)
+                      : null;
+                  const formattedDate =
+                    sub.submittedAt || (sub as any).createdAt
+                      ? formatDateTime(sub.submittedAt || (sub as any).createdAt)
+                      : sub.timingText || (sub.isLate ? 'Late' : 'On Time');
+
+                  return (
+                    <tr
+                      key={sub.id}
+                      className="hover:bg-slate-50/70 transition-colors"
+                    >
+                      <td className="py-3 px-4 text-center text-slate-400 font-mono font-bold">
+                        {idx + 1}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="font-bold text-slate-900 block">
+                          {sub.student?.firstName} {sub.student?.lastName}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {sub.student?.studentId || ''}{' '}
+                          {sub.student?.rollNumber ? `• Roll: ${sub.student.rollNumber}` : ''}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-700 font-mono text-xs">
+                            {formattedDate}
+                          </span>
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                              sub.isLate
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                                : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                            }`}
+                          >
+                            <Clock className="w-3 h-3" />
+                            {sub.isLate ? 'Late' : 'On Time'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {isGraded ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                            <CheckCircle2 className="w-3 h-3" /> Graded
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
+                            <AlertCircle className="w-3 h-3" /> Not Graded
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {isGraded ? (
+                          <span className="font-bold text-slate-900 tabular-nums">
+                            {sub.score} / {assignment.totalMarks}{' '}
+                            <span className="text-[11px] text-purple-600 font-bold">
+                              ({pct}%)
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-xs">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
+            {filtered.map((sub) => {
               const isGraded = sub.status === 'GRADED';
-              const pct = isGraded && typeof sub.score === 'number' ? Math.round((sub.score / assignment.totalMarks) * 100) : null;
+              const pct =
+                isGraded && typeof sub.score === 'number'
+                  ? Math.round((sub.score / assignment.totalMarks) * 100)
+                  : null;
 
               return (
                 <div
                   key={sub.id}
-                  className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-3 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
+                  className="p-4 rounded-2xl border border-slate-200/80 bg-white shadow-sm space-y-3 hover:border-slate-300 transition-colors"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     {/* Student Info */}
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-bold flex items-center justify-center text-xs overflow-hidden flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs overflow-hidden flex-shrink-0">
                         {sub.student?.avatarUrl ? (
                           <img src={sub.student.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                         ) : (
@@ -175,10 +273,10 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
                         )}
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                        <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
                           {sub.student?.firstName} {sub.student?.lastName}
                           {sub.student?.rollNumber && (
-                            <span className="text-[10px] font-mono px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-500 font-semibold">
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 bg-slate-100 rounded text-slate-500 font-semibold">
                               {sub.student.rollNumber}
                             </span>
                           )}
@@ -192,8 +290,8 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold ${
                           sub.isLate
-                            ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800'
-                            : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800'
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
                         }`}
                       >
                         <Clock className="w-3.5 h-3.5" />
@@ -201,11 +299,11 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
                       </span>
 
                       {isGraded ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200/60">
                           <Award className="w-3.5 h-3.5" /> {sub.score} / {assignment.totalMarks} pts ({pct}%)
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
                           <AlertCircle className="w-3.5 h-3.5" /> Not Graded
                         </span>
                       )}
@@ -214,7 +312,7 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
 
                   {/* Submission Content & Solution Notes */}
                   {sub.submissionText && (
-                    <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-xs text-slate-700 dark:text-slate-300 leading-relaxed border border-slate-100 dark:border-slate-800">
+                    <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-700 leading-relaxed border border-slate-100">
                       <span className="font-bold text-slate-500 block mb-0.5">Student's Solution Notes:</span>
                       {sub.submissionText}
                     </div>
@@ -222,26 +320,90 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
 
                   {/* Feedback display */}
                   {isGraded && sub.feedback && (
-                    <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/30 rounded-xl text-xs text-emerald-900 dark:text-emerald-200 leading-relaxed border border-emerald-200/60 dark:border-emerald-800/60">
-                      <span className="font-bold text-emerald-700 dark:text-emerald-400 block mb-0.5">
+                    <div className="p-3 bg-emerald-50/50 rounded-xl text-xs text-emerald-900 leading-relaxed border border-emerald-200/60">
+                      <span className="font-bold text-emerald-700 block mb-0.5">
                         Faculty Feedback:
                       </span>
                       {sub.feedback}
                     </div>
                   )}
 
-                  {/* Actions: Download File + Grade Button */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-                    <div>
-                      {sub.fileUrl ? (
-                        <a
-                          href={sub.fileUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold rounded-xl hover:bg-blue-100 transition-colors"
-                        >
-                          <Download className="w-3.5 h-3.5" /> Download Student Solution File
-                        </a>
+                  {/* Actions: View / Download Files + Grade Button */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {sub.files && sub.files.length > 0 ? (
+                        sub.files.map((fUrl, fIdx) => {
+                          const rawName = fUrl.split('/').pop()?.split('?')[0] || `Solution File #${fIdx + 1}`;
+                          const cleanName = rawName.match(/^[0-9a-fA-F-]{36,}-(.*)$/)?.[1] || rawName;
+                          return (
+                            <div
+                              key={fIdx}
+                              className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200/80 rounded-xl text-xs font-semibold text-blue-900 shadow-2xs"
+                            >
+                              <FileText className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                              <span className="truncate max-w-[180px]" title={cleanName}>
+                                {cleanName || `Solution File #${fIdx + 1}`}
+                              </span>
+                              <div className="flex items-center gap-1 ml-1 border-l border-blue-200 pl-1.5">
+                                <a
+                                  href={fUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100/80 rounded-md transition-colors flex items-center gap-1"
+                                  title="View / Open File"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span className="text-[11px] font-bold">View</span>
+                                </a>
+                                <a
+                                  href={fUrl}
+                                  download={cleanName}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-100/80 rounded-md transition-colors"
+                                  title="Download File"
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : sub.fileUrl ? (
+                        (() => {
+                          const rawName = sub.fileUrl.split('/').pop()?.split('?')[0] || 'Solution File';
+                          const cleanName = rawName.match(/^[0-9a-fA-F-]{36,}-(.*)$/)?.[1] || rawName;
+                          return (
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200/80 rounded-xl text-xs font-semibold text-blue-900 shadow-2xs">
+                              <FileText className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                              <span className="truncate max-w-[180px]" title={cleanName}>
+                                {cleanName || 'Solution File'}
+                              </span>
+                              <div className="flex items-center gap-1 ml-1 border-l border-blue-200 pl-1.5">
+                                <a
+                                  href={sub.fileUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100/80 rounded-md transition-colors flex items-center gap-1"
+                                  title="View / Open File"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span className="text-[11px] font-bold">View</span>
+                                </a>
+                                <a
+                                  href={sub.fileUrl}
+                                  download={cleanName}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-100/80 rounded-md transition-colors"
+                                  title="Download File"
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })()
                       ) : (
                         <span className="text-slate-400 text-[11px]">No file attached (text response only)</span>
                       )}
@@ -251,7 +413,7 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
                       onClick={() => handleOpenGrade(sub)}
                       className={`flex items-center gap-1 px-3.5 py-1.5 rounded-xl font-bold transition-all ${
                         isGraded
-                          ? 'bg-slate-100 dark:bg-slate-800 hover:bg-purple-50 hover:text-purple-600 text-slate-700 dark:text-slate-300'
+                          ? 'bg-slate-100 hover:bg-purple-50 hover:text-purple-600 text-slate-700'
                           : 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm shadow-purple-500/20'
                       }`}
                     >
@@ -261,16 +423,16 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
                   </div>
                 </div>
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
+        )}
 
-        {/* Inline Grading Submodal */}
-        {gradingSubmission && (
-          <div className="p-5 bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/80 rounded-2xl space-y-4">
+        {/* Inline Grading Submodal (Teacher only) */}
+        {!isAdmin && gradingSubmission && (
+          <div className="p-5 bg-purple-50/60 border border-purple-200 rounded-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold text-purple-900 dark:text-purple-200 uppercase tracking-wider flex items-center gap-1.5">
-                <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <h4 className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Award className="w-4 h-4 text-purple-600" />
                 Grading for {gradingSubmission.student?.firstName} {gradingSubmission.student?.lastName}
               </h4>
               <span className="text-xs text-slate-500 font-semibold">Max Marks: {assignment.totalMarks}</span>
@@ -279,7 +441,7 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
             <form onSubmit={handleSubmitGrade} className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div className="sm:col-span-1">
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
                     Marks Awarded *
                   </label>
                   <div className="relative">
@@ -291,7 +453,7 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
                       value={scoreInput}
                       onChange={(e) => setScoreInput(e.target.value)}
                       placeholder={`0 - ${assignment.totalMarks}`}
-                      className="w-full px-3 py-2 text-sm font-black bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                      className="w-full px-3 py-2 text-sm font-black bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:outline-none"
                       required
                     />
                     <span className="absolute right-2.5 top-2.5 text-[10px] text-slate-400 font-bold">
@@ -301,15 +463,15 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
                 </div>
 
                 <div className="sm:col-span-3">
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
                     Faculty Remarks & Constructive Feedback (Optional)
                   </label>
                   <input
                     type="text"
                     value={feedbackInput}
                     onChange={(e) => setFeedbackInput(e.target.value)}
-                    placeholder="e.g. Excellent mathematical proof in section B. Minor step error in Q3."
-                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                    placeholder=""
+                    className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -318,7 +480,7 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
                 <button
                   type="button"
                   onClick={() => setGradingSubmission(null)}
-                  className="px-3.5 py-1.5 bg-slate-200 dark:bg-slate-800 text-xs font-semibold rounded-xl"
+                  className="px-3.5 py-1.5 bg-slate-200 text-xs font-semibold rounded-xl"
                 >
                   Cancel
                 </button>
@@ -335,10 +497,10 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
           </div>
         )}
 
-        <div className="flex justify-end pt-2 border-t border-slate-200 dark:border-slate-800">
+        <div className="flex justify-end pt-2 border-t border-slate-200">
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold rounded-xl"
+            className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl"
           >
             Close Submissions
           </button>

@@ -3,14 +3,18 @@ import { generateClassroomId } from '../utils/idGenerator.util';
 import prisma from '../prisma/client';
 
 const DEFAULT_CLASSROOMS = [
-  { name: 'Lecture Hall 101', capacity: 75, roomType: 'LECTURE_HALL', building: 'Academic Block A - Floor 1', facilities: 'Dual 4K Projector, Central AC, Surround Sound, Tiered Seating', status: 'AVAILABLE' },
-  { name: 'Lecture Hall 102', capacity: 75, roomType: 'LECTURE_HALL', building: 'Academic Block A - Floor 1', facilities: 'Smart Interactive Board, AC, HD Recording Cameras', status: 'AVAILABLE' },
-  { name: 'Smart Classroom A', capacity: 45, roomType: 'SMART_CLASS', building: 'Academic Block B - Floor 2', facilities: 'Interactive Digital Whiteboard, Ergonomic Desks, High-Speed WiFi', status: 'AVAILABLE' },
-  { name: 'Smart Classroom B', capacity: 45, roomType: 'SMART_CLASS', building: 'Academic Block B - Floor 2', facilities: 'Smart Touch Display, AC, Video Conferencing Rig', status: 'AVAILABLE' },
-  { name: 'Main Auditorium', capacity: 250, roomType: 'AUDITORIUM', building: 'Central Block - Ground Floor', facilities: 'Full Stage, Audio Visual Console, Acoustic Wall Panels, Central AC', status: 'AVAILABLE' },
-  { name: 'Physics Lab 1', capacity: 40, roomType: 'SCIENCE_LAB', building: 'Science Wing - Floor 3', facilities: 'Optical Benches, Vernier Sensors, Electrical Testing Kits, Safety Stations', status: 'AVAILABLE' },
-  { name: 'Chemistry Lab 1', capacity: 40, roomType: 'SCIENCE_LAB', building: 'Science Wing - Floor 3', facilities: 'Fume Hoods, Analytical Balances, Titration Rigs, Chemical Safety Showers', status: 'AVAILABLE' },
-  { name: 'Computer Lab 2', capacity: 50, roomType: 'COMPUTER_LAB', building: 'Technology Wing - Floor 2', facilities: 'Core i7 Workstations, Dual Monitors, Gigabit LAN, UPS Backup', status: 'AVAILABLE' },
+  { name: 'Room 001', floor: 'Ground Floor' },
+  { name: 'Room 002', floor: 'Ground Floor' },
+  { name: 'Room 003', floor: 'Ground Floor' },
+  { name: 'Room 004', floor: 'Ground Floor' },
+  { name: 'Room 005', floor: 'Ground Floor' },
+  { name: 'Room 006', floor: 'Ground Floor' },
+  { name: 'Room 101', floor: 'First Floor' },
+  { name: 'Room 102', floor: 'First Floor' },
+  { name: 'Room 103', floor: 'First Floor' },
+  { name: 'Room 104', floor: 'First Floor' },
+  { name: 'Room 105', floor: 'First Floor' },
+  { name: 'Room 106', floor: 'First Floor' },
 ];
 
 export class ClassroomService {
@@ -21,15 +25,16 @@ export class ClassroomService {
         const roomId = await generateClassroomId();
         await classroomRepository.create({
           roomId,
-          ...item,
+          name: item.name,
+          floor: item.floor,
         });
       }
     }
   }
 
-  async getAllClassrooms(status?: string) {
+  async getAllClassrooms() {
     await this.autoSeedIfEmpty();
-    const classrooms = await classroomRepository.findAll(status);
+    const classrooms = await classroomRepository.findAll();
     
     // Enrich with active batches assigned to this room
     const batches = await prisma.batch.findMany({
@@ -66,7 +71,7 @@ export class ClassroomService {
     };
   }
 
-  async createClassroom(data: any) {
+  async createClassroom(data: { name: string; floor?: string }) {
     if (!data.name || !data.name.trim()) {
       throw new Error('Classroom / Venue name is required');
     }
@@ -78,20 +83,16 @@ export class ClassroomService {
     }
 
     const roomId = await generateClassroomId();
-    const capacity = Number(data.capacity || 60);
+    const floor = data.floor && data.floor.trim() ? data.floor.trim() : 'Ground Floor';
 
     return classroomRepository.create({
       roomId,
       name: trimmedName,
-      capacity: capacity > 0 ? capacity : 60,
-      roomType: data.roomType || 'LECTURE_HALL',
-      building: data.building || 'Main Campus',
-      facilities: data.facilities || 'Projector, AC, Smart Board',
-      status: data.status || 'AVAILABLE',
+      floor,
     });
   }
 
-  async updateClassroom(id: string, data: any) {
+  async updateClassroom(id: string, data: { name?: string; floor?: string }) {
     const existing = await classroomRepository.findById(id);
     if (!existing) throw new Error('Classroom not found');
 
@@ -102,15 +103,9 @@ export class ClassroomService {
       }
     }
 
-    const capacity = data.capacity !== undefined ? Number(data.capacity) : existing.capacity;
-
     return classroomRepository.update(id, {
       name: data.name ? data.name.trim() : existing.name,
-      capacity: capacity > 0 ? capacity : existing.capacity,
-      roomType: data.roomType ?? existing.roomType,
-      building: data.building ?? existing.building,
-      facilities: data.facilities ?? existing.facilities,
-      status: data.status ?? existing.status,
+      floor: data.floor ? data.floor.trim() : existing.floor,
     });
   }
 

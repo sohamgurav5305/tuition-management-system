@@ -10,6 +10,7 @@ import {
   Lock,
   Users,
   Search,
+  Eye,
 } from 'lucide-react';
 import { materialApi, batchApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -36,9 +37,9 @@ export const MaterialList: React.FC = () => {
   const isStudent = user?.role === 'STUDENT';
   const canUpload = user?.role === 'ADMINISTRATOR' || user?.role === 'TEACHER';
 
-  const fetchMaterials = async () => {
+  const fetchMaterials = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await materialApi.getAll({
         materialType: typeFilter || undefined,
         batchId: batchFilter || undefined,
@@ -48,7 +49,7 @@ export const MaterialList: React.FC = () => {
     } catch (err) {
       console.error('Failed to load study materials', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -59,21 +60,26 @@ export const MaterialList: React.FC = () => {
   }, [canUpload]);
 
   useEffect(() => {
-    fetchMaterials();
+    fetchMaterials(true);
+    const interval = setInterval(() => {
+      fetchMaterials(false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, [typeFilter, batchFilter, search]);
 
-  const handleDownload = async (m: StudyMaterial) => {
+  const handleDownloadFile = async (m: StudyMaterial, fileUrl?: string) => {
     try {
       await materialApi.trackDownload(m.id);
       success('Download Started', `Downloading: ${m.title}`);
-      if (m.fileUrl) {
-        window.open(m.fileUrl, '_blank');
+      const targetUrl = fileUrl || (m.files && m.files[0]) || m.fileUrl;
+      if (targetUrl) {
+        window.open(targetUrl, '_blank');
       } else {
         const blob = new Blob(
           [
             `Apex Coaching Institute - Study Material: ${m.title}\nBatch: ${
-              m.batch?.name || 'Assigned Cohort'
-            }\nSubject: ${m.subject}\nChapter: ${m.chapterName}\n\n[Official Coursework Content]`,
+              m.batch?.name || 'Assigned Batch'
+            }\nSubject: ${m.subject}\nChapter: ${m.chapterName}\n\n[Official Assignment Content]`,
           ],
           { type: 'text/plain' }
         );
@@ -116,11 +122,11 @@ export const MaterialList: React.FC = () => {
     <div className="space-y-6">
       {/* Top Banner */}
       <PageHeader
-        title={isStudent ? 'My Batch DPPs & Notes' : 'Study Materials & DPP Repository'}
+        title="Study Materials"
         subtitle={
           isStudent
-            ? 'Daily Practice Problems (DPPs), lecture notes, formula mind maps, and solution keys.'
-            : 'Digital library of practice problem sheets, lecture notes, formula mind maps, and mock test solutions.'
+            ? ''
+            : ''
         }
         badge={`${materials.length} Documents`}
         actions={
@@ -131,21 +137,21 @@ export const MaterialList: React.FC = () => {
               leftIcon={PlusCircle}
               onClick={() => setIsUploadOpen(true)}
             >
-              Upload Material / DPP
+              Upload Study Materials
             </Button>
           )
         }
       />
 
       {/* Filter Bar */}
-      <div className="p-3.5 bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
+      <div className="p-3.5 bg-white border border-slate-200/80 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
         <div className="flex flex-wrap items-center gap-2">
           <Filter className="w-3.5 h-3.5 text-slate-400" />
           <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Category:</span>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none"
+            className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none"
           >
             <option value="">All Categories</option>
             <option value="DPP">Daily Practice Problems (DPP)</option>
@@ -161,7 +167,7 @@ export const MaterialList: React.FC = () => {
               <select
                 value={batchFilter}
                 onChange={(e) => setBatchFilter(e.target.value)}
-                className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none max-w-[200px]"
+                className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none max-w-[200px]"
               >
                 <option value="">All Batches</option>
                 {batches.map((b) => (
@@ -181,7 +187,7 @@ export const MaterialList: React.FC = () => {
             placeholder="Search by topic, subject..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -193,9 +199,9 @@ export const MaterialList: React.FC = () => {
             Loading batch study materials...
           </div>
         ) : materials.length === 0 ? (
-          <div className="col-span-full p-12 text-center bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl">
-            <FileText className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+          <div className="col-span-full p-12 text-center bg-white border border-slate-200/80 rounded-2xl">
+            <FileText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <h3 className="text-xs font-bold text-slate-800">
               {isStudent ? 'No Study Materials for Your Batch' : 'No Study Materials Found'}
             </h3>
             <p className="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">
@@ -208,7 +214,7 @@ export const MaterialList: React.FC = () => {
           materials.map((m) => (
             <div
               key={m.id}
-              className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#111827] shadow-xs space-y-3 flex flex-col justify-between hover:border-blue-500/40 transition-colors"
+              className="p-4 rounded-xl border border-slate-200/80 bg-white shadow-xs space-y-3 flex flex-col justify-between hover:border-blue-500/40 transition-colors"
             >
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
@@ -229,12 +235,12 @@ export const MaterialList: React.FC = () => {
                   </div>
                 </div>
 
-                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2">
+                <h3 className="text-xs font-bold text-slate-900 leading-snug line-clamp-2">
                   {m.title}
                 </h3>
 
                 <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{m.subject}</span>
+                  <span className="font-semibold text-slate-700">{m.subject}</span>
                   {m.chapterName && <span>&bull; {m.chapterName}</span>}
                 </div>
 
@@ -243,16 +249,72 @@ export const MaterialList: React.FC = () => {
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-center">
-                <Button
-                  variant="outline"
-                  size="xs"
-                  className="w-full justify-center"
-                  leftIcon={Download}
-                  onClick={() => handleDownload(m)}
-                >
-                  Download
-                </Button>
+              <div className="pt-3 border-t border-slate-100">
+                {m.files && m.files.length > 1 ? (
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Documents ({m.files.length}):
+                    </span>
+                    <div className="flex flex-col gap-1.5">
+                      {m.files.map((fUrl, fIdx) => {
+                        const rawName = fUrl.split('/').pop() || `Doc #${fIdx + 1}`;
+                        const cleanName = rawName.match(/^[0-9a-fA-F-]{36,}-(.*)$/)?.[1] || rawName;
+                        return (
+                          <div
+                            key={fIdx}
+                            className="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-slate-50 border border-slate-200/70 rounded-xl text-xs"
+                          >
+                            <span className="truncate text-slate-700 font-medium max-w-[140px]" title={cleanName}>
+                              {cleanName}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <a
+                                href={fUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={() => materialApi.trackDownload(m.id)}
+                                className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors flex items-center gap-1 text-[11px] font-bold"
+                                title="View Document"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>View</span>
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadFile(m, fUrl)}
+                                className="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-colors"
+                                title="Download Document"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={m.files?.[0] || m.fileUrl || '#'}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => materialApi.trackDownload(m.id)}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 rounded-xl text-xs font-bold transition-colors"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>View</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadFile(m, m.files?.[0] || m.fileUrl || undefined)}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold transition-colors shadow-2xs"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))

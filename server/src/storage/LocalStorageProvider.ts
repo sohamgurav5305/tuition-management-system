@@ -20,7 +20,8 @@ export class LocalStorageProvider implements StorageProvider {
     }
 
     const fileExt = path.extname(file.originalname) || '.jpg';
-    const fileName = `${uuidv4()}${fileExt}`;
+    const baseName = path.basename(file.originalname, fileExt).replace(/[^a-zA-Z0-9_\-\.]/g, '_').substring(0, 60);
+    const fileName = baseName ? `${uuidv4()}-${baseName}${fileExt}` : `${uuidv4()}${fileExt}`;
     const targetPath = path.join(targetDir, fileName);
 
     if (file.buffer) {

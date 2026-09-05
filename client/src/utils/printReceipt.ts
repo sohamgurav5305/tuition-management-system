@@ -1,4 +1,5 @@
 import { Payment, Student } from '../types';
+import { formatDate, formatDateTime } from './date';
 
 export function numberToWords(num: number): string {
   if (!num || num === 0) return 'Rupees Zero Only';
@@ -413,7 +414,7 @@ export function generateReceiptHtml({ payment, settings }: PrintReceiptOptions):
         <div class="receipt-title">FEE PAYMENT RECEIPT</div>
         <div class="receipt-meta">
           <div>Receipt No: <strong>${payment.receiptId}</strong></div>
-          <div>Date: <strong>${payment.paymentDate}</strong></div>
+          <div>Date: <strong>${formatDate(payment.paymentDate)}</strong></div>
         </div>
         <span class="copy-type">[ Original - Student Copy ]</span>
       </div>
@@ -454,12 +455,8 @@ export function generateReceiptHtml({ payment, settings }: PrintReceiptOptions):
           <span class="field-value">${student?.course?.targetExam || 'Foundation / Entrance'}</span>
         </div>
         <div class="field-row">
-          <span class="field-label">Batch Cohort:</span>
-          <span class="field-value">${student?.batch?.name || 'Assigned Cohort'}</span>
-        </div>
-        <div class="field-row">
-          <span class="field-label">Classroom Venue:</span>
-          <span class="field-value">${student?.batch?.classroom || 'Institute Campus'}</span>
+          <span class="field-label">Batch:</span>
+          <span class="field-value">${student?.batch?.name || 'Assigned Batch'}</span>
         </div>
       </div>
     </div>
@@ -481,7 +478,7 @@ export function generateReceiptHtml({ payment, settings }: PrintReceiptOptions):
           <td>
             <strong>${payment.remarks || 'Academic Tuition Fee Installment'}</strong>
             <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
-              Includes Classroom Lectures, Daily Practice Problems (DPP), Study Material & Test Series
+              Includes Interactive Lectures, Daily Practice Problems (DPP), Study Material & Test Series
               ${payment.transactionReference ? ` &bull; Ref: <span style="font-family: monospace;">${payment.transactionReference}</span>` : ''}
             </div>
           </td>
@@ -521,7 +518,7 @@ export function generateReceiptHtml({ payment, settings }: PrintReceiptOptions):
     <div class="footer-signatures">
       <div>
         <div class="stamp-box">&check; Electronically Verified &bull; Official Accounts Desk</div>
-        <p style="font-size: 9px; color: #94a3b8; margin-top: 4px;">Txn Timestamp: ${new Date().toLocaleString('en-IN')}</p>
+        <p style="font-size: 9px; color: #94a3b8; margin-top: 4px;">Txn Timestamp: ${formatDateTime(new Date())}</p>
       </div>
       <div style="display: flex; gap: 32px;">
         <div class="sig-line">
@@ -538,7 +535,7 @@ export function generateReceiptHtml({ payment, settings }: PrintReceiptOptions):
       <strong>Terms & Conditions:</strong>
       <ol>
         <li>Fees once deposited are non-refundable and non-transferable under any circumstances.</li>
-        <li>Please preserve this official receipt for classroom entry badge issuance, library access, and mock test seat allocation.</li>
+        <li>Please preserve this official receipt for student entry badge issuance, library access, and mock test seat allocation.</li>
         <li>Any cheque / electronic transfer is subject to realization by the institute banking desk.</li>
       </ol>
     </div>

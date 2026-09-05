@@ -6,11 +6,15 @@ import {
   Clock,
   Filter,
   User,
+  GraduationCap,
+  Briefcase,
   Layers,
   Check,
   X,
   PlusCircle,
   FileText,
+  Search,
+  ShieldCheck,
 } from 'lucide-react';
 import { leaveApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -21,6 +25,7 @@ import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
+import { formatDate } from '../../utils/date';
 
 export const LeaveManagement: React.FC = () => {
   const { user } = useAuth();
@@ -28,8 +33,10 @@ export const LeaveManagement: React.FC = () => {
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [applicantTypeFilter, setApplicantTypeFilter] = useState<string>('ALL'); // 'ALL' | 'STUDENT' | 'FACULTY'
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Student Apply Form Modal
+  // Apply Leave Modal State (For Students and Faculty)
   const [isApplyOpen, setIsApplyOpen] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -37,24 +44,29 @@ export const LeaveManagement: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isStudent = user?.role === 'STUDENT';
-  const canApprove = user?.role === 'ADMINISTRATOR' || user?.role === 'TEACHER';
+  const isTeacher = user?.role === 'TEACHER';
+  const isAdmin = user?.role === 'ADMINISTRATOR';
 
-  const fetchLeaves = async () => {
+  const fetchLeaves = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await leaveApi.getAll({
         status: statusFilter || undefined,
       });
-      setLeaves(res.data.data);
+      setLeaves(res.data.data || []);
     } catch (err) {
       console.error('Failed to load leaves', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchLeaves();
+    fetchLeaves(true);
+    const interval = setInterval(() => {
+      fetchLeaves(false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, [statusFilter]);
 
   const handleApply = async (e: React.FormEvent) => {
@@ -66,13 +78,32 @@ export const LeaveManagement: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      await leaveApi.apply({
-        studentId: user?.id,
-        startDate,
-        endDate,
-        reason,
-      });
-      success('Leave Application Submitted', 'Your leave request has been submitted for faculty review.');
+      if (isTeacher) {
+        // Faculty Leave Application (Admin Approval Required)
+        await leaveApi.apply({
+          startDate,
+          endDate,
+          reason,
+          applicantType: 'FACULTY',
+        });
+        success(
+          'Faculty Leave Submitted',
+          'Your leave application has been submitted directly to the Administrator for review.'
+        );
+      } else {
+        // Student Leave Application
+        await leaveApi.apply({
+          startDate,
+          endDate,
+          reason,
+          applicantType: 'STUDENT',
+        });
+        success(
+          'Leave Application Submitted',
+          'Your leave request has been submitted for faculty and admin review.'
+        );
+      }
+
       setIsApplyOpen(false);
       setStartDate('');
       setEndDate('');
@@ -88,26 +119,64 @@ export const LeaveManagement: React.FC = () => {
   const handleStatusUpdate = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     try {
       await leaveApi.updateStatus(id, status);
-      success(`Leave ${status}`, `Student leave application has been marked as ${status.toLowerCase()}.`);
+      success(`Leave ${status}`, `Leave application has been marked as ${status.toLowerCase()}.`);
       fetchLeaves();
     } catch (err: any) {
-      error('Update Failed', err.message || 'Could not update leave status');
+      error('Update Failed', err.response?.data?.message || err.message || 'Could not update leave status');
     }
   };
 
+  // Filter leaves based on type and search query
+  const filteredLeaves = leaves.filter((l) => {
+    // 1. Applicant Type Filter
+    if (applicantTypeFilter === 'STUDENT' && l.applicantType === 'FACULTY') return false;
+    if (applicantTypeFilter === 'FACULTY' && l.applicantType !== 'FACULTY') return false;
+
+    // 2. Search Query
+    if (searchQuery.trim()) {
+      const words = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+      if (words.length === 0) return true;
+
+      const studentName = l.student ? `${l.student.firstName} ${l.student.lastName}` : '';
+      const facultyName = l.faculty ? `${l.faculty.firstName} ${l.faculty.lastName}` : '';
+      const reasonText = l.reason || '';
+      const idCode = l.student?.studentId || l.faculty?.facultyId || '';
+      const subject = l.faculty?.subjectTaught || '';
+      const combined = `${studentName} ${facultyName} ${reasonText} ${idCode} ${subject}`.toLowerCase();
+
+      return words.every((word) => combined.includes(word));
+    }
+
+    return true;
+  });
+
   const pendingCount = leaves.filter((l) => l.status === 'PENDING').length;
+  const facultyLeavesCount = leaves.filter((l) => l.applicantType === 'FACULTY').length;
+  const studentLeavesCount = leaves.filter((l) => l.applicantType !== 'FACULTY').length;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Banner */}
       <PageHeader
-        title={isStudent ? 'My Leave Applications' : 'Leave Requests & Approvals'}
+        title={
+          isStudent
+            ? 'My Leave Applications'
+            : isTeacher
+            ? 'Student Requests & My Leaves'
+            : 'Leave Requests & Approvals'
+        }
         subtitle={
           isStudent
-            ? 'Apply for planned leave of absence, track faculty approvals, and view application history.'
-            : 'Review, approve, and track student absence applications and medical leave requests.'
+            ? ''
+            : isTeacher
+            ? ''
+            : ''
         }
-        badge={isStudent ? `${leaves.length} Applications` : `${pendingCount} Pending Review`}
+        badge={
+          isStudent
+            ? `${leaves.length} Applications`
+            : `${pendingCount} Pending Review`
+        }
         actions={
           isStudent ? (
             <Button
@@ -118,43 +187,106 @@ export const LeaveManagement: React.FC = () => {
             >
               + Apply for Leave
             </Button>
+          ) : isTeacher ? (
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={PlusCircle}
+              onClick={() => setIsApplyOpen(true)}
+            >
+              + Ask a Leave
+            </Button>
           ) : undefined
         }
       />
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-        {[
-          { label: 'All Requests', value: '' },
-          { label: 'Pending Review', value: 'PENDING' },
-          { label: 'Approved', value: 'APPROVED' },
-          { label: 'Rejected', value: 'REJECTED' },
-        ].map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setStatusFilter(tab.value)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-              statusFilter === tab.value
-                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-800/80'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Filter Toolbar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        {/* Role / Applicant Category Pills (Admin & Teacher) */}
+        {!isStudent && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+            <button
+              onClick={() => setApplicantTypeFilter('ALL')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+                applicantTypeFilter === 'ALL'
+                  ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/80'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              All Requests ({leaves.length})
+            </button>
+            <button
+              onClick={() => setApplicantTypeFilter('STUDENT')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+                applicantTypeFilter === 'STUDENT'
+                  ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/80'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Student Leaves ({studentLeavesCount})
+            </button>
+            <button
+              onClick={() => setApplicantTypeFilter('FACULTY')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+                applicantTypeFilter === 'FACULTY'
+                  ? 'bg-purple-50 text-purple-700 font-bold border border-purple-200/80'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              {isTeacher ? `My Leaves (${facultyLeavesCount})` : `Faculty Leaves (${facultyLeavesCount})`}
+            </button>
+          </div>
+        )}
+
+        {/* Status Filters & Search Bar */}
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* Status Tabs */}
+          <div className="flex items-center gap-1 overflow-x-auto">
+            {[
+              { label: 'All', value: '' },
+              { label: 'Pending', value: 'PENDING' },
+              { label: 'Approved', value: 'APPROVED' },
+              { label: 'Rejected', value: 'REJECTED' },
+            ].map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setStatusFilter(tab.value)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                  statusFilter === tab.value
+                    ? 'bg-slate-900 text-white font-bold'
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Search Box */}
+          <div className="relative flex-1 sm:w-48">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Leaves List Table */}
-      <div className="bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
         {loading ? (
           <div className="p-8">
             <LoadingSkeleton count={4} />
           </div>
-        ) : leaves.length === 0 ? (
+        ) : filteredLeaves.length === 0 ? (
           <div className="p-12 text-center text-slate-400 text-xs">
             {isStudent ? (
               <div className="space-y-3">
-                <FileText className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
+                <FileText className="w-8 h-8 text-slate-300 mx-auto" />
                 <p>You have not submitted any leave applications yet.</p>
                 <Button
                   variant="primary"
@@ -165,103 +297,217 @@ export const LeaveManagement: React.FC = () => {
                   Apply for Leave
                 </Button>
               </div>
+            ) : isTeacher && applicantTypeFilter === 'FACULTY' ? (
+              <div className="space-y-3">
+                <Briefcase className="w-8 h-8 text-purple-300 mx-auto" />
+                <p>You have not submitted any faculty leave applications yet.</p>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  leftIcon={PlusCircle}
+                  onClick={() => setIsApplyOpen(true)}
+                >
+                  + Ask a Leave
+                </Button>
+              </div>
             ) : (
-              'No leave requests found matching this status filter.'
+              'No leave requests found matching the current filters.'
             )}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200/80 dark:border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <thead className="bg-slate-50 border-b border-slate-200/80 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 <tr>
-                  {!isStudent && <th className="px-5 py-3">Student</th>}
+                  {!isStudent && <th className="px-5 py-3">Applicant & Role</th>}
                   <th className="px-5 py-3">Leave Duration</th>
                   <th className="px-5 py-3">Reason / Details</th>
                   <th className="px-5 py-3">Applied On</th>
                   <th className="px-5 py-3 text-center">Status</th>
-                  {!isStudent && <th className="px-5 py-3 text-right">Admin Actions</th>}
+                  {!isStudent && <th className="px-5 py-3 text-right">Approval Actions</th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                {leaves.map((l) => (
-                  <tr key={l.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-900/40 transition-colors">
-                    {!isStudent && (
-                      <td className="px-5 py-3.5">
-                        <span className="font-bold text-slate-900 dark:text-slate-100 block">
-                          {l.student ? `${l.student.firstName} ${l.student.lastName}` : 'Enrolled Student'}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-mono">
-                          {l.student?.studentId || '—'}
-                        </span>
-                      </td>
-                    )}
-                    <td className="px-5 py-3.5 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                      {l.startDate} &rarr; {l.endDate}
-                    </td>
-                    <td className="px-5 py-3.5 max-w-xs text-slate-600 dark:text-slate-300">
-                      <p className="line-clamp-2">{l.reason}</p>
-                    </td>
-                    <td className="px-5 py-3.5 text-slate-400 text-[11px] font-mono whitespace-nowrap">
-                      {new Date(l.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-5 py-3.5 text-center">
-                      <Badge
-                        variant={
-                          l.status === 'APPROVED'
-                            ? 'success'
-                            : l.status === 'REJECTED'
-                            ? 'danger'
-                            : 'warning'
-                        }
-                        size="xs"
-                        dot
-                      >
-                        {l.status}
-                      </Badge>
-                    </td>
-                    {!isStudent && (
-                      <td className="px-5 py-3.5 text-right">
-                        {l.status === 'PENDING' && canApprove ? (
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => handleStatusUpdate(l.id, 'APPROVED')}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-colors border border-emerald-200/60 dark:border-emerald-800/60"
-                              title="Approve Leave"
+              <tbody className="divide-y divide-slate-100">
+                {filteredLeaves.map((l) => {
+                  const isFacultyLeave = l.applicantType === 'FACULTY' || Boolean(l.facultyId);
+                  const isStudentLeave = !isFacultyLeave;
+
+                  return (
+                    <tr
+                      key={l.id}
+                      className={`hover:bg-slate-50/70 transition-colors ${
+                        isFacultyLeave ? 'bg-purple-50/20' : ''
+                      }`}
+                    >
+                      {/* Applicant Column (Only for Staff / Admins) */}
+                      {!isStudent && (
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-2.5">
+                            <div
+                              className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 ${
+                                isFacultyLeave
+                                  ? 'bg-purple-100 text-purple-700'
+                                  : 'bg-blue-100 text-blue-700'
+                              }`}
                             >
-                              <Check className="w-3.5 h-3.5" /> Approve
-                            </button>
-                            <button
-                              onClick={() => handleStatusUpdate(l.id, 'REJECTED')}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 hover:bg-rose-100 rounded-lg text-xs font-bold transition-colors border border-rose-200/60 dark:border-rose-800/60"
-                              title="Reject Leave"
-                            >
-                              <X className="w-3.5 h-3.5" /> Reject
-                            </button>
+                              {isFacultyLeave ? (
+                                <Briefcase className="w-3.5 h-3.5" />
+                              ) : (
+                                <GraduationCap className="w-3.5 h-3.5" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-slate-900 block">
+                                  {isFacultyLeave
+                                    ? l.faculty
+                                      ? `${l.faculty.firstName} ${l.faculty.lastName}`
+                                      : 'Faculty Mentor'
+                                    : l.student
+                                    ? `${l.student.firstName} ${l.student.lastName}`
+                                    : 'Enrolled Student'}
+                                </span>
+                                <span
+                                  className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                    isFacultyLeave
+                                      ? 'bg-purple-100 text-purple-700'
+                                      : 'bg-blue-100 text-blue-700'
+                                  }`}
+                                >
+                                  {isFacultyLeave ? 'Faculty' : 'Student'}
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                {isFacultyLeave
+                                  ? `${l.faculty?.facultyId || 'FAC'} • ${l.faculty?.subjectTaught || 'Faculty'}`
+                                  : `${l.student?.studentId || 'STU'}${l.student?.batch?.name ? ` • ${l.student.batch.name}` : ''}`}
+                              </span>
+                            </div>
                           </div>
-                        ) : (
-                          <span className="text-[11px] text-slate-400 italic">Reviewed</span>
-                        )}
+                        </td>
+                      )}
+
+                      {/* Leave Duration */}
+                      <td className="px-5 py-3.5 font-medium text-slate-700 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          <span>
+                            {formatDate(l.startDate)} &rarr; {formatDate(l.endDate)}
+                          </span>
+                        </div>
                       </td>
-                    )}
-                  </tr>
-                ))}
+
+                      {/* Reason */}
+                      <td className="px-5 py-3.5 max-w-xs text-slate-600">
+                        <p className="line-clamp-2">{l.reason}</p>
+                      </td>
+
+                      {/* Applied On */}
+                      <td className="px-5 py-3.5 text-slate-400 text-[11px] font-mono whitespace-nowrap">
+                        {formatDate(l.createdAt)}
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-5 py-3.5 text-center">
+                        <Badge
+                          variant={
+                            l.status === 'APPROVED'
+                              ? 'success'
+                              : l.status === 'REJECTED'
+                              ? 'danger'
+                              : 'warning'
+                          }
+                          size="xs"
+                          dot
+                        >
+                          {l.status}
+                        </Badge>
+                      </td>
+
+                      {/* Approval Actions */}
+                      {!isStudent && (
+                        <td className="px-5 py-3.5 text-right">
+                          {l.status === 'PENDING' ? (
+                            isFacultyLeave ? (
+                              // FACULTY LEAVE: ONLY Administrator can approve/reject
+                              isAdmin ? (
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    onClick={() => handleStatusUpdate(l.id, 'APPROVED')}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-colors border border-emerald-200/60"
+                                    title="Approve Faculty Leave"
+                                  >
+                                    <Check className="w-3.5 h-3.5" /> Approve
+                                  </button>
+                                  <button
+                                    onClick={() => handleStatusUpdate(l.id, 'REJECTED')}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-bold transition-colors border border-rose-200/60"
+                                    title="Reject Faculty Leave"
+                                  >
+                                    <X className="w-3.5 h-3.5" /> Reject
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
+                                  <Clock className="w-3 h-3" /> Awaiting Admin Approval
+                                </span>
+                              )
+                            ) : (
+                              // STUDENT LEAVE: Both Admin and Teacher can approve/reject
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => handleStatusUpdate(l.id, 'APPROVED')}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-colors border border-emerald-200/60"
+                                  title="Approve Student Leave"
+                                >
+                                  <Check className="w-3.5 h-3.5" /> Approve
+                                </button>
+                                <button
+                                  onClick={() => handleStatusUpdate(l.id, 'REJECTED')}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-bold transition-colors border border-rose-200/60"
+                                  title="Reject Student Leave"
+                                >
+                                  <X className="w-3.5 h-3.5" /> Reject
+                                </button>
+                              </div>
+                            )
+                          ) : (
+                            <span className="text-[11px] text-slate-400 italic">
+                              Reviewed by {l.reviewedBy || 'Staff'}
+                            </span>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </div>
 
-      {/* Student Apply Leave Modal */}
+      {/* Leave Application Modal (Students & Faculty) */}
       <Modal
         isOpen={isApplyOpen}
         onClose={() => setIsApplyOpen(false)}
-        title="Apply for Leave of Absence"
+        title={isTeacher ? 'Ask a Leave (Faculty Absence Application)' : 'Apply for Leave of Absence'}
         maxWidth="md"
       >
         <form onSubmit={handleApply} className="space-y-4">
+          {isTeacher && (
+            <div className="p-3 bg-purple-50 border border-purple-200/80 rounded-xl text-xs text-purple-800 flex items-start gap-2">
+              <ShieldCheck className="w-4 h-4 flex-shrink-0 mt-0.5 text-purple-600" />
+              <span>
+                <strong>Faculty Notice:</strong> Your leave request will be routed directly to the{' '}
+                <strong>Institute Administrator</strong> for official review and approval.
+              </span>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Start Date
               </label>
               <input
@@ -269,12 +515,12 @@ export const LeaveManagement: React.FC = () => {
                 required
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100 font-medium"
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 font-medium"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 End Date
               </label>
               <input
@@ -282,13 +528,13 @@ export const LeaveManagement: React.FC = () => {
                 required
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100 font-medium"
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 font-medium"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-xs font-bold text-slate-700 mb-1">
               Reason for Absence
             </label>
             <textarea
@@ -296,12 +542,16 @@ export const LeaveManagement: React.FC = () => {
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g. Medical illness, Family emergency, School examination..."
-              className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100 font-medium"
+              placeholder={
+                isTeacher
+                  ? ''
+                  : ''
+              }
+              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 font-medium"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
             <Button
               type="button"
               variant="outline"
@@ -316,7 +566,7 @@ export const LeaveManagement: React.FC = () => {
               size="sm"
               isLoading={isSubmitting}
             >
-              Submit Application
+              {isTeacher ? 'Submit Leave Request to Admin' : 'Submit Application'}
             </Button>
           </div>
         </form>

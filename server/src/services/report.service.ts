@@ -9,6 +9,85 @@ import { jsonToCsv } from '../utils/csvExporter.util';
 
 export class ReportService {
   async getDashboardSummary(role: string, userId?: string) {
+    if (role === 'STUDENT' && userId) {
+      const student = await prisma.student.findUnique({
+        where: { userId },
+        select: { id: true, batchId: true, totalFee: true, paidFee: true, pendingFee: true },
+      });
+
+      if (student) {
+        const [attStats, assignmentCount] = await Promise.all([
+          attendanceRepository.getStudentAttendanceStats(student.id),
+          student.batchId ? prisma.assignment.count({ where: { batchId: student.batchId, status: 'OPEN' } }) : 0,
+        ]);
+
+        return {
+          totalStudents: 1,
+          totalRevenue: student.paidFee,
+          totalFeeObligation: student.totalFee,
+          totalPendingFees: student.pendingFee,
+          pendingFees: student.pendingFee,
+          feeCollectionRate: student.totalFee > 0 ? Number(((student.paidFee / student.totalFee) * 100).toFixed(1)) : 0,
+          attendanceAverage: attStats.percentage,
+          attendanceStats: attStats,
+          openAssignments: assignmentCount,
+        };
+      }
+    }
+
+    if (role === 'TEACHER' && userId) {
+      const faculty = await prisma.faculty.findUnique({
+        where: { userId },
+        select: { id: true },
+      });
+
+      if (faculty) {
+        const [assignedBatches, openDoubts, pendingAssignments, batchStudents] = await Promise.all([
+          prisma.batch.count({ where: { facultyId: faculty.id, status: 'ACTIVE' } }),
+          prisma.doubt.count({ where: { facultyId: faculty.id, status: 'OPEN' } }),
+          prisma.assignment.count({ where: { facultyId: faculty.id, status: 'OPEN' } }),
+          prisma.student.count({ where: { batch: { facultyId: faculty.id } } }),
+        ]);
+
+        return {
+          totalBatches: assignedBatches,
+          openDoubts,
+          pendingAssignments,
+          totalStudents: batchStudents,
+        };
+      }
+    }
+
+    if (role === 'ACCOUNTANT') {
+      const [totalRevenue, feeAggregate, totalStudents] = await Promise.all([
+        paymentRepository.getTotalRevenue(),
+        prisma.student.aggregate({
+          _sum: {
+            totalFee: true,
+            paidFee: true,
+            pendingFee: true,
+          },
+        }),
+        studentRepository.count(),
+      ]);
+
+      const totalFeeObligation = feeAggregate._sum.totalFee || 0;
+      const totalPendingFees = feeAggregate._sum.pendingFee || 0;
+      const feeCollectionRate = totalFeeObligation > 0
+        ? Number(((totalRevenue / totalFeeObligation) * 100).toFixed(1))
+        : 0;
+
+      return {
+        totalStudents,
+        totalRevenue,
+        totalFeeObligation,
+        totalPendingFees,
+        pendingFees: totalPendingFees,
+        feeCollectionRate,
+      };
+    }
+
+    // Default: Administrator summary using fast SQL aggregations
     const [
       totalStudents,
       totalFaculty,
@@ -16,7 +95,7 @@ export class ReportService {
       totalBatches,
       totalRevenue,
       attendanceStats,
-      allStudents,
+      feeAggregate,
     ] = await Promise.all([
       studentRepository.count(),
       facultyRepository.count(),
@@ -24,11 +103,17 @@ export class ReportService {
       batchRepository.count({ status: 'ACTIVE' }),
       paymentRepository.getTotalRevenue(),
       attendanceRepository.getInstituteAttendanceStats(),
-      prisma.student.findMany({ select: { totalFee: true, paidFee: true, pendingFee: true } }),
+      prisma.student.aggregate({
+        _sum: {
+          totalFee: true,
+          paidFee: true,
+          pendingFee: true,
+        },
+      }),
     ]);
 
-    const totalFeeObligation = allStudents.reduce((sum, s) => sum + s.totalFee, 0);
-    const totalPendingFees = allStudents.reduce((sum, s) => sum + s.pendingFee, 0);
+    const totalFeeObligation = feeAggregate._sum.totalFee || 0;
+    const totalPendingFees = feeAggregate._sum.pendingFee || 0;
     const feeCollectionRate = totalFeeObligation > 0
       ? Number(((totalRevenue / totalFeeObligation) * 100).toFixed(1))
       : 0;
@@ -41,6 +126,7 @@ export class ReportService {
       totalRevenue,
       totalFeeObligation,
       totalPendingFees,
+      pendingFees: totalPendingFees,
       feeCollectionRate,
       attendanceAverage: attendanceStats.averagePercentage,
       attendanceStats,
@@ -48,20 +134,34 @@ export class ReportService {
   }
 
   async getRevenueReport() {
-    const payments = await prisma.payment.findMany({
-      include: {
-        student: {
-          include: {
-            course: true,
-            batch: true,
+    const [aggregate, payments] = await Promise.all([
+      prisma.payment.aggregate({
+        _sum: { amount: true },
+        _count: { id: true },
+      }),
+      prisma.payment.findMany({
+        select: {
+          id: true,
+          receiptId: true,
+          amount: true,
+          paymentDate: true,
+          paymentMode: true,
+          transactionReference: true,
+          student: {
+            select: {
+              studentId: true,
+              firstName: true,
+              lastName: true,
+              course: { select: { name: true } },
+              batch: { select: { name: true } },
+            },
           },
         },
-      },
-      orderBy: { paymentDate: 'desc' },
-    });
+        orderBy: { paymentDate: 'desc' },
+      }),
+    ]);
 
-    const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
-
+    const totalRevenue = aggregate._sum.amount || 0;
     const modeBreakdown: Record<string, { count: number; total: number }> = {
       CASH: { count: 0, total: 0 },
       UPI: { count: 0, total: 0 },
@@ -77,29 +177,40 @@ export class ReportService {
 
     return {
       totalRevenue,
-      totalTransactions: payments.length,
+      totalTransactions: aggregate._count.id || 0,
       modeBreakdown,
       payments,
     };
   }
 
   async getPendingFeesReport() {
-    const studentsWithPending = await prisma.student.findMany({
-      where: {
-        pendingFee: { gt: 0 },
-      },
-      include: {
-        course: true,
-        batch: true,
-      },
-      orderBy: { pendingFee: 'desc' },
-    });
-
-    const totalPending = studentsWithPending.reduce((sum, s) => sum + s.pendingFee, 0);
+    const [aggregate, studentsWithPending] = await Promise.all([
+      prisma.student.aggregate({
+        where: { pendingFee: { gt: 0 } },
+        _sum: { pendingFee: true },
+        _count: { id: true },
+      }),
+      prisma.student.findMany({
+        where: { pendingFee: { gt: 0 } },
+        select: {
+          id: true,
+          studentId: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          totalFee: true,
+          paidFee: true,
+          pendingFee: true,
+          course: { select: { name: true } },
+          batch: { select: { name: true } },
+        },
+        orderBy: { pendingFee: 'desc' },
+      }),
+    ]);
 
     return {
-      totalPendingAmount: totalPending,
-      studentCount: studentsWithPending.length,
+      totalPendingAmount: aggregate._sum.pendingFee || 0,
+      studentCount: aggregate._count.id || 0,
       students: studentsWithPending,
     };
   }
@@ -107,37 +218,36 @@ export class ReportService {
   async getBatchStrengthReport() {
     const batches = await prisma.batch.findMany({
       include: {
-        course: true,
-        faculty: true,
-        students: true,
+        course: { select: { name: true } },
+        faculty: { select: { firstName: true, lastName: true } },
+        _count: { select: { students: true } },
       },
     });
 
-    return batches.map(b => {
-      const enrolled = b.students.length;
-      return {
-        id: b.id,
-        batchId: b.batchId,
-        name: b.name,
-        courseName: b.course.name,
-        facultyName: `${b.faculty.firstName} ${b.faculty.lastName}`,
-        classroom: b.classroom,
-        enrolledCount: enrolled,
-        status: b.status,
-      };
-    });
+    return batches.map(b => ({
+      id: b.id,
+      batchId: b.batchId,
+      name: b.name,
+      courseName: b.course.name,
+      facultyName: `${b.faculty.firstName} ${b.faculty.lastName}`,
+      classroom: b.classroom,
+      enrolledCount: b._count.students,
+      status: b.status,
+    }));
   }
 
   async getCourseRevenueReport() {
     const courses = await prisma.course.findMany({
       include: {
-        students: true,
-        batches: true,
+        _count: { select: { batches: true, students: true } },
+        students: {
+          select: { totalFee: true, paidFee: true, pendingFee: true },
+        },
       },
     });
 
     return courses.map(c => {
-      const studentCount = c.students.length;
+      const studentCount = c._count.students;
       const expectedRevenue = c.students.reduce((sum, s) => sum + s.totalFee, 0);
       const collectedRevenue = c.students.reduce((sum, s) => sum + s.paidFee, 0);
       const pendingRevenue = c.students.reduce((sum, s) => sum + s.pendingFee, 0);
@@ -149,7 +259,7 @@ export class ReportService {
         courseName: c.name,
         standardFee: c.fee,
         duration: c.duration,
-        batchCount: c.batches.length,
+        batchCount: c._count.batches,
         studentCount,
         expectedRevenue,
         collectedRevenue,

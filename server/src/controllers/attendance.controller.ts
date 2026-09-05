@@ -28,6 +28,34 @@ export class AttendanceController {
     }
   }
 
+  async getBatchAttendanceRange(req: Request, res: Response): Promise<void> {
+    try {
+      const batchId = req.query.batchId as string;
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
+
+      if (!batchId || !startDate || !endDate) {
+        sendError(res, 'batchId, startDate, and endDate are required query parameters', 400);
+        return;
+      }
+
+      // Teacher Scoping: Only allow rollcall view for assigned batches
+      if (req.user?.role === 'TEACHER') {
+        const facultyId = await resolveFacultyId(req.user);
+        const assignedBatchIds = facultyId ? await getFacultyAssignedBatchIds(facultyId) : [];
+        if (!assignedBatchIds.includes(batchId)) {
+          sendError(res, 'Access denied: You are not assigned to this batch', 403);
+          return;
+        }
+      }
+
+      const result = await attendanceService.getBatchAttendanceRange(batchId, startDate, endDate);
+      sendSuccess(res, result, 'Batch attendance range report fetched successfully');
+    } catch (error: any) {
+      sendError(res, error.message, 400, error);
+    }
+  }
+
   async markAttendance(req: Request, res: Response): Promise<void> {
     try {
       const { batchId, date, subject, facultyId, records } = req.body;

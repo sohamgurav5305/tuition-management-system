@@ -3,6 +3,7 @@ import { courseRepository } from '../repositories/course.repository';
 import { batchRepository } from '../repositories/batch.repository';
 import { attendanceRepository } from '../repositories/attendance.repository';
 import { generateStudentId } from '../utils/idGenerator.util';
+import { realtimeHub } from '../utils/eventEmitter';
 import { storage } from '../storage';
 import { batchService } from './batch.service';
 import prisma from '../prisma/client';
@@ -76,6 +77,10 @@ export class StudentService {
   }
 
   async createStudent(data: any, file?: any) {
+    if (data.totalFee !== undefined && Number(data.totalFee) < 0) {
+      throw new Error('Total fee cannot be negative');
+    }
+
     let standardFee = Number(data.totalFee || 0);
     if (data.courseId) {
       const course = await courseRepository.findById(data.courseId);
@@ -127,7 +132,7 @@ export class StudentService {
     }
 
     const scholarshipPct = Number(data.scholarshipPct || 0);
-    const agreedTotalFee = Math.round(standardFee * (1 - scholarshipPct / 100));
+    const agreedTotalFee = Math.max(0, Math.round(standardFee * (1 - scholarshipPct / 100)));
     const paidFee = Number(data.paidFee ?? 0);
     const pendingFee = Math.max(0, agreedTotalFee - paidFee);
 
@@ -146,7 +151,7 @@ export class StudentService {
       guardianName: data.guardianName,
       guardianRelation: data.guardianRelation,
       guardianPhone: data.guardianPhone,
-      emergencyContact: data.emergencyContact,
+      emergencyContact: data.emergencyContact || data.guardianPhone || data.phone || 'N/A',
       batchId: data.batchId || null,
       admissionDate: data.admissionDate || new Date().toISOString().split('T')[0],
       scholarshipPct,
@@ -167,6 +172,10 @@ export class StudentService {
       ],
     });
 
+    try {
+      realtimeHub.broadcast('student:updated', { studentId: student.id, action: 'created' });
+    } catch {}
+
     return student;
   }
 
@@ -184,11 +193,15 @@ export class StudentService {
       avatarUrl = await storage.upload(file, 'profile-images');
     }
 
-    const totalFee = data.totalFee !== undefined ? Number(data.totalFee) : existing.totalFee;
+    if (data.totalFee !== undefined && Number(data.totalFee) < 0) {
+      throw new Error('Total fee cannot be negative');
+    }
+
+    const totalFee = data.totalFee !== undefined ? Math.max(0, Number(data.totalFee)) : existing.totalFee;
     const paidFee = existing.paidFee;
     const pendingFee = Math.max(0, totalFee - paidFee);
 
-    return studentRepository.update(id, {
+    const updated = await studentRepository.update(id, {
       firstName: data.firstName ?? existing.firstName,
       lastName: data.lastName ?? existing.lastName,
       rollNumber: data.rollNumber ?? existing.rollNumber,
@@ -200,7 +213,7 @@ export class StudentService {
       guardianName: data.guardianName ?? existing.guardianName,
       guardianRelation: data.guardianRelation ?? existing.guardianRelation,
       guardianPhone: data.guardianPhone ?? existing.guardianPhone,
-      emergencyContact: data.emergencyContact ?? existing.emergencyContact,
+      emergencyContact: data.emergencyContact !== undefined ? (data.emergencyContact || data.guardianPhone || data.phone || 'N/A') : existing.emergencyContact,
       courseId: data.courseId ?? existing.courseId,
       batchId: data.batchId !== undefined ? (data.batchId || null) : existing.batchId,
       admissionDate: data.admissionDate ?? existing.admissionDate,
@@ -210,6 +223,12 @@ export class StudentService {
       totalFee,
       pendingFee,
     });
+
+    try {
+      realtimeHub.broadcast('student:updated', { studentId: updated.id, action: 'updated' });
+    } catch {}
+
+    return updated;
   }
 
   async deleteStudent(id: string) {
@@ -222,7 +241,11 @@ export class StudentService {
       await storage.delete(existing.avatarUrl);
     }
 
-    return studentRepository.delete(id);
+    const res = await studentRepository.delete(id);
+    try {
+      realtimeHub.broadcast('student:updated', { studentId: id, action: 'deleted' });
+    } catch {}
+    return res;
   }
 }
 

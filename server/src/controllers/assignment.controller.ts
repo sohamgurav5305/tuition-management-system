@@ -107,13 +107,13 @@ export class AssignmentController {
         }
       }
 
-      const file = req.file;
+      const files = (req.files as Express.Multer.File[]) || (req.file ? [req.file] : []);
       const data = {
         ...req.body,
         facultyId: facultyId || undefined,
         createdById: req.user?.id,
       };
-      const assignment = await assignmentService.createAssignment(data, file);
+      const assignment = await assignmentService.createAssignment(data, files);
       sendSuccess(res, assignment, 'Assignment created successfully', 201);
     } catch (error: any) {
       sendError(res, error.message, 400, error);
@@ -134,8 +134,8 @@ export class AssignmentController {
         }
       }
 
-      const file = req.file;
-      const assignment = await assignmentService.updateAssignment(id, req.body, file);
+      const files = (req.files as Express.Multer.File[]) || (req.file ? [req.file] : []);
+      const assignment = await assignmentService.updateAssignment(id, req.body, files);
       sendSuccess(res, assignment, 'Assignment updated successfully');
     } catch (error: any) {
       sendError(res, error.message, 400, error);
@@ -175,11 +175,11 @@ export class AssignmentController {
         return;
       }
 
-      const file = req.file;
+      const files = (req.files as Express.Multer.File[]) || (req.file ? [req.file] : []);
       const { submissionText } = req.body;
 
-      if (!file && (!submissionText || !submissionText.trim())) {
-        sendError(res, 'Please provide an uploaded solution file or text response', 400);
+      if (files.length === 0 && (!submissionText || !submissionText.trim())) {
+        sendError(res, 'Please provide uploaded solution file(s) or text response', 400);
         return;
       }
 
@@ -187,7 +187,7 @@ export class AssignmentController {
         assignmentId,
         studentId,
         submissionText,
-        file,
+        files,
       });
 
       sendSuccess(res, submission, 'Assignment solution submitted successfully', 201);

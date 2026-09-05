@@ -7,12 +7,15 @@ const api = axios.create({
   },
 });
 
-// Request interceptor for JWT
+// Request interceptor for JWT and FormData content type handling
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('tuition_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers['Content-Type'];
     }
     return config;
   },
@@ -43,6 +46,8 @@ export const authApi = {
   login: (credentials: { identifier?: string; email?: string; password: string }) =>
     api.post('/auth/login', credentials),
   getProfile: () => api.get('/auth/profile'),
+  changePassword: (data: { currentPassword: string; newPassword: string; confirmPassword?: string }) =>
+    api.post('/auth/change-password', data),
 };
 
 
@@ -103,6 +108,8 @@ export const classroomApi = {
 export const attendanceApi = {
   getBatchAttendance: (batchId: string, date?: string, subject?: string) =>
     api.get(`/attendance/batch/${batchId}`, { params: { date, subject } }),
+  getAttendanceRange: (batchId: string, startDate: string, endDate: string) =>
+    api.get('/attendance/range', { params: { batchId, startDate, endDate } }),
   markAttendance: (data: { batchId: string; date: string; subject?: string; facultyId?: string; records: any[] }) =>
     api.post('/attendance/mark', data),
   getStudentAttendance: (studentId: string, subject?: string) =>
@@ -117,24 +124,6 @@ export const leaveApi = {
   getAll: (params?: any) => api.get('/leaves', { params }),
   apply: (data: any) => api.post('/leaves/apply', data),
   updateStatus: (id: string, status: string) => api.patch(`/leaves/${id}/status`, { status }),
-};
-
-// 9. Examinations (Test Series)
-export const examApi = {
-  getAll: (params?: any) => api.get('/exams', { params }),
-  getById: (id: string) => api.get(`/exams/${id}`),
-  create: (data: any) => api.post('/exams', data),
-  update: (id: string, data: any) => api.put(`/exams/${id}`, data),
-  delete: (id: string) => api.delete(`/exams/${id}`),
-};
-
-// 10. Examination Results & AIR Rankings
-export const resultApi = {
-  getByExam: (examId: string) => api.get(`/results/exam/${examId}`),
-  getByStudent: (studentId: string) => api.get(`/results/student/${studentId}`),
-  getMyResults: () => api.get('/results/my-results'),
-  submitResults: (data: { examId: string; entries: any[] }) =>
-    api.post('/results/submit', data),
 };
 
 // 11. Study Material & DPPs Repository
@@ -152,15 +141,15 @@ export const doubtApi = {
   getAll: (params?: any) => api.get('/doubts', { params }),
   getById: (id: string) => api.get(`/doubts/${id}`),
   getBatchFaculty: () => api.get('/doubts/batch-faculty'),
-  create: (data: any) => api.post('/doubts', data),
-  answer: (id: string, data: { answerText: string; facultyId?: string }) =>
-    api.post(`/doubts/${id}/answer`, data),
+  create: (formData: FormData) =>
+    api.post('/doubts', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  answer: (id: string, formData: FormData) =>
+    api.post(`/doubts/${id}/answer`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   delete: (id: string) => api.delete(`/doubts/${id}`),
 };
 
 
 
-// 14. Coursework Assignments
 export const assignmentApi = {
   getAll: (params?: any) => api.get('/assignments', { params }),
   getById: (id: string) => api.get(`/assignments/${id}`),
@@ -185,6 +174,15 @@ export const paymentApi = {
   getStudentFeeSummary: (studentId: string) => api.get(`/payments/student/${studentId}`),
   getMyFees: () => api.get('/payments/my-fees'),
   recordPayment: (data: any) => api.post('/payments', data),
+  assignFee: (data: {
+    targetType: 'ALL' | 'BATCH' | 'STUDENT';
+    targetId?: string;
+    title: string;
+    amount: number;
+    dueDate?: string;
+    category?: string;
+    remarks?: string;
+  }) => api.post('/payments/assign-fee', data),
 };
 
 // 16. Reports & Analytics
@@ -200,7 +198,8 @@ export const reportApi = {
 // 17. Notifications
 export const notificationApi = {
   getMyNotifications: () => api.get('/notifications'),
-  create: (data: any) => api.post('/notifications', data),
+  create: (formData: FormData) =>
+    api.post('/notifications', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   markAsRead: (id: string) => api.patch(`/notifications/${id}/read`),
   markAllAsRead: () => api.patch('/notifications/read-all'),
 };

@@ -13,6 +13,7 @@ function sanitizeForTeacher(student: any) {
   delete sanitized.feeStatus;
   delete sanitized.paymentMode;
   delete sanitized.payments;
+  delete sanitized.installments;
   return sanitized;
 }
 

@@ -1,22 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   CreditCard,
-  DollarSign,
-  Clock,
-  CheckCircle2,
   PlusCircle,
-  Download,
   Receipt,
   Filter,
   FileText,
-  AlertTriangle,
-  UserCheck,
-  TrendingUp,
 } from 'lucide-react';
 import { paymentApi, studentApi, reportApi, batchApi } from '../../services/api';
 import { Student, Payment, Batch } from '../../types';
-import { StatCard } from '../../components/common/StatCard';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/common/Button';
 import { DataTable, Column } from '../../components/common/DataTable';
@@ -24,17 +16,36 @@ import { Badge } from '../../components/common/Badge';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { useSettings } from '../../context/SettingsContext';
 import { CollectPaymentModal } from './CollectPaymentModal';
+import { AssignFeeModal } from './AssignFeeModal';
 import { ReceiptModal } from '../../components/common/ReceiptModal';
+import { FeeRecordsSection } from './FeeRecordsSection';
 
 export const FeeDashboard: React.FC = () => {
-  const { formatCurrency } = useSettings();
+  const { formatCurrency, formatDate } = useSettings();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [summary, setSummary] = useState<any>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [activeTab, setActiveTab] = useState<'students' | 'receipts'>('students');
+
+  const tabFromUrl = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<'students' | 'records' | 'receipts'>(
+    tabFromUrl === 'records' || tabFromUrl === 'receipts' ? tabFromUrl : 'students'
+  );
+
+  useEffect(() => {
+    const t = searchParams.get('tab');
+    if (t === 'records' || t === 'receipts' || t === 'students') {
+      setActiveTab(t);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: 'students' | 'records' | 'receipts') => {
+    setActiveTab(tab);
+    setSearchParams(tab === 'students' ? {} : { tab });
+  };
 
   // Filters
   const [selectedBatch, setSelectedBatch] = useState<string>('');
@@ -44,34 +55,51 @@ export const FeeDashboard: React.FC = () => {
 
   // Modals
   const [isCollectOpen, setIsCollectOpen] = useState(false);
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [selectedStudentForPay, setSelectedStudentForPay] = useState<Student | null>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<Payment | null>(null);
 
-  const loadData = async () => {
+  const loadData = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const [sumRes, stuRes, payRes, batRes] = await Promise.all([
-        reportApi.getDashboardSummary(),
+        reportApi.getDashboardSummary().catch((err) => {
+          console.error('Failed summary fetch', err);
+          return { data: { data: null } };
+        }),
         studentApi.getAll({
           batchId: selectedBatch || undefined,
           feeStatus: selectedStatus || undefined,
+        }).catch((err) => {
+          console.error('Failed students fetch', err);
+          return { data: { data: [] } };
         }),
-        paymentApi.getAll({}),
-        batchApi.getAll({ status: 'ACTIVE' }),
+        paymentApi.getAll({}).catch((err) => {
+          console.error('Failed payments fetch', err);
+          return { data: { data: [] } };
+        }),
+        batchApi.getAll({ status: 'ACTIVE' }).catch((err) => {
+          console.error('Failed batches fetch', err);
+          return { data: { data: [] } };
+        }),
       ]);
-      setSummary(sumRes.data.data);
-      setStudents(stuRes.data.data);
-      setPayments(payRes.data.data);
-      setBatches(batRes.data.data);
+      if (sumRes.data?.data) setSummary(sumRes.data.data);
+      if (stuRes.data?.data) setStudents(stuRes.data.data);
+      if (payRes.data?.data) setPayments(payRes.data.data);
+      if (batRes.data?.data) setBatches(batRes.data.data);
     } catch (err) {
       console.error('Failed to load fees data', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(true);
+    const interval = setInterval(() => {
+      loadData(false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, [selectedBatch, selectedStatus]);
 
   const handleOpenCollect = (student?: Student) => {
@@ -86,22 +114,17 @@ export const FeeDashboard: React.FC = () => {
     }
   };
 
-  const totalCollected = summary?.totalRevenue || 0;
-  const pendingFees = summary?.pendingFees || 0;
   const studentsWithDues = students.filter((s) => s.pendingFee > 0).length;
-  const overdueAmount = Math.round(pendingFees * 0.35); // Estimated overdue component
-
-  const grandTotal = (totalCollected + pendingFees) || 1;
-  const collectionPercent = Math.min(100, Math.round((totalCollected / grandTotal) * 100));
 
   const studentColumns: Column<Student>[] = [
+
     {
       header: 'Student',
       cell: (s) => (
         <div>
           <span
             onClick={() => navigate(`/students/${s.id}`)}
-            className="font-bold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer block text-xs sm:text-sm truncate"
+            className="font-bold text-slate-900 hover:text-blue-600 cursor-pointer block text-xs sm:text-sm truncate"
           >
             {s.firstName} {s.lastName}
           </span>
@@ -112,7 +135,7 @@ export const FeeDashboard: React.FC = () => {
     {
       header: 'Batch',
       cell: (s) => (
-        <span className="text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-md border border-purple-200/60 dark:border-purple-800/60">
+        <span className="text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200/60">
           {s.batch?.name || 'Unassigned'}
         </span>
       ),
@@ -120,7 +143,7 @@ export const FeeDashboard: React.FC = () => {
     {
       header: 'Total Agreed Fee',
       cell: (s) => (
-        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+        <span className="text-xs font-bold text-slate-900 tabular-nums">
           {formatCurrency(s.totalFee)}
         </span>
       ),
@@ -128,7 +151,7 @@ export const FeeDashboard: React.FC = () => {
     {
       header: 'Paid Amount',
       cell: (s) => (
-        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+        <span className="text-xs font-bold text-emerald-600 tabular-nums">
           {formatCurrency(s.paidFee)}
         </span>
       ),
@@ -138,7 +161,7 @@ export const FeeDashboard: React.FC = () => {
       cell: (s) => (
         <span
           className={`text-xs font-black tabular-nums ${
-            s.pendingFee > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'
+            s.pendingFee > 0 ? 'text-rose-600' : 'text-slate-400'
           }`}
         >
           {formatCurrency(s.pendingFee)}
@@ -149,7 +172,7 @@ export const FeeDashboard: React.FC = () => {
       header: 'Due Date',
       cell: (s) => (
         <span className="text-xs text-slate-500 font-mono">
-          {s.installments?.[0]?.dueDate || 'End of Term'}
+          {s.installments?.[0]?.dueDate ? formatDate(s.installments[0].dueDate) : 'End of Term'}
         </span>
       ),
     },
@@ -173,14 +196,13 @@ export const FeeDashboard: React.FC = () => {
             <Button
               variant="primary"
               size="xs"
-              leftIcon={DollarSign}
               onClick={() => handleOpenCollect(s)}
             >
               Collect
             </Button>
           )}
           <Button
-            variant="ghost"
+            variant="outline"
             size="xs"
             onClick={() => navigate(`/students/${s.id}`)}
           >
@@ -197,7 +219,7 @@ export const FeeDashboard: React.FC = () => {
       cell: (p) => (
         <span
           onClick={() => setSelectedReceipt(p)}
-          className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+          className="text-xs font-mono font-bold text-blue-600 hover:underline cursor-pointer"
         >
           {p.receiptId}
         </span>
@@ -207,7 +229,7 @@ export const FeeDashboard: React.FC = () => {
       header: 'Student Name',
       cell: (p) => (
         <div>
-          <span className="font-bold text-slate-900 dark:text-slate-100 block text-xs">
+          <span className="font-bold text-slate-900 block text-xs">
             {p.student ? `${p.student.firstName} ${p.student.lastName}` : 'Enrolled Student'}
           </span>
           <span className="text-[10px] text-slate-400 font-mono">{p.student?.studentId}</span>
@@ -217,7 +239,7 @@ export const FeeDashboard: React.FC = () => {
     {
       header: 'Amount Received',
       cell: (p) => (
-        <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+        <span className="text-xs font-black text-emerald-600 tabular-nums">
           {formatCurrency(p.amount)}
         </span>
       ),
@@ -236,7 +258,7 @@ export const FeeDashboard: React.FC = () => {
     },
     {
       header: 'Date',
-      cell: (p) => <span className="text-xs text-slate-500 font-mono">{p.paymentDate}</span>,
+      cell: (p) => <span className="text-xs text-slate-500 font-mono">{formatDate(p.paymentDate)}</span>,
     },
     {
       header: 'Receipt',
@@ -258,100 +280,62 @@ export const FeeDashboard: React.FC = () => {
       {/* Top Banner */}
       <PageHeader
         title="Fee Ledger & Invoices"
-        subtitle="Manage student fee installments, collection receipts, pending balance recovery, and official tax invoices."
+        subtitle=""
         badge={`${studentsWithDues} Students with Dues`}
         actions={
-          <Button
-            variant="primary"
-            size="sm"
-            leftIcon={PlusCircle}
-            onClick={() => handleOpenCollect()}
-          >
-            Collect Fee Payment
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={PlusCircle}
+              onClick={() => setIsAssignOpen(true)}
+            >
+              Assign Fee
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={CreditCard}
+              onClick={() => handleOpenCollect()}
+            >
+              Collect Fee Payment
+            </Button>
+          </div>
         }
       />
 
-      {/* Top 4 Summary KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Collection"
-          value={formatCurrency(totalCollected)}
-          subtitle={`${collectionPercent}% of total agreed fees`}
-          icon={DollarSign}
-          colorScheme="emerald"
-        />
-        <StatCard
-          title="Pending Fees"
-          value={formatCurrency(pendingFees)}
-          subtitle="Remaining installment dues"
-          icon={Clock}
-          colorScheme="amber"
-        />
-        <StatCard
-          title="Estimated Overdue"
-          value={formatCurrency(overdueAmount)}
-          subtitle="Crossed term due dates"
-          icon={AlertTriangle}
-          colorScheme="rose"
-        />
-        <StatCard
-          title="Students With Dues"
-          value={studentsWithDues}
-          subtitle="Learners with balance > ₹0"
-          icon={UserCheck}
-          colorScheme="blue"
-        />
-      </div>
-
-      {/* Simple Fee Collection Visualization Banner */}
-      <div className="p-4 sm:p-5 bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs space-y-3">
-        <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-emerald-600" />
-            <span className="font-bold text-slate-900 dark:text-slate-100">
-              Institutional Fee Realization Progress
-            </span>
-          </div>
-          <span className="font-bold text-emerald-600 dark:text-emerald-400">
-            {collectionPercent}% Collected
-          </span>
-        </div>
-
-        <div className="h-2.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
-          <div
-            style={{ width: `${collectionPercent}%` }}
-            className="bg-emerald-500 rounded-l-full transition-all"
-          />
-          <div
-            style={{ width: `${100 - collectionPercent}%` }}
-            className="bg-amber-400 rounded-r-full transition-all"
-          />
-        </div>
-      </div>
-
-      {/* Segmented Tabs (Student Fee Accounts Ledger vs Official Receipts Audit) */}
-      <div className="flex items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-2">
+      {/* Segmented Tabs (Student Fee Accounts Ledger vs Fee Records vs Official Receipts Audit) */}
+      <div className="flex items-center justify-between gap-4 border-b border-slate-200/80 pb-2">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setActiveTab('students')}
+            onClick={() => handleTabChange('students')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
               activeTab === 'students'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             Student Accounts Ledger ({students.length})
           </button>
           <button
-            onClick={() => setActiveTab('receipts')}
+            onClick={() => handleTabChange('records')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+              activeTab === 'records'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            Fee Records & Print Register
+          </button>
+          <button
+            onClick={() => handleTabChange('receipts')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
               activeTab === 'receipts'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            Payment Receipts Audit ({payments.length})
+            Payment Receipts ({payments.length})
           </button>
         </div>
       </div>
@@ -363,14 +347,14 @@ export const FeeDashboard: React.FC = () => {
           data={students}
           keyExtractor={(s: Student) => s.id}
           isLoading={loading}
-          searchPlaceholder="Search student by name or ID..."
-          searchableFields={['firstName', 'lastName', 'studentId']}
+          searchPlaceholder="Search student by name, roll, batch, or student ID..."
+          searchableFields={['firstName', 'lastName', 'studentId', 'rollNumber', 'phone', 'batch', 'course']}
           filters={
             <div className="flex items-center gap-2">
               <select
                 value={selectedBatch}
                 onChange={(e) => setSelectedBatch(e.target.value)}
-                className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-700 dark:text-slate-300 font-medium"
+                className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-medium"
               >
                 <option value="">All Batches</option>
                 {batches.map((b) => (
@@ -383,7 +367,7 @@ export const FeeDashboard: React.FC = () => {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-700 dark:text-slate-300 font-medium"
+                className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-medium"
               >
                 <option value="">All Fee Statuses</option>
                 <option value="PAID">Paid in Full</option>
@@ -397,15 +381,25 @@ export const FeeDashboard: React.FC = () => {
         />
       )}
 
-      {/* Tab 2: Payment Receipts Audit Table */}
+      {/* Tab 2: Fee Records & Print Register */}
+      {activeTab === 'records' && (
+        <FeeRecordsSection
+          students={students}
+          batches={batches}
+          loading={loading}
+          onOpenCollect={handleOpenCollect}
+        />
+      )}
+
+      {/* Tab 3: Payment Receipts Table */}
       {activeTab === 'receipts' && (
         <DataTable
           columns={receiptColumns}
           data={payments}
           keyExtractor={(p: Payment) => p.id}
           isLoading={loading}
-          searchPlaceholder="Search receipt number or transaction ref..."
-          searchableFields={['receiptId', 'transactionReference']}
+          searchPlaceholder="Search receipt number, transaction ref, student name, or mode..."
+          searchableFields={['receiptId', 'transactionReference', 'student', 'paymentMode', 'remarks']}
           emptyTitle="No Payment Receipts"
           emptySubtitle="No official payment receipts have been generated yet."
         />
@@ -420,6 +414,13 @@ export const FeeDashboard: React.FC = () => {
         }}
         onSuccess={handlePaymentRecorded}
         student={selectedStudentForPay}
+      />
+
+      {/* Assign Fee Modal */}
+      <AssignFeeModal
+        isOpen={isAssignOpen}
+        onClose={() => setIsAssignOpen(false)}
+        onSuccess={loadData}
       />
 
       {/* Official A4 Receipt Modal */}

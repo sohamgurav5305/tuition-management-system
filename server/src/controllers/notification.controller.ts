@@ -16,7 +16,8 @@ export class NotificationController {
 
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const notification = await notificationService.createNotification(req.body);
+      const files = (req.files as Express.Multer.File[]) || (req.file ? [req.file] : []);
+      const notification = await notificationService.createNotification(req.body, files);
       sendSuccess(res, notification, 'Notification broadcasted successfully', 201);
     } catch (error: any) {
       sendError(res, error.message, 400, error);
@@ -26,7 +27,8 @@ export class NotificationController {
   async markAsRead(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const notification = await notificationService.markAsRead(id);
+      const userId = req.user?.id;
+      const notification = await notificationService.markAsRead(id, userId);
       sendSuccess(res, notification, 'Notification marked as read');
     } catch (error: any) {
       sendError(res, error.message, 400, error);

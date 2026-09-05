@@ -29,20 +29,24 @@ export const CourseList: React.FC = () => {
   const canEdit = user?.role === 'ADMINISTRATOR';
   const canDelete = user?.role === 'ADMINISTRATOR';
 
-  const fetchCourses = async () => {
+  const fetchCourses = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await courseApi.getAll();
       setCourses(res.data.data);
     } catch (err) {
       console.error('Failed to load courses', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCourses();
+    fetchCourses(true);
+    const interval = setInterval(() => {
+      fetchCourses(false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleDelete = async () => {
@@ -62,19 +66,23 @@ export const CourseList: React.FC = () => {
 
   const columns: Column<Course>[] = [
     {
-      header: 'Program & Target Stream',
+      header: 'Course Name',
       cell: (c) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
             <BookOpen className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">{c.name}</p>
+            <p className="font-bold text-slate-900 text-xs sm:text-sm">{c.name}</p>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <Badge variant="primary" size="xs">
-                {c.targetExam}
-              </Badge>
-              <span className="text-[11px] text-slate-400 font-mono">Class {c.gradeLevel} &bull; {c.courseId}</span>
+              {c.targetExam && c.targetExam !== 'General' && (
+                <Badge variant="primary" size="xs">
+                  {c.targetExam}
+                </Badge>
+              )}
+              <span className="text-[11px] text-slate-400 font-mono">
+                {c.gradeLevel && c.gradeLevel !== 'General' ? `Class ${c.gradeLevel} • ` : ''}{c.courseId}
+              </span>
             </div>
           </div>
         </div>
@@ -95,7 +103,7 @@ export const CourseList: React.FC = () => {
               subjectsList.map((s, idx) => (
                 <span
                   key={idx}
-                  className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700"
                 >
                   {s}
                 </span>
@@ -110,15 +118,15 @@ export const CourseList: React.FC = () => {
     {
       header: 'Duration',
       cell: (c) => (
-        <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700">
           <Clock className="w-3.5 h-3.5 text-slate-400" /> {c.duration}
         </span>
       ),
     },
     {
-      header: 'Standard Tuition',
+      header: 'Fees',
       cell: (c) => (
-        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+        <span className="text-xs font-bold text-slate-900 tabular-nums">
           {formatCurrency(c.fee)}
         </span>
       ),
@@ -126,8 +134,8 @@ export const CourseList: React.FC = () => {
     {
       header: 'Batches Running',
       cell: (c) => (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-          <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700">
+          <Layers className="w-3.5 h-3.5 text-purple-600" />
           <span>{c._count?.batches || 0} Batches</span>
         </span>
       ),
@@ -144,7 +152,7 @@ export const CourseList: React.FC = () => {
                 setIsFormOpen(true);
               }}
               title="Edit Course"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
             >
               <Edit className="w-4 h-4" />
             </button>
@@ -153,7 +161,7 @@ export const CourseList: React.FC = () => {
             <button
               onClick={() => setDeletingId(c.id)}
               title="Delete Course"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -167,9 +175,8 @@ export const CourseList: React.FC = () => {
     <div className="space-y-6">
       {/* Top Banner */}
       <PageHeader
-        title="Programs & Courses"
-        subtitle="Define academic programs, target entrance exams (JEE, NEET, Foundation), curriculum subjects, and tuition pricing."
-        badge={`${courses.length} Programs`}
+        title="Courses"
+        badge={`${courses.length} Courses`}
         actions={
           canEdit && (
             <Button
@@ -181,7 +188,7 @@ export const CourseList: React.FC = () => {
                 setIsFormOpen(true);
               }}
             >
-              Create New Program
+              Create New Course
             </Button>
           )
         }
@@ -192,14 +199,14 @@ export const CourseList: React.FC = () => {
         data={courses}
         columns={columns}
         keyExtractor={(c) => c.id}
-        searchPlaceholder="Search courses by title, grade level, target exam, course ID..."
-        searchableFields={['name', 'targetExam', 'gradeLevel', 'courseId']}
+        searchPlaceholder="Search Courses"
+        searchableFields={['name', 'targetExam', 'gradeLevel', 'courseId', 'description', 'subjects']}
         emptyTitle="No courses created yet"
-        emptySubtitle="Get started on Day 1 by creating your first academic course (e.g., Class 8th, 9th, 10th, 11th, 12th JEE / NEET)."
+        emptySubtitle="Get started on Day 1 by creating your first academic course."
         emptyAction={
           canEdit
             ? {
-                label: '+ Create Course Program',
+                label: '+ Create New Course',
                 onClick: () => {
                   setEditingCourse(null);
                   setIsFormOpen(true);
@@ -223,7 +230,7 @@ export const CourseList: React.FC = () => {
         isOpen={!!deletingId}
         onClose={() => setDeletingId(null)}
         onConfirm={handleDelete}
-        title="Delete Academic Program"
+        title="Delete Course"
         message="Are you sure you want to delete this course? Courses with enrolled students or active batches cannot be removed until batches are reassigned."
         isLoading={isDeleting}
       />

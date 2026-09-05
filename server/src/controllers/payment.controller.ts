@@ -90,6 +90,19 @@ export class PaymentController {
       sendError(res, error.message, 400, error);
     }
   }
+
+  async assignFee(req: Request, res: Response): Promise<void> {
+    try {
+      const recordedById = req.user?.id;
+      const result = await paymentService.assignFee({
+        ...req.body,
+        recordedById,
+      });
+      sendSuccess(res, result, 'Fee charge successfully assigned', 201);
+    } catch (error: any) {
+      sendError(res, error.message, 400, error);
+    }
+  }
 }
 
 export const paymentController = new PaymentController();

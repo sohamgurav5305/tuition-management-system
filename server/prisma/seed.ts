@@ -127,26 +127,23 @@ async function main() {
 
   // 4. Classrooms & Venues
   const classroomDefs = [
-    { roomId: 'CLR-2026-0001', name: 'Aryabhata Lecture Hall 101', capacity: 100, roomType: 'LECTURE_HALL', building: 'Academic Block A - Floor 1', facilities: 'Dual 4K Laser Projectors, Central AC, JBL Surround Sound, Tiered Amphitheater Seating' },
-    { roomId: 'CLR-2026-0002', name: 'Ramanujan Smart Class 102', capacity: 80, roomType: 'SMART_CLASS', building: 'Academic Block A - Floor 1', facilities: '86-inch Interactive Touch Display, 4K Lecture Recording Rig, High-Speed WiFi' },
-    { roomId: 'CLR-2026-0003', name: 'C.V. Raman Physics Hall 201', capacity: 90, roomType: 'LECTURE_HALL', building: 'Physics Wing - Floor 2', facilities: 'Demonstration Benches, High-Framerate Mechanics Sensors, Dual Projectors, AC' },
-    { roomId: 'CLR-2026-0004', name: 'Homi Bhabha Science Theatre 202', capacity: 85, roomType: 'SMART_CLASS', building: 'Science Wing - Floor 2', facilities: 'Interactive Digital Whiteboard, Ergonomic Desks, Central AC' },
-    { roomId: 'CLR-2026-0005', name: 'A.P.J. Abdul Kalam Auditorium', capacity: 350, roomType: 'AUDITORIUM', building: 'Central Block - Ground Floor', facilities: 'Full Stage, Audio-Visual Console, Acoustic Wall Panels, High-Capacity Air Filtration' },
-    { roomId: 'CLR-2026-0006', name: 'J.C. Bose Bio-Lab 301', capacity: 50, roomType: 'SCIENCE_LAB', building: 'Medical Wing - Floor 3', facilities: 'High-Resolution Binocular Microscopes, Anatomical Models, Digital Slides' },
-    { roomId: 'CLR-2026-0007', name: 'P.C. Ray Chemistry Lab 302', capacity: 50, roomType: 'SCIENCE_LAB', building: 'Chemical Sciences Wing - Floor 3', facilities: 'Fume Hoods, Analytical Balances, Chemical Safety Showers, Titration Rigs' },
-    { roomId: 'CLR-2026-0008', name: 'Visvesvaraya Computer Lab 401', capacity: 60, roomType: 'COMPUTER_LAB', building: 'Technology Wing - Floor 4', facilities: 'Core i7 Workstations, Dual Monitors, Gigabit LAN, 100% UPS Inverter Backup' },
-    { roomId: 'CLR-2026-0009', name: 'Vikram Sarabhai Smart Suite A', capacity: 60, roomType: 'SMART_CLASS', building: 'Academic Block B - Floor 1', facilities: 'Smart Interactive Board, Video Conferencing, High-Speed WiFi' },
-    { roomId: 'CLR-2026-0010', name: 'Satyendra Nath Bose Hall B', capacity: 75, roomType: 'LECTURE_HALL', building: 'Academic Block B - Floor 2', facilities: 'Projector, Mic & Sound System, Central AC' },
-    { roomId: 'CLR-2026-0011', name: 'Birbal Sahni Botanical Lab', capacity: 45, roomType: 'SCIENCE_LAB', building: 'Medical Wing - Floor 3', facilities: 'Plant Specimen Racks, Compound Microscopes, Digital Herbarium' },
-    { roomId: 'CLR-2026-0012', name: 'Meghnad Saha Astro-Physics Lab', capacity: 50, roomType: 'SCIENCE_LAB', building: 'Physics Wing - Floor 3', facilities: 'Spectrometers, Optical Benches, Interferometers' },
+    { roomId: 'CLR-2026-0001', name: 'Room 001', floor: 'Ground Floor' },
+    { roomId: 'CLR-2026-0002', name: 'Room 002', floor: 'Ground Floor' },
+    { roomId: 'CLR-2026-0003', name: 'Room 003', floor: 'Ground Floor' },
+    { roomId: 'CLR-2026-0004', name: 'Room 004', floor: 'Ground Floor' },
+    { roomId: 'CLR-2026-0005', name: 'Room 005', floor: 'Ground Floor' },
+    { roomId: 'CLR-2026-0006', name: 'Room 006', floor: 'Ground Floor' },
+    { roomId: 'CLR-2026-0007', name: 'Room 101', floor: 'First Floor' },
+    { roomId: 'CLR-2026-0008', name: 'Room 102', floor: 'First Floor' },
+    { roomId: 'CLR-2026-0009', name: 'Room 103', floor: 'First Floor' },
+    { roomId: 'CLR-2026-0010', name: 'Room 104', floor: 'First Floor' },
+    { roomId: 'CLR-2026-0011', name: 'Room 105', floor: 'First Floor' },
+    { roomId: 'CLR-2026-0012', name: 'Room 106', floor: 'First Floor' },
   ];
 
   for (const c of classroomDefs) {
     await prisma.classroom.create({
-      data: {
-        ...c,
-        status: 'AVAILABLE',
-      },
+      data: c,
     });
   }
   console.log(`✔ Seeded ${classroomDefs.length} Classrooms.`);

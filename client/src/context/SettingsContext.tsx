@@ -2,11 +2,16 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { settingApi } from '../services/api';
 import { SystemSettings } from '../types';
 
+import { formatDate, formatDateTime, formatDateRange } from '../utils/date';
+
 interface SettingsContextType {
   settings: SystemSettings;
   loading: boolean;
   refreshSettings: () => Promise<void>;
   formatCurrency: (amount: number | null | undefined) => string;
+  formatDate: (value: string | Date | number | null | undefined) => string;
+  formatDateTime: (value: string | Date | number | null | undefined) => string;
+  formatDateRange: (start: string | Date | null | undefined, end: string | Date | null | undefined) => string;
 }
 
 const defaultSettings: SystemSettings = {
@@ -50,7 +55,17 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   return (
-    <SettingsContext.Provider value={{ settings, loading, refreshSettings, formatCurrency }}>
+    <SettingsContext.Provider
+      value={{
+        settings,
+        loading,
+        refreshSettings,
+        formatCurrency,
+        formatDate,
+        formatDateTime,
+        formatDateRange,
+      }}
+    >
       {children}
     </SettingsContext.Provider>
   );

@@ -9,10 +9,11 @@ import {
   AlertCircle,
   Award,
   Send,
-  Lock,
   Paperclip,
   Check,
   Filter,
+  X,
+  Eye,
 } from 'lucide-react';
 import { assignmentApi } from '../../services/api';
 import { Assignment, AssignmentSubmission } from '../../types';
@@ -20,6 +21,7 @@ import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { useToast } from '../../context/ToastContext';
+import { formatDate, formatDateTime } from '../../utils/date';
 
 export const MyAssignments: React.FC = () => {
   const { success, error } = useToast();
@@ -30,52 +32,64 @@ export const MyAssignments: React.FC = () => {
   // Submission Modal state
   const [submittingAssignment, setSubmittingAssignment] = useState<Assignment | null>(null);
   const [submissionText, setSubmissionText] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchAssignments = async () => {
+  const fetchAssignments = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await assignmentApi.getMyAssignments();
       setAssignments(res.data.data || []);
     } catch (err) {
       console.error('Failed to load my assignments', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAssignments();
+    fetchAssignments(true);
+    const interval = setInterval(() => {
+      fetchAssignments(false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleOpenSubmit = (a: Assignment) => {
     setSubmittingAssignment(a);
     setSubmissionText(a.mySubmission?.submissionText || '');
-    setSelectedFile(null);
+    setSelectedFiles([]);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
     }
+    e.target.value = '';
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmitSolution = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!submittingAssignment) return;
 
-    if (!selectedFile && !submissionText.trim()) {
-      error('Input Required', 'Please upload a solution file or provide solution notes');
+    if (selectedFiles.length === 0 && !submissionText.trim()) {
+      error('Input Required', 'Please upload at least one solution file or provide solution notes');
       return;
     }
 
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      if (selectedFile) {
-        formData.append('file', selectedFile);
+      if (selectedFiles.length > 0) {
+        selectedFiles.forEach((file) => {
+          formData.append('files', file);
+        });
       }
       if (submissionText.trim()) {
         formData.append('submissionText', submissionText.trim());
@@ -84,10 +98,10 @@ export const MyAssignments: React.FC = () => {
       await assignmentApi.submit(submittingAssignment.id, formData);
       success(
         'Assignment Submitted!',
-        'Your solution has been recorded with early/late timestamp and queued for faculty grading'
+        'Your solution files have been recorded with timestamp and queued for faculty grading'
       );
       setSubmittingAssignment(null);
-      setSelectedFile(null);
+      setSelectedFiles([]);
       setSubmissionText('');
       fetchAssignments();
     } catch (err: any) {
@@ -112,22 +126,19 @@ export const MyAssignments: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              My Academic Coursework & Problem Sets
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+              Assignments
             </h1>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-              <Lock className="w-3 h-3" /> Private Portal
-            </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Subject-wise problem sets, weekly homework submissions with automatic timing verification, and faculty gradecards.
+          <p className="text-xs text-slate-500 mt-1">
+            
           </p>
         </div>
       </div>
 
       {/* Subject Filter Bar */}
       {subjects.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm text-xs">
+        <div className="flex flex-wrap items-center gap-2 p-3 bg-white border border-slate-200/80 rounded-2xl shadow-sm text-xs">
           <span className="text-slate-400 font-bold flex items-center gap-1 mr-1">
             <Filter className="w-3.5 h-3.5" /> Filter by Subject:
           </span>
@@ -136,7 +147,7 @@ export const MyAssignments: React.FC = () => {
             className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
               selectedSubject === 'ALL'
                 ? 'bg-blue-600 text-white shadow-sm'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
             All Subjects ({assignments.length})
@@ -150,7 +161,7 @@ export const MyAssignments: React.FC = () => {
                 className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
                   selectedSubject === s
                     ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 {s} ({count})
@@ -175,20 +186,20 @@ export const MyAssignments: React.FC = () => {
             return (
               <div
                 key={a.id}
-                className="p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm space-y-4"
+                className="p-6 bg-white border border-slate-200/80 rounded-3xl shadow-sm space-y-4"
               >
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">
+                      <span className="text-xs font-mono font-bold text-blue-600">
                         {a.assignmentId}
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/60">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/60">
                         <BookOpen className="w-3 h-3" /> {a.subject}
                       </span>
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-1">{a.title}</h3>
+                    <h3 className="text-lg font-bold text-slate-900 mt-1">{a.title}</h3>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
@@ -200,7 +211,7 @@ export const MyAssignments: React.FC = () => {
 
                 {/* Assignment Description */}
                 {a.description && (
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     {a.description}
                   </p>
                 )}
@@ -208,38 +219,69 @@ export const MyAssignments: React.FC = () => {
                 {/* Meta details */}
                 <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 pt-1">
                   <div className="flex flex-wrap items-center gap-4">
-                    <span className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" /> Deadline: <strong>{a.dueDate}</strong>
+                    <span className="flex items-center gap-1.5 font-semibold text-slate-700">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" /> Deadline: <strong>{formatDate(a.dueDate)}</strong>
                     </span>
                     <span>
                       Max Marks: <strong>{a.totalMarks} pts</strong>
                     </span>
                   </div>
 
-                  {a.attachmentUrl && (
-                    <a
-                      href={a.attachmentUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded-xl font-bold hover:bg-blue-100 transition-colors"
-                    >
-                      <Download className="w-3.5 h-3.5" /> Download Problem Material
-                    </a>
+                  {((a.attachments && a.attachments.length > 0) || a.attachmentUrl) && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {(a.attachments && a.attachments.length > 0 ? a.attachments : [a.attachmentUrl!]).map((attUrl, attIdx) => {
+                        const rawName = attUrl.split('/').pop() || `Problem Material #${attIdx + 1}`;
+                        const cleanName = rawName.match(/^[0-9a-fA-F-]{36,}-(.*)$/)?.[1] || rawName;
+                        return (
+                          <div
+                            key={attIdx}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200/80 rounded-xl text-xs font-semibold text-blue-900 shadow-2xs"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                            <span className="truncate max-w-[180px]" title={cleanName}>
+                              {cleanName}
+                            </span>
+                            <div className="flex items-center gap-1 ml-1 border-l border-blue-200 pl-1.5">
+                              <a
+                                href={attUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100/80 rounded-md transition-colors flex items-center gap-1"
+                                title="View / Open File"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span className="text-[11px] font-bold">View</span>
+                              </a>
+                              <a
+                                href={attUrl}
+                                download={cleanName}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-100/80 rounded-md transition-colors"
+                                title="Download File"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                              </a>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
 
                 {/* Submission Box */}
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div className="pt-3 border-t border-slate-100">
                   {isSubmitted ? (
-                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200/70 dark:border-slate-800 space-y-3">
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-3">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         {/* Submission Timing Badge */}
                         <div className="flex items-center gap-2">
                           <span
                             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold ${
                               sub.isLate
-                                ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800'
-                                : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800'
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                                : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
                             }`}
                           >
                             <Clock className="w-3.5 h-3.5" />
@@ -247,23 +289,19 @@ export const MyAssignments: React.FC = () => {
                           </span>
 
                           <span className="text-[11px] text-slate-400">
-                            {new Date(sub.submittedAt).toLocaleDateString()} at{' '}
-                            {new Date(sub.submittedAt).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
+                            {formatDateTime(sub.submittedAt)}
                           </span>
                         </div>
 
                         {/* Grading Status Pill */}
                         <div>
                           {isGraded ? (
-                            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-xl text-xs font-black bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shadow-sm">
-                              <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-xl text-xs font-black bg-purple-50 text-purple-700 border border-purple-200 shadow-sm">
+                              <Award className="w-4 h-4 text-purple-600" />
                               Score: {sub.score} / {a.totalMarks} Marks ({pct}%)
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
                               <AlertCircle className="w-3.5 h-3.5" /> Awaiting Subject Teacher Evaluation
                             </span>
                           )}
@@ -272,7 +310,7 @@ export const MyAssignments: React.FC = () => {
 
                       {/* Student Solution Notes */}
                       {sub.submissionText && (
-                        <div className="p-3 bg-white dark:bg-slate-900 rounded-xl text-xs text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-800">
+                        <div className="p-3 bg-white rounded-xl text-xs text-slate-700 border border-slate-200/60">
                           <span className="font-bold text-slate-500 block mb-0.5">My Submitted Notes:</span>
                           {sub.submissionText}
                         </div>
@@ -280,33 +318,64 @@ export const MyAssignments: React.FC = () => {
 
                       {/* Teacher Feedback */}
                       {isGraded && sub.feedback && (
-                        <div className="p-3 bg-purple-50/70 dark:bg-purple-950/40 rounded-xl text-xs text-purple-950 dark:text-purple-200 border border-purple-200/60 dark:border-purple-800/60">
-                          <span className="font-bold text-purple-700 dark:text-purple-400 flex items-center gap-1 mb-0.5">
+                        <div className="p-3 bg-purple-50/70 rounded-xl text-xs text-purple-950 border border-purple-200/60">
+                          <span className="font-bold text-purple-700 flex items-center gap-1 mb-0.5">
                             <Award className="w-3.5 h-3.5" /> Instructor Evaluation Remarks:
                           </span>
                           {sub.feedback}
                         </div>
                       )}
 
-                      {/* Download Submitted Solution File & Re-Submit option */}
+                      {/* Download/View Submitted Solution Files & Re-Submit option */}
                       <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                        {sub.fileUrl ? (
-                          <a
-                            href={sub.fileUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors"
-                          >
-                            <Download className="w-3.5 h-3.5 text-blue-600" /> View Uploaded Solution File
-                          </a>
-                        ) : (
-                          <span className="text-[11px] text-slate-400">Text solution submitted</span>
-                        )}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {((sub.files && sub.files.length > 0) || sub.fileUrl) ? (
+                            (sub.files && sub.files.length > 0 ? sub.files : [sub.fileUrl!]).map((sUrl, sIdx) => {
+                              const rawName = sUrl.split('/').pop() || `Solution File #${sIdx + 1}`;
+                              const cleanName = rawName.match(/^[0-9a-fA-F-]{36,}-(.*)$/)?.[1] || rawName;
+                              return (
+                                <div
+                                  key={sIdx}
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 shadow-2xs"
+                                >
+                                  <FileText className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                                  <span className="truncate max-w-[170px]" title={cleanName}>
+                                    {cleanName}
+                                  </span>
+                                  <div className="flex items-center gap-1 ml-1 border-l border-slate-200 pl-1.5">
+                                    <a
+                                      href={sUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors flex items-center gap-1"
+                                      title="View / Open File"
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                      <span className="text-[11px] font-bold">View</span>
+                                    </a>
+                                    <a
+                                      href={sUrl}
+                                      download={cleanName}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                                      title="Download File"
+                                    >
+                                      <Download className="w-3.5 h-3.5" />
+                                    </a>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <span className="text-[11px] text-slate-400">Text solution submitted</span>
+                          )}
+                        </div>
 
                         {a.status === 'OPEN' && !isGraded && (
                           <button
                             onClick={() => handleOpenSubmit(a)}
-                            className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline"
+                            className="flex items-center gap-1.5 text-xs text-blue-600 font-bold hover:underline"
                           >
                             <Upload className="w-3.5 h-3.5" /> Re-upload / Update Solution
                           </button>
@@ -314,10 +383,10 @@ export const MyAssignments: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50/60 dark:bg-slate-800/20 border border-slate-200/60 dark:border-slate-800">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50/60 border border-slate-200/60">
                       <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <span className="text-xs font-bold text-slate-700">
                           Not Submitted Yet
                         </span>
                         <span className="text-[11px] text-slate-400">
@@ -342,8 +411,8 @@ export const MyAssignments: React.FC = () => {
             );
           })
         ) : (
-          <div className="p-12 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
-            <FileText className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+          <div className="p-12 text-center bg-white border border-slate-200 rounded-3xl">
+            <FileText className="w-10 h-10 text-slate-300 mx-auto mb-2" />
             <p className="text-slate-400 text-sm font-semibold">
               No assignments found matching subject filter "{selectedSubject}".
             </p>
@@ -357,72 +426,95 @@ export const MyAssignments: React.FC = () => {
           isOpen={!!submittingAssignment}
           onClose={() => setSubmittingAssignment(null)}
           title={`Submit Solution: ${submittingAssignment.title}`}
-          subtitle={`Subject: ${submittingAssignment.subject} • Due Date: ${submittingAssignment.dueDate} • Max Marks: ${submittingAssignment.totalMarks} pts`}
+          subtitle={`Subject: ${submittingAssignment.subject} • Due Date: ${formatDate(submittingAssignment.dueDate)} • Max Marks: ${submittingAssignment.totalMarks} pts`}
           maxWidth="lg"
         >
           <form onSubmit={handleSubmitSolution} className="space-y-4">
             {/* File Upload Drop Area */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                Upload Solution File (PDF, Image, Word Doc - Max 10MB)
+              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Paperclip className="w-3.5 h-3.5 text-blue-600" /> Upload Solution Files
+                </span>
+                <span className="text-[11px] text-slate-400 font-normal">PDF, Images, Word Docs (Max 25MB each)</span>
               </label>
 
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className={`p-6 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all ${
-                  selectedFile
-                    ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20'
-                    : 'border-slate-300 dark:border-slate-700 hover:border-blue-500 bg-slate-50 dark:bg-slate-800/40'
-                }`}
+                className="p-5 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all border-slate-300 hover:border-blue-500 bg-slate-50"
               >
                 <input
                   type="file"
+                  multiple
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.zip"
                   className="hidden"
                 />
-                {selectedFile ? (
-                  <div className="text-center space-y-1">
-                    <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
-                    <p className="text-xs font-bold text-emerald-900 dark:text-emerald-200">{selectedFile.name}</p>
-                    <p className="text-[11px] text-slate-400">{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
-                    <span className="text-[11px] text-blue-600 font-semibold underline block mt-1">
-                      Click to choose a different file
-                    </span>
-                  </div>
-                ) : (
-                  <div className="text-center space-y-1.5">
-                    <Upload className="w-8 h-8 text-slate-400 mx-auto" />
-                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Click to browse or drag & drop solution file
-                    </p>
-                    <p className="text-[11px] text-slate-400">PDF, PNG, JPG, DOCX supported</p>
-                  </div>
-                )}
+                <div className="text-center space-y-1.5">
+                  <Upload className="w-7 h-7 text-blue-500 mx-auto" />
+                  <p className="text-xs font-bold text-slate-700">
+                    Click to browse or drag & drop solution files
+                  </p>
+                  <p className="text-[11px] text-slate-400">Attach multiple photos of handwritten work, diagrams, or PDFs</p>
+                </div>
               </div>
+
+              {/* Selected Files Preview Chips */}
+              {selectedFiles.length > 0 && (
+                <div className="mt-2.5 space-y-1.5">
+                  <p className="text-[11px] font-bold text-slate-600">
+                    Attached Files ({selectedFiles.length}):
+                  </p>
+                  <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-1">
+                    {selectedFiles.map((file, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-900 text-xs font-semibold"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                        <span className="truncate max-w-[170px]">{file.name}</span>
+                        <span className="text-[10px] text-slate-400 font-normal">
+                          ({(file.size / 1024).toFixed(0)} KB)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFile(idx);
+                          }}
+                          className="p-0.5 hover:bg-emerald-200/60 rounded-full text-rose-500 ml-1"
+                          title="Remove file"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Solution Notes / Text Input */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                Solution Notes / Steps & Remarks (Optional)
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Comments
               </label>
               <textarea
                 value={submissionText}
                 onChange={(e) => setSubmissionText(e.target.value)}
                 rows={4}
                 placeholder="Type your explanation, answers to specific problem questions, or references..."
-                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
 
             {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
               <button
                 type="button"
                 onClick={() => setSubmittingAssignment(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl"
+                className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 rounded-xl"
               >
                 Cancel
               </button>

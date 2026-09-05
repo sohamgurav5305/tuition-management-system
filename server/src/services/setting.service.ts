@@ -1,4 +1,6 @@
 import { settingRepository } from '../repositories/setting.repository';
+import { serverCache } from '../utils/cache';
+import { realtimeHub } from '../utils/eventEmitter';
 import { exec } from 'child_process';
 import util from 'util';
 import path from 'path';
@@ -7,8 +9,11 @@ const execPromise = util.promisify(exec);
 
 export class SettingService {
   async getSettings(): Promise<Record<string, string>> {
+    const cached = serverCache.get<Record<string, string>>('settings');
+    if (cached) return cached;
+
     const settings = await settingRepository.getAll();
-    return {
+    const result = {
       instituteName: settings.instituteName || 'Apex Academy Tuition & Coaching Institute',
       currencySymbol: settings.currencySymbol || '$',
       currencyCode: settings.currencyCode || 'USD',
@@ -19,11 +24,16 @@ export class SettingService {
       website: settings.website || 'https://apexacademy.edu',
       ...settings,
     };
+    serverCache.set('settings', result, 5 * 60 * 1000); // 5 min cache
+    return result;
   }
 
   async updateSettings(newSettings: Record<string, string>): Promise<Record<string, string>> {
     await settingRepository.updateMany(newSettings);
-    return this.getSettings();
+    serverCache.invalidate('settings');
+    const updated = await this.getSettings();
+    realtimeHub.broadcast('settings:updated', updated);
+    return updated;
   }
 
   async getBackupData() {

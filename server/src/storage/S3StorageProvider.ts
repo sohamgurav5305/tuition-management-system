@@ -19,7 +19,9 @@ export class S3StorageProvider implements StorageProvider {
 
   async upload(file: UploadedFile, folder: string = 'general'): Promise<string> {
     const fileExt = path.extname(file.originalname) || '.jpg';
-    const key = `${folder}/${uuidv4()}${fileExt}`.replace(/\\/g, '/');
+    const baseName = path.basename(file.originalname, fileExt).replace(/[^a-zA-Z0-9_\-\.]/g, '_').substring(0, 60);
+    const fileName = baseName ? `${uuidv4()}-${baseName}${fileExt}` : `${uuidv4()}${fileExt}`;
+    const key = `${folder}/${fileName}`.replace(/\\/g, '/');
 
     // If AWS SDK is configured, execute PutObjectCommand here:
     /*

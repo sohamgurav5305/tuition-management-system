@@ -17,4 +17,18 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'lucide-icons': ['lucide-react'],
+          'form-vendor': ['react-hook-form', 'zod', '@hookform/resolvers'],
+          'network-vendor': ['axios'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
 });
+

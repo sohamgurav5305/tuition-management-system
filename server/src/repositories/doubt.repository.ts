@@ -5,7 +5,12 @@ export class DoubtRepository {
   async findById(id: string) {
     return prisma.doubt.findUnique({
       where: { id },
-      include: { student: true, faculty: true },
+      include: {
+        student: {
+          include: { batch: true },
+        },
+        faculty: true,
+      },
     });
   }
 
@@ -22,7 +27,17 @@ export class DoubtRepository {
       orderBy: { createdAt: 'desc' },
       include: {
         student: {
-          select: { id: true, studentId: true, firstName: true, lastName: true, rollNumber: true, avatarUrl: true },
+          select: {
+            id: true,
+            studentId: true,
+            firstName: true,
+            lastName: true,
+            rollNumber: true,
+            avatarUrl: true,
+            batch: {
+              select: { id: true, name: true, batchId: true },
+            },
+          },
         },
         faculty: {
           select: { id: true, facultyId: true, firstName: true, lastName: true, subjectTaught: true },

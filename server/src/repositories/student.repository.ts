@@ -27,12 +27,6 @@ export class StudentRepository {
         attendance: {
           orderBy: { date: 'desc' },
         },
-        results: {
-          include: {
-            exam: true,
-          },
-          orderBy: { createdAt: 'desc' },
-        },
       },
     });
   }
@@ -65,12 +59,6 @@ export class StudentRepository {
         attendance: {
           orderBy: { date: 'desc' },
         },
-        results: {
-          include: {
-            exam: true,
-          },
-          orderBy: { createdAt: 'desc' },
-        },
       },
     });
   }
@@ -78,15 +66,27 @@ export class StudentRepository {
   async findAll(filters?: StudentFilterParams) {
     const where: Prisma.StudentWhereInput = {};
 
-    if (filters?.search) {
-      const q = filters.search;
-      where.OR = [
-        { firstName: { contains: q } },
-        { lastName: { contains: q } },
-        { studentId: { contains: q } },
-        { email: { contains: q } },
-        { phone: { contains: q } },
-      ];
+    if (filters?.search?.trim()) {
+      const words = filters.search.trim().split(/\s+/).filter(Boolean);
+      if (words.length > 0) {
+        where.AND = [
+          ...(Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []),
+          ...words.map((word) => ({
+            OR: [
+              { firstName: { contains: word, mode: 'insensitive' as const } },
+              { lastName: { contains: word, mode: 'insensitive' as const } },
+              { studentId: { contains: word, mode: 'insensitive' as const } },
+              { rollNumber: { contains: word, mode: 'insensitive' as const } },
+              { email: { contains: word, mode: 'insensitive' as const } },
+              { phone: { contains: word, mode: 'insensitive' as const } },
+              { guardianName: { contains: word, mode: 'insensitive' as const } },
+              { address: { contains: word, mode: 'insensitive' as const } },
+              { course: { name: { contains: word, mode: 'insensitive' as const } } },
+              { batch: { name: { contains: word, mode: 'insensitive' as const } } },
+            ],
+          })),
+        ];
+      }
     }
 
     if (filters?.courseId) {
@@ -115,7 +115,11 @@ export class StudentRepository {
 
     return prisma.student.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: [
+        { firstName: 'asc' },
+        { lastName: 'asc' },
+        { studentId: 'asc' },
+      ],
       include: {
         course: true,
         batch: true,

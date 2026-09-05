@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PlusCircle, Edit, Trash2, FileText, Download, Clock, Award, Users, BookOpen, Filter, GraduationCap, CheckCircle2, UserCheck } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, FileText, Download, Clock, Award, Users, BookOpen, Filter, GraduationCap, CheckCircle2, UserCheck, Eye } from 'lucide-react';
 import { assignmentApi } from '../../services/api';
 import { Assignment } from '../../types';
 import { DataTable, Column } from '../../components/common/DataTable';
@@ -9,6 +9,7 @@ import { Badge } from '../../components/common/Badge';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { formatDate } from '../../utils/date';
 import { AssignmentFormModal } from './AssignmentFormModal';
 import { AssignmentSubmissionsModal } from './AssignmentSubmissionsModal';
 
@@ -30,20 +31,24 @@ export const AssignmentList: React.FC = () => {
   const isTeacher = user?.role === 'TEACHER';
   const isAdmin = user?.role === 'ADMINISTRATOR';
 
-  const fetchAssignments = async () => {
+  const fetchAssignments = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await assignmentApi.getAll();
       setAssignments(res.data.data);
     } catch (err) {
       console.error('Failed to load assignments', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAssignments();
+    fetchAssignments(true);
+    const interval = setInterval(() => {
+      fetchAssignments(false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleDelete = async () => {
@@ -72,7 +77,7 @@ export const AssignmentList: React.FC = () => {
       header: 'Assignment Title',
       cell: (a) => (
         <div>
-          <p className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">{a.title}</p>
+          <p className="font-bold text-slate-900 text-xs sm:text-sm">{a.title}</p>
           <span className="text-[11px] text-slate-400 font-mono">{a.assignmentId}</span>
         </div>
       ),
@@ -88,49 +93,53 @@ export const AssignmentList: React.FC = () => {
         </div>
       ),
     },
-    {
-      header: 'Assigned Faculty',
-      cell: (a) => {
-        const facName = a.faculty
-          ? `${a.faculty.firstName} ${a.faculty.lastName}`
-          : a.batch?.faculty
-          ? `${a.batch.faculty.firstName} ${a.batch.faculty.lastName}`
-          : 'Faculty Instructor';
-        return (
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
-            <GraduationCap className="w-3.5 h-3.5 text-purple-600 flex-shrink-0" />
-            <span>{facName}</span>
-          </div>
-        );
-      },
-    },
+    ...(!isTeacher
+      ? [
+          {
+            header: 'Assigned Faculty',
+            cell: (a: Assignment) => {
+              const facName = a.faculty
+                ? `${a.faculty.firstName} ${a.faculty.lastName}`
+                : a.batch?.faculty
+                ? `${a.batch.faculty.firstName} ${a.batch.faculty.lastName}`
+                : 'Faculty Instructor';
+              return (
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                  <GraduationCap className="w-3.5 h-3.5 text-purple-600 flex-shrink-0" />
+                  <span>{facName}</span>
+                </div>
+              );
+            },
+          },
+        ]
+      : []),
     {
       header: 'Submission Deadline',
       cell: (a) => (
-        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 font-mono">
-          <Clock className="w-3.5 h-3.5 text-slate-400" /> {a.dueDate}
+        <span className="text-xs font-semibold text-slate-700 flex items-center gap-1 font-mono">
+          <Clock className="w-3.5 h-3.5 text-slate-400" /> {formatDate(a.dueDate)}
         </span>
       ),
     },
     {
       header: 'Max Score',
       cell: (a) => (
-        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+        <span className="text-xs font-bold text-slate-900 tabular-nums">
           {a.totalMarks} pts
         </span>
       ),
     },
     {
-      header: 'Submissions & Progress',
+      header: 'Submissions',
       cell: (a) => {
         const subCount = (a as any)._count?.submissions ?? (a as any).submissions?.length ?? 0;
         const studentCount = a.batch?._count?.students ?? 0;
         return (
           <button
             onClick={() => setViewingSubmissions(a)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 dark:bg-slate-800/80 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg text-xs font-semibold border border-slate-200/60 dark:border-slate-700 transition-colors"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 rounded-lg text-xs font-semibold border border-slate-200/60 transition-colors"
           >
-            <UserCheck className="w-3.5 h-3.5" />
+            <Eye className="w-3.5 h-3.5 text-blue-600" />
             <span>
               {subCount} / {studentCount > 0 ? studentCount : '—'} Submitted
             </span>
@@ -138,51 +147,44 @@ export const AssignmentList: React.FC = () => {
         );
       },
     },
-    {
-      header: 'Actions',
-      className: 'text-right',
-      cell: (a) => (
-        <div className="flex items-center justify-end gap-1">
-          <button
-            onClick={() => setViewingSubmissions(a)}
-            title="Review Submissions"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
-          >
-            <Users className="w-4 h-4" />
-          </button>
-          {(isTeacher || isAdmin) && (
-            <>
-              <button
-                onClick={() => {
-                  setEditingAssignment(a);
-                  setIsFormOpen(true);
-                }}
-                title="Edit Assignment"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setDeletingId(a.id)}
-                title="Delete Assignment"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </>
-          )}
-        </div>
-      ),
-    },
+    ...(isTeacher
+      ? [
+          {
+            header: 'Actions',
+            className: 'text-right',
+            cell: (a: Assignment) => (
+              <div className="flex items-center justify-end gap-1">
+                <button
+                  onClick={() => {
+                    setEditingAssignment(a);
+                    setIsFormOpen(true);
+                  }}
+                  title="Edit Assignment"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setDeletingId(a.id)}
+                  title="Delete Assignment"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (
     <div className="space-y-6">
       {/* Top Banner */}
       <PageHeader
-        title="Assignments & Coursework"
-        subtitle="Manage subject problem sets, daily homework sheets, deadline trackers, and faculty evaluation."
-        badge={`${assignments.length} Coursework Sets`}
+        title="Assignments"
+        subtitle=""
+        badge={`${assignments.length} Assignments`}
         actions={
           isTeacher && (
             <Button
@@ -202,14 +204,14 @@ export const AssignmentList: React.FC = () => {
 
       {/* Subject Filter Bar */}
       {allSubjects.length > 0 && (
-        <div className="p-3.5 bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-3 text-xs shadow-xs">
+        <div className="p-3.5 bg-white border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs shadow-xs">
           <div className="flex items-center gap-2">
             <Filter className="w-3.5 h-3.5 text-slate-400" />
             <span className="font-bold text-slate-500 uppercase tracking-wider">Filter Subject:</span>
             <select
               value={subjectFilter}
               onChange={(e) => setSubjectFilter(e.target.value)}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-semibold focus:outline-none"
+              className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 font-semibold focus:outline-none"
             >
               <option value="">All Subjects</option>
               {allSubjects.map((s) => (
@@ -221,7 +223,7 @@ export const AssignmentList: React.FC = () => {
             {subjectFilter && (
               <button
                 onClick={() => setSubjectFilter('')}
-                className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                className="text-xs text-blue-600 font-semibold hover:underline"
               >
                 Clear
               </button>
@@ -239,9 +241,9 @@ export const AssignmentList: React.FC = () => {
         data={filteredAssignments}
         columns={columns}
         keyExtractor={(a) => a.id}
-        searchPlaceholder="Search assignments by title, subject, batch..."
-        searchableFields={['title', 'assignmentId', 'subject']}
-        emptyTitle="No coursework posted yet"
+        searchPlaceholder="Search assignments by title, subject, batch, description..."
+        searchableFields={['title', 'assignmentId', 'subject', 'description', 'batch', 'faculty']}
+        emptyTitle="No Assignments posted yet"
         emptySubtitle="Faculty can post daily practice assignments and problem sets for assigned batches."
         emptyAction={
           isTeacher

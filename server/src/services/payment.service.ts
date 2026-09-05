@@ -1,6 +1,8 @@
 import { paymentRepository, PaymentFilterParams } from '../repositories/payment.repository';
 import { studentRepository } from '../repositories/student.repository';
+import { notificationService } from './notification.service';
 import { generateReceiptId } from '../utils/idGenerator.util';
+import { realtimeHub } from '../utils/eventEmitter';
 import prisma from '../prisma/client';
 
 export class PaymentService {
@@ -100,6 +102,31 @@ export class PaymentService {
 
     const fullPayment = await paymentRepository.findById(payment.id);
 
+    // Notify student of fee payment confirmation
+    try {
+      await notificationService.createNotification({
+        title: `Fee Payment Confirmed: ₹${amount.toLocaleString('en-IN')}`,
+        message: `Tuition fee payment of ₹${amount.toLocaleString('en-IN')} via ${data.paymentMode} recorded (Receipt #${receiptId}). Remaining dues: ₹${updatedStudent.pendingFee.toLocaleString('en-IN')}.`,
+        type: 'SUCCESS',
+        targetUserId: student.userId || undefined,
+        targetRole: 'STUDENT',
+      });
+    } catch (e) {
+      console.error('Failed to send payment notification', e);
+    }
+
+    // Realtime SSE broadcast for payments and fee updates
+    try {
+      realtimeHub.broadcast('payment:created', {
+        paymentId: payment.id,
+        receiptId: payment.receiptId,
+        studentId: student.id,
+        amount: payment.amount,
+      });
+    } catch (e) {
+      console.error('Failed to emit realtime payment event', e);
+    }
+
     return {
       payment: fullPayment || payment,
       student: {
@@ -141,9 +168,152 @@ export class PaymentService {
       totalFee: student.totalFee,
       paidFee: student.paidFee,
       pendingFee: student.pendingFee,
-      status: student.pendingFee === 0 ? 'PAID' : (student.paidFee > 0 ? 'PARTIAL' : 'PENDING'),
       payments,
       installments,
+    };
+  }
+
+  async assignFee(data: {
+    targetType: 'ALL' | 'BATCH' | 'STUDENT';
+    targetId?: string;
+    title: string;
+    amount: number;
+    dueDate?: string;
+    category?: string;
+    remarks?: string;
+    recordedById?: string;
+  }) {
+    const amount = Number(data.amount);
+    if (isNaN(amount) || amount <= 0) {
+      throw new Error('Fee amount must be greater than zero');
+    }
+    if (!data.title?.trim()) {
+      throw new Error('Fee title is required');
+    }
+
+    let targetStudents: { id: string; userId: string | null; totalFee: number; pendingFee: number; firstName: string; lastName: string }[] = [];
+
+    if (data.targetType === 'STUDENT') {
+      if (!data.targetId) throw new Error('Please select a student');
+      const student = await prisma.student.findUnique({
+        where: { id: data.targetId },
+        select: { id: true, userId: true, totalFee: true, pendingFee: true, firstName: true, lastName: true },
+      });
+      if (!student) throw new Error('Student not found');
+      targetStudents = [student];
+    } else if (data.targetType === 'BATCH') {
+      if (!data.targetId) throw new Error('Please select a batch');
+      targetStudents = await prisma.student.findMany({
+        where: { batchId: data.targetId, status: 'ACTIVE' },
+        select: { id: true, userId: true, totalFee: true, pendingFee: true, firstName: true, lastName: true },
+      });
+      if (targetStudents.length === 0) {
+        throw new Error('No active students found in the selected batch');
+      }
+    } else {
+      // ALL active students
+      targetStudents = await prisma.student.findMany({
+        where: { status: 'ACTIVE' },
+        select: { id: true, userId: true, totalFee: true, pendingFee: true, firstName: true, lastName: true },
+      });
+      if (targetStudents.length === 0) {
+        throw new Error('No active students found in the institute');
+      }
+    }
+
+    const dueDate = data.dueDate || new Date().toISOString().split('T')[0];
+    const categoryTitle = data.title.trim();
+    const studentIds = targetStudents.map((s) => s.id);
+
+    // 1. Efficiently query highest installment numbers for all targeted students in one bulk query
+    const maxInstallments = await prisma.feeInstallment.groupBy({
+      by: ['studentId'],
+      where: { studentId: { in: studentIds } },
+      _max: { installmentNo: true },
+    });
+
+    const nextNoMap = new Map<string, number>();
+    for (const item of maxInstallments) {
+      nextNoMap.set(item.studentId, (item._max.installmentNo || 0) + 1);
+    }
+
+    const installmentsData = targetStudents.map((student) => {
+      const nextNo = nextNoMap.get(student.id) || 1;
+      return {
+        studentId: student.id,
+        installmentNo: nextNo,
+        title: categoryTitle,
+        amount: amount,
+        dueDate: dueDate,
+        status: 'PENDING',
+        paidAmount: 0,
+      };
+    });
+
+    // 2. Perform atomic transaction with bulk operations & extended timeout for large cohorts
+    await prisma.$transaction(
+      async (tx) => {
+        // Bulk insert installments
+        await tx.feeInstallment.createMany({
+          data: installmentsData,
+        });
+
+        // Bulk update student ledger balances
+        await tx.student.updateMany({
+          where: { id: { in: studentIds } },
+          data: {
+            totalFee: { increment: amount },
+            pendingFee: { increment: amount },
+          },
+        });
+      },
+      {
+        maxWait: 10000,
+        timeout: 30000,
+      }
+    );
+
+    // Notify students of newly assigned fee / fine
+    try {
+      if (data.targetType === 'STUDENT') {
+        const s = targetStudents[0];
+        if (s.userId) {
+          await notificationService.createNotification({
+            title: `Fee Notice: ${categoryTitle} (₹${amount.toLocaleString('en-IN')})`,
+            message: `A new fee charge of ₹${amount.toLocaleString('en-IN')} (${categoryTitle}) has been added to your account. Due date: ${dueDate}.`,
+            type: 'FEE',
+            targetUserId: s.userId,
+            targetRole: 'STUDENT',
+          });
+        }
+      } else {
+        await notificationService.createNotification({
+          title: `Fee Notice: ${categoryTitle} (₹${amount.toLocaleString('en-IN')})`,
+          message: `A fee charge of ₹${amount.toLocaleString('en-IN')} (${categoryTitle}) has been assigned. Due date: ${dueDate}.`,
+          type: 'FEE',
+          targetRole: 'STUDENT',
+        });
+      }
+    } catch (e) {
+      console.error('Failed to send fee assignment notification', e);
+    }
+
+    try {
+      realtimeHub.broadcast('fee:assigned', {
+        assignedCount: targetStudents.length,
+        title: categoryTitle,
+        amount,
+        dueDate,
+      });
+    } catch {}
+
+    return {
+      success: true,
+      assignedCount: targetStudents.length,
+      amountPerStudent: amount,
+      totalAmountAssigned: amount * targetStudents.length,
+      title: categoryTitle,
+      dueDate,
     };
   }
 }

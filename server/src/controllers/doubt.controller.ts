@@ -1,41 +1,12 @@
 import { Request, Response } from 'express';
 import { doubtService } from '../services/doubt.service';
 import prisma from '../prisma/client';
-
-async function resolveStudentId(req: Request): Promise<string | null> {
-  if (req.user?.studentId) return req.user.studentId;
-  if (!req.user) return null;
-  const student = await prisma.student.findFirst({
-    where: {
-      OR: [
-        { userId: req.user.id },
-        { email: req.user.email },
-        { id: req.user.id },
-      ],
-    },
-  });
-  return student?.id || null;
-}
-
-async function resolveFacultyId(req: Request): Promise<string | null> {
-  if (!req.user) return null;
-  const faculty = await prisma.faculty.findFirst({
-    where: {
-      OR: [
-        { userId: req.user.id },
-        { email: req.user.email },
-        { id: req.user.id },
-      ],
-    },
-  });
-  return faculty?.id || null;
-}
+import { resolveFacultyId, resolveStudentId } from '../utils/userResolver';
 
 export class DoubtController {
   async getBatchFaculty(req: Request, res: Response): Promise<void> {
     try {
-      const studentId = await resolveStudentId(req);
-      if (!studentId) {
+      if (req.user?.role !== 'STUDENT') {
         const faculties = await prisma.faculty.findMany({
           where: { status: 'ACTIVE' },
           select: {
@@ -52,13 +23,18 @@ export class DoubtController {
         return;
       }
 
+      const studentId = await resolveStudentId(req.user);
+      if (!studentId) {
+        res.status(400).json({ success: false, message: 'Student profile not linked to user account' });
+        return;
+      }
+
       const student = await prisma.student.findUnique({
         where: { id: studentId },
         include: {
           batch: {
             include: {
               faculty: true,
-              course: true,
             },
           },
         },
@@ -84,7 +60,6 @@ export class DoubtController {
       const facultyList: any[] = [];
       const seenIds = new Set<string>();
 
-      // 1. Primary Batch Coordinator / Faculty
       if (student.batch.faculty) {
         seenIds.add(student.batch.faculty.id);
         facultyList.push({
@@ -99,7 +74,6 @@ export class DoubtController {
         });
       }
 
-      // 2. Subject Specialist Teachers mapped on this batch
       if (student.batch.subjectTeachers) {
         try {
           const mapping = JSON.parse(student.batch.subjectTeachers);
@@ -121,12 +95,11 @@ export class DoubtController {
               }
             }
           }
-        } catch (e) {
+        } catch {
           // JSON parse fallback
         }
       }
 
-      // Fallback if empty
       if (facultyList.length === 0) {
         const all = await prisma.faculty.findMany({
           where: { status: 'ACTIVE' },
@@ -156,9 +129,8 @@ export class DoubtController {
       let targetStudentId = studentId as string | undefined;
       let targetFacultyId = facultyId as string | undefined;
 
-      // Student Privacy: A student can ONLY see their own 1-on-1 doubts
       if (req.user?.role === 'STUDENT') {
-        const myStudentId = await resolveStudentId(req);
+        const myStudentId = await resolveStudentId(req.user);
         if (!myStudentId) {
           res.json({ success: true, data: [] });
           return;
@@ -166,9 +138,8 @@ export class DoubtController {
         targetStudentId = myStudentId;
       }
 
-      // Faculty Privacy: A teacher can ONLY see doubts assigned directly to them
       if (req.user?.role === 'TEACHER') {
-        const myFacultyId = await resolveFacultyId(req);
+        const myFacultyId = await resolveFacultyId(req.user);
         if (!myFacultyId) {
           res.json({ success: true, data: [] });
           return;
@@ -182,6 +153,7 @@ export class DoubtController {
         status: status as string,
         subject: subject as string,
       });
+
       res.json({ success: true, data: doubts });
     } catch (err: any) {
       res.status(500).json({ success: false, message: err.message });
@@ -192,9 +164,8 @@ export class DoubtController {
     try {
       const doubt = await doubtService.getDoubtById(req.params.id);
 
-      // Student Access Check
       if (req.user?.role === 'STUDENT') {
-        const myStudentId = await resolveStudentId(req);
+        const myStudentId = await resolveStudentId(req.user);
         if (!myStudentId || doubt.studentId !== myStudentId) {
           res.status(403).json({
             success: false,
@@ -204,9 +175,8 @@ export class DoubtController {
         }
       }
 
-      // Faculty Access Check: A teacher can only view doubts directed to them
       if (req.user?.role === 'TEACHER') {
-        const myFacultyId = await resolveFacultyId(req);
+        const myFacultyId = await resolveFacultyId(req.user);
         if (!myFacultyId || (doubt.facultyId && doubt.facultyId !== myFacultyId)) {
           res.status(403).json({
             success: false,
@@ -234,9 +204,8 @@ export class DoubtController {
         return;
       }
 
-      // Ensure studentId is bound to authenticated student
       if (req.user?.role === 'STUDENT') {
-        const myStudentId = await resolveStudentId(req);
+        const myStudentId = await resolveStudentId(req.user);
         if (!myStudentId) {
           res.status(400).json({ success: false, message: 'Student profile not linked to account' });
           return;
@@ -244,7 +213,8 @@ export class DoubtController {
         data.studentId = myStudentId;
       }
 
-      const doubt = await doubtService.createDoubt(data);
+      const files = (req.files as Express.Multer.File[]) || (req.file ? [req.file] : []);
+      const doubt = await doubtService.createDoubt(data, files);
       res.status(201).json({
         success: true,
         data: doubt,
@@ -260,7 +230,7 @@ export class DoubtController {
       let facultyIdToUse = req.body.facultyId;
 
       if (req.user?.role === 'TEACHER') {
-        const myFacultyId = await resolveFacultyId(req);
+        const myFacultyId = await resolveFacultyId(req.user);
         if (!myFacultyId) {
           res.status(400).json({ success: false, message: 'Faculty profile not linked to account' });
           return;
@@ -277,12 +247,19 @@ export class DoubtController {
         facultyIdToUse = myFacultyId;
       }
 
+      const files = (req.files as Express.Multer.File[]) || (req.file ? [req.file] : []);
       const doubt = await doubtService.answerDoubt(
         req.params.id,
-        facultyIdToUse || req.user?.id,
-        req.body.answerText
+        facultyIdToUse,
+        req.body.answerText || req.body.answer || '',
+        files
       );
-      res.json({ success: true, data: doubt, message: 'Solution provided and doubt resolved' });
+
+      res.json({
+        success: true,
+        data: doubt,
+        message: '1-on-1 mentorship solution recorded and sent to student',
+      });
     } catch (err: any) {
       res.status(400).json({ success: false, message: err.message });
     }
@@ -290,20 +267,21 @@ export class DoubtController {
 
   async delete(req: Request, res: Response): Promise<void> {
     try {
+      const doubt = await doubtService.getDoubtById(req.params.id);
+
       if (req.user?.role === 'STUDENT') {
-        const myStudentId = await resolveStudentId(req);
-        const existing = await doubtService.getDoubtById(req.params.id);
-        if (!myStudentId || existing.studentId !== myStudentId) {
+        const myStudentId = await resolveStudentId(req.user);
+        if (doubt.studentId !== myStudentId) {
           res.status(403).json({
             success: false,
-            message: "Access denied: You cannot remove another student's doubt query.",
+            message: 'Access denied: You cannot delete another student’s doubt.',
           });
           return;
         }
       }
 
       await doubtService.deleteDoubt(req.params.id);
-      res.json({ success: true, message: 'Doubt query removed' });
+      res.json({ success: true, message: 'Doubt thread deleted' });
     } catch (err: any) {
       res.status(400).json({ success: false, message: err.message });
     }

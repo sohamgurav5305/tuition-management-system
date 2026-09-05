@@ -30,20 +30,24 @@ export const FacultyList: React.FC = () => {
 
   const canEdit = user?.role === 'ADMINISTRATOR';
 
-  const fetchFaculty = async () => {
+  const fetchFaculty = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await facultyApi.getAll();
       setFacultyList(res.data.data);
     } catch (err) {
       console.error('Failed to load faculty list', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchFaculty();
+    fetchFaculty(true);
+    const interval = setInterval(() => {
+      fetchFaculty(false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleDelete = async () => {
@@ -66,17 +70,17 @@ export const FacultyList: React.FC = () => {
       header: 'Faculty Member',
       cell: (f) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold flex items-center justify-center text-xs overflow-hidden flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 font-bold flex items-center justify-center text-xs overflow-hidden flex-shrink-0">
             {f.avatarUrl ? (
               <img src={f.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
-              `${f.firstName[0]}${f.lastName[0]}`
+              `${f.firstName?.[0] || 'F'}${f.lastName?.[0] || ''}`
             )}
           </div>
           <div className="min-w-0">
             <span
               onClick={() => setViewingWorkload(f)}
-              className="font-bold text-slate-900 dark:text-slate-100 hover:text-purple-600 dark:hover:text-purple-400 cursor-pointer block truncate"
+              className="font-bold text-slate-900 hover:text-purple-600 cursor-pointer block truncate"
             >
               {f.firstName} {f.lastName}
             </span>
@@ -98,8 +102,8 @@ export const FacultyList: React.FC = () => {
       header: 'Contact & Login Email',
       cell: (f) => (
         <div className="text-xs">
-          <p className="text-slate-700 dark:text-slate-300 font-medium">{f.phone}</p>
-          <p className="text-[11px] text-blue-600 dark:text-blue-400 font-mono truncate max-w-[200px]" title={f.email}>
+          <p className="text-slate-700 font-medium">{f.phone}</p>
+          <p className="text-[11px] text-blue-600 font-mono truncate max-w-[200px]" title={f.email}>
             {f.email}
           </p>
         </div>
@@ -110,7 +114,7 @@ export const FacultyList: React.FC = () => {
       cell: (f) => (
         <button
           onClick={() => setViewingWorkload(f)}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 dark:bg-slate-800/80 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 rounded-lg text-xs font-semibold border border-slate-200/60 dark:border-slate-700 transition-colors"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 hover:bg-purple-50 text-slate-700 hover:text-purple-600 rounded-lg text-xs font-semibold border border-slate-200/60 transition-colors"
         >
           <Layers className="w-3.5 h-3.5" />
           <span>{f.batchCount ?? f._count?.batches ?? 0} Batches</span>
@@ -120,7 +124,7 @@ export const FacultyList: React.FC = () => {
     {
       header: 'Monthly Compensation',
       cell: (f) => (
-        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+        <span className="text-xs font-bold text-slate-900 tabular-nums">
           {formatCurrency(f.salary)}
         </span>
       ),
@@ -133,7 +137,7 @@ export const FacultyList: React.FC = () => {
           <button
             onClick={() => setViewingWorkload(f)}
             title="Workload Summary"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
           >
             <Briefcase className="w-4 h-4" />
           </button>
@@ -145,14 +149,14 @@ export const FacultyList: React.FC = () => {
                   setIsFormOpen(true);
                 }}
                 title="Edit Faculty Record"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
               >
                 <Edit className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setDeletingId(f.id)}
                 title="Remove Faculty Member"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -167,9 +171,8 @@ export const FacultyList: React.FC = () => {
     <div className="space-y-6">
       {/* Top Banner */}
       <PageHeader
-        title="Faculty & Mentors"
-        subtitle="Manage subject specialists, instructional workload, teaching schedules, and instructor compensation."
-        badge={`${facultyList.length} Instructors`}
+        title="Faculty"
+        badge={`${facultyList.length} Faculty`}
         actions={
           canEdit && (
             <Button
@@ -181,7 +184,7 @@ export const FacultyList: React.FC = () => {
                 setIsFormOpen(true);
               }}
             >
-              Add Faculty Mentor
+              Add New Faculty
             </Button>
           )
         }
@@ -192,8 +195,8 @@ export const FacultyList: React.FC = () => {
         data={facultyList}
         columns={columns}
         keyExtractor={(f) => f.id}
-        searchPlaceholder="Search faculty by name, subject, faculty ID, email..."
-        searchableFields={['firstName', 'lastName', 'facultyId', 'subjectTaught', 'email']}
+        searchPlaceholder="Search Faculty"
+        searchableFields={['firstName', 'lastName', 'facultyId', 'subjectTaught', 'email', 'phone', 'qualification', 'batches']}
         isLoading={loading}
       />
 
@@ -219,8 +222,8 @@ export const FacultyList: React.FC = () => {
         isOpen={!!deletingId}
         onClose={() => setDeletingId(null)}
         onConfirm={handleDelete}
-        title="Remove Faculty Record"
-        message="Are you sure you want to remove this faculty instructor? Instructors currently assigned to active batches cannot be removed until batches are reassigned."
+        title="Delete Faculty"
+        message="Are you sure you want to delete this faculty member? Faculty currently assigned to active batches cannot be removed until batches are reassigned."
         isLoading={isDeleting}
       />
     </div>

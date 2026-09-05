@@ -139,7 +139,8 @@ export class MaterialController {
         }
       }
 
-      const material = await materialService.uploadMaterial(req.body, req.file);
+      const files = (req.files as Express.Multer.File[]) || (req.file ? [req.file] : []);
+      const material = await materialService.uploadMaterial(req.body, files);
       res.status(201).json({
         success: true,
         data: material,

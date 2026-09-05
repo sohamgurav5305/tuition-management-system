@@ -1,36 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { Breadcrumbs } from './Breadcrumbs';
 import { MobileBottomNav } from './MobileBottomNav';
 
 export const MainLayout: React.FC = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-[#0B0F17] text-slate-900 dark:text-slate-100 font-sans antialiased">
-      {/* Sidebar (Desktop Permanent + Mobile Slide-over Drawer) */}
-      <Sidebar
-        mobileOpen={mobileMenuOpen}
-        onCloseMobile={() => setMobileMenuOpen(false)}
-        isCollapsed={isCollapsed}
-        onToggleCollapse={() => setIsCollapsed((prev) => !prev)}
-      />
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased flex flex-col">
+      {/* Top Application Header */}
+      <Header />
 
-      {/* Main Content Viewport */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header onToggleMobileMenu={() => setMobileMenuOpen((prev) => !prev)} />
-        <main className="flex-1 p-4 sm:p-6 md:p-8 pb-24 lg:pb-8 overflow-y-auto">
-          <Outlet />
-        </main>
-      </div>
+      {/* Full-width Centered Page Viewport without Sidebar */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-12">
+        <Breadcrumbs />
+        <Outlet />
+      </main>
 
-      {/* Mobile Native Bottom Navigation Bar */}
-      <MobileBottomNav
-        onToggleMenu={() => setMobileMenuOpen((prev) => !prev)}
-        isMenuOpen={mobileMenuOpen}
-      />
+      {/* Mobile Bottom Navigation Bar for rapid thumb access */}
+      <MobileBottomNav onToggleMenu={() => {}} isMenuOpen={false} />
     </div>
   );
 };

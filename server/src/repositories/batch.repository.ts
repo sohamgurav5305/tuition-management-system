@@ -60,12 +60,23 @@ export class BatchRepository {
       where.status = filters.status;
     }
 
-    if (filters?.search) {
-      where.OR = [
-        { name: { contains: filters.search } },
-        { batchId: { contains: filters.search } },
-        { classroom: { contains: filters.search } },
-      ];
+    if (filters?.search?.trim()) {
+      const words = filters.search.trim().split(/\s+/).filter(Boolean);
+      if (words.length > 0) {
+        where.AND = [
+          ...(Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []),
+          ...words.map((word) => ({
+            OR: [
+              { name: { contains: word, mode: 'insensitive' as const } },
+              { batchId: { contains: word, mode: 'insensitive' as const } },
+              { classroom: { contains: word, mode: 'insensitive' as const } },
+              { course: { name: { contains: word, mode: 'insensitive' as const } } },
+              { faculty: { firstName: { contains: word, mode: 'insensitive' as const } } },
+              { faculty: { lastName: { contains: word, mode: 'insensitive' as const } } },
+            ],
+          })),
+        ];
+      }
     }
 
     return prisma.batch.findMany({

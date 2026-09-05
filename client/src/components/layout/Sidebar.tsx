@@ -8,12 +8,11 @@ import {
   BookOpen,
   Layers,
   GraduationCap,
-  Building2,
-  CalendarDays,
   FileSpreadsheet,
   Award,
   FileText,
   CreditCard,
+  Receipt,
   BarChart3,
   Bell,
   Settings,
@@ -25,6 +24,7 @@ import {
   Download,
   HelpCircle,
   UserCheck,
+  User,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
@@ -59,11 +59,9 @@ const ADMIN_NAV_GROUPS: NavGroup[] = [
   {
     title: 'ACADEMICS',
     items: [
-      { label: 'Programs & Courses', path: '/courses', icon: BookOpen },
-      { label: 'Batches & Sections', path: '/batches', icon: Layers },
-      { label: 'Faculty & Mentors', path: '/faculty', icon: GraduationCap },
-      { label: 'Classrooms & Venues', path: '/classrooms', icon: Building2 },
-      { label: 'Weekly Timetable', path: '/timetable', icon: CalendarDays },
+      { label: 'Courses', path: '/courses', icon: BookOpen },
+      { label: 'Batches', path: '/batches', icon: Layers },
+      { label: 'Faculty', path: '/faculty', icon: GraduationCap },
     ],
   },
   {
@@ -78,12 +76,6 @@ const ADMIN_NAV_GROUPS: NavGroup[] = [
     title: 'FINANCE',
     items: [
       { label: 'Fee Ledger & Invoices', path: '/fees', icon: CreditCard },
-    ],
-  },
-  {
-    title: 'INSIGHTS',
-    items: [
-      { label: 'Reports & Analytics', path: '/reports', icon: BarChart3 },
     ],
   },
   {
@@ -102,14 +94,13 @@ const TEACHER_NAV_GROUPS: NavGroup[] = [
       { label: 'Faculty Dashboard', path: '/dashboard', icon: LayoutDashboard },
       { label: 'My Teaching Batches', path: '/teacher/batches', icon: Layers },
       { label: 'Students Roster', path: '/students', icon: Users },
-      { label: 'Weekly Timetable', path: '/timetable', icon: CalendarDays },
     ],
   },
   {
-    title: 'CLASSROOM OPERATIONS',
+    title: 'ACADEMIC OPERATIONS',
     items: [
-      { label: 'Attendance Rollcall', path: '/attendance', icon: CalendarCheck },
-      { label: 'Assignments & DPPs', path: '/assignments', icon: FileText },
+      { label: 'Attendance', path: '/attendance', icon: CalendarCheck },
+      { label: 'Assignments', path: '/assignments', icon: FileText },
       { label: 'Test Series & Exams', path: '/exams', icon: FileSpreadsheet },
       { label: 'Scorecard Grading', path: '/results', icon: Award },
       { label: 'Study Materials', path: '/materials', icon: Download },
@@ -118,9 +109,10 @@ const TEACHER_NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: 'COMMUNICATION',
+    title: 'ACCOUNT',
     items: [
       { label: 'Announcements', path: '/notifications', icon: Bell },
+      { label: 'My Profile', path: '/faculty/profile', icon: User },
     ],
   },
 ];
@@ -132,7 +124,7 @@ const STUDENT_NAV_GROUPS: NavGroup[] = [
       { label: 'My Dashboard', path: '/dashboard', icon: LayoutDashboard },
       { label: 'My Batch & Schedule', path: '/student/my-batch', icon: Layers },
       { label: 'Attendance Record', path: '/student/attendance', icon: CalendarCheck },
-      { label: 'Study Materials & DPPs', path: '/materials', icon: Download },
+      { label: 'Study Materials', path: '/materials', icon: Download },
       { label: 'Ask a Doubt', path: '/doubts', icon: HelpCircle },
       { label: 'Leave Application', path: '/leaves', icon: CalendarRange },
     ],
@@ -160,8 +152,9 @@ const ACCOUNTANT_NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Finance Dashboard', path: '/dashboard', icon: LayoutDashboard },
       { label: 'Fee Ledger & Invoices', path: '/fees', icon: CreditCard },
+      { label: 'Fee Records & Register', path: '/fees?tab=records', icon: FileSpreadsheet },
+      { label: 'Payment Receipts', path: '/receipts', icon: Receipt },
       { label: 'Student Accounts', path: '/students', icon: Users },
-      { label: 'Financial Reports', path: '/reports', icon: BarChart3 },
     ],
   },
   {
@@ -207,22 +200,22 @@ export const Sidebar: React.FC<{
 
   const sidebarContent = (
     <aside
-      className={`flex flex-col h-full bg-white dark:bg-[#0E131F] border-r border-slate-200 dark:border-slate-800 select-none transition-all duration-200 ${
+      className={`flex flex-col h-full bg-white border-r border-slate-200 select-none transition-all duration-200 ${
         isCollapsed ? 'w-[72px]' : 'w-64'
       }`}
     >
       {/* Brand Header */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
+      <div className="h-16 px-4 flex items-center justify-between border-b border-slate-200 flex-shrink-0">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs flex-shrink-0">
             <Shield className="w-5 h-5" />
           </div>
           {!isCollapsed && (
             <div className="min-w-0">
-              <h1 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate tracking-tight uppercase">
+              <h1 className="text-sm sm:text-base font-extrabold text-slate-900 truncate tracking-tight uppercase leading-tight">
                 {settings.instituteName || 'Apex Institute'}
               </h1>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate">
+              <p className="text-[11px] text-slate-500 font-semibold truncate">
                 {roleLabel}
               </p>
             </div>
@@ -233,7 +226,7 @@ export const Sidebar: React.FC<{
         {onCloseMobile && (
           <button
             onClick={onCloseMobile}
-            className="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
+            className="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
           >
             <X className="w-5 h-5" />
           </button>
@@ -243,7 +236,7 @@ export const Sidebar: React.FC<{
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className="hidden lg:flex p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="hidden lg:flex p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
             title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
           >
             {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -256,7 +249,7 @@ export const Sidebar: React.FC<{
         {navGroups.map((group) => (
           <div key={group.title} className="space-y-1">
             {!isCollapsed && (
-              <div className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider uppercase">
+              <div className="px-3 text-[10px] font-bold text-slate-400 tracking-wider uppercase">
                 {group.title}
               </div>
             )}
@@ -274,8 +267,8 @@ export const Sidebar: React.FC<{
                         isCollapsed ? 'justify-center px-0' : ''
                       } ${
                         isActive
-                          ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 font-bold border border-blue-200/60 dark:border-blue-800/60'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/50'
+                          ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/60'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
                       }`
                     }
                   >
@@ -290,15 +283,15 @@ export const Sidebar: React.FC<{
       </div>
 
       {/* Bottom Profile Footer */}
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex-shrink-0 bg-slate-50 dark:bg-[#0B0F17]/50">
+      <div className="p-3 border-t border-slate-200 flex-shrink-0 bg-slate-50">
         <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} gap-2`}>
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 font-bold text-xs flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-bold text-xs flex-shrink-0">
               {user?.username?.[0]?.toUpperCase() || 'U'}
             </div>
             {!isCollapsed && (
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                <p className="text-xs font-bold text-slate-900 truncate">
                   {user?.username || 'Authenticated User'}
                 </p>
                 <span className="text-[10px] text-slate-400 font-medium block truncate">
@@ -311,7 +304,7 @@ export const Sidebar: React.FC<{
           {!isCollapsed && (
             <button
               onClick={logout}
-              className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />
@@ -336,7 +329,7 @@ export const Sidebar: React.FC<{
             className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"
             onClick={onCloseMobile}
           />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-[#0E131F] z-10">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white z-10">
             {sidebarContent}
           </div>
         </div>

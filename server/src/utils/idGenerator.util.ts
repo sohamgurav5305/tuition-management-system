@@ -1,65 +1,85 @@
 import prisma from '../prisma/client';
 
-export async function generateStudentId(): Promise<string> {
+async function generateSequentialId(
+  prefix: string,
+  modelName: keyof typeof prisma,
+  fieldName: string,
+  digits: number = 4
+): Promise<string> {
   const year = new Date().getFullYear();
-  const count = await prisma.student.count();
-  const sequence = String(count + 1).padStart(4, '0');
-  return `STU-${year}-${sequence}`;
+  const fullPrefix = `${prefix}-${year}-`;
+  const delegate = (prisma as any)[modelName];
+
+  let nextSeq = 1;
+
+  try {
+    const latest = await delegate.findFirst({
+      where: { [fieldName]: { startsWith: fullPrefix } },
+      orderBy: { [fieldName]: 'desc' },
+      select: { [fieldName]: true },
+    });
+
+    if (latest && latest[fieldName]) {
+      const parts = String(latest[fieldName]).split('-');
+      const lastNum = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(lastNum)) {
+        nextSeq = lastNum + 1;
+      }
+    } else {
+      const count = await delegate.count();
+      nextSeq = count + 1;
+    }
+  } catch (e) {
+    const count = await delegate.count();
+    nextSeq = count + 1;
+  }
+
+  let candidate = `${fullPrefix}${String(nextSeq).padStart(digits, '0')}`;
+  while (await delegate.findUnique({ where: { [fieldName]: candidate } })) {
+    nextSeq++;
+    candidate = `${fullPrefix}${String(nextSeq).padStart(digits, '0')}`;
+  }
+
+  return candidate;
+}
+
+export async function generateStudentId(): Promise<string> {
+  return generateSequentialId('STU', 'student', 'studentId', 4);
 }
 
 export async function generateFacultyId(): Promise<string> {
-  const year = new Date().getFullYear();
-  const count = await prisma.faculty.count();
-  const sequence = String(count + 1).padStart(4, '0');
-  return `FAC-${year}-${sequence}`;
+  return generateSequentialId('FAC', 'faculty', 'facultyId', 4);
 }
 
 export async function generateCourseId(): Promise<string> {
-  const year = new Date().getFullYear();
-  const count = await prisma.course.count();
-  const sequence = String(count + 1).padStart(4, '0');
-  return `CRS-${year}-${sequence}`;
+  return generateSequentialId('CRS', 'course', 'courseId', 4);
 }
 
 export async function generateBatchId(): Promise<string> {
-  const year = new Date().getFullYear();
-  const count = await prisma.batch.count();
-  const sequence = String(count + 1).padStart(4, '0');
-  return `BAT-${year}-${sequence}`;
+  return generateSequentialId('BAT', 'batch', 'batchId', 4);
 }
 
 export async function generateReceiptId(): Promise<string> {
-  const year = new Date().getFullYear();
-  const count = await prisma.payment.count();
-  const sequence = String(count + 1).padStart(5, '0');
-  return `REC-${year}-${sequence}`;
-}
-
-export async function generateExamId(): Promise<string> {
-  const year = new Date().getFullYear();
-  const count = await prisma.examination.count();
-  const sequence = String(count + 1).padStart(4, '0');
-  return `EXM-${year}-${sequence}`;
+  return generateSequentialId('REC', 'payment', 'receiptId', 5);
 }
 
 export async function generateAssignmentId(): Promise<string> {
-  const year = new Date().getFullYear();
-  const count = await prisma.assignment.count();
-  const sequence = String(count + 1).padStart(4, '0');
-  return `ASN-${year}-${sequence}`;
-}
-
-export async function generateResultId(): Promise<string> {
-  const year = new Date().getFullYear();
-  const count = await prisma.result.count();
-  const sequence = String(count + 1).padStart(5, '0');
-  return `RES-${year}-${sequence}`;
+  return generateSequentialId('ASN', 'assignment', 'assignmentId', 4);
 }
 
 export async function generateClassroomId(): Promise<string> {
-  const year = new Date().getFullYear();
-  const count = await prisma.classroom.count();
-  const sequence = String(count + 1).padStart(4, '0');
-  return `CLR-${year}-${sequence}`;
+  return generateSequentialId('CLR', 'classroom', 'roomId', 4);
+}
+
+export async function generateMaterialId(): Promise<string> {
+  return generateSequentialId('MAT', 'studyMaterial', 'materialId', 4);
+}
+
+export async function generateSubmissionId(): Promise<string> {
+  return generateSequentialId('SUB', 'assignmentSubmission', 'submissionId', 4);
+}
+
+export async function generateDoubtId(): Promise<string> {
+  return generateSequentialId('DBT', 'doubt', 'doubtId', 4);
 }
 

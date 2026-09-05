@@ -19,6 +19,9 @@ import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
+import { PreviousAttendanceRecords } from './PreviousAttendanceRecords';
+import { formatDate } from '../../utils/date';
 
 interface StudentAttendanceEntry {
   studentId: string;
@@ -27,14 +30,18 @@ interface StudentAttendanceEntry {
   lastName: string;
   email: string;
   phone: string;
-  status: 'PRESENT' | 'LATE' | 'ABSENT';
+  status: 'PRESENT' | 'ABSENT';
   remarks?: string;
   isMarked?: boolean;
 }
 
 export const AttendanceSheet: React.FC = () => {
+  const { user } = useAuth();
   const { success, error } = useToast();
   const [searchParams] = useSearchParams();
+
+  const isAccountant = user?.role === 'ACCOUNTANT';
+  const [activeTab, setActiveTab] = useState<'daily' | 'history'>('daily');
 
   const [batches, setBatches] = useState<Batch[]>([]);
   const [selectedBatchId, setSelectedBatchId] = useState<string>(searchParams.get('batchId') || '');
@@ -71,10 +78,10 @@ export const AttendanceSheet: React.FC = () => {
     loadBatches();
   }, []);
 
-  const fetchAttendanceSheet = async () => {
+  const fetchAttendanceSheet = async (showLoading = false) => {
     if (!selectedBatchId) return;
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await attendanceApi.getBatchAttendance(selectedBatchId, selectedDate, selectedSubject);
       setRoster(res.data.data.records);
       if (res.data.data.batch?.subjects && res.data.data.batch.subjects.length > 0) {
@@ -84,23 +91,30 @@ export const AttendanceSheet: React.FC = () => {
         }
       }
     } catch (err: any) {
-      error('Error', err.response?.data?.message || 'Failed to fetch batch attendance roster');
+      if (showLoading) {
+        error('Error', err.response?.data?.message || 'Failed to fetch batch attendance roster');
+      }
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
     if (selectedBatchId) {
-      fetchAttendanceSheet();
+      fetchAttendanceSheet(true);
+      const interval = setInterval(() => {
+        fetchAttendanceSheet(false);
+      }, 5000);
+      return () => clearInterval(interval);
     }
   }, [selectedBatchId, selectedDate, selectedSubject]);
 
-  const setStudentStatus = (studentId: string, status: 'PRESENT' | 'LATE' | 'ABSENT') => {
+  const setStudentStatus = (studentId: string, status: 'PRESENT' | 'ABSENT') => {
     setRoster((prev) =>
       prev.map((s) => (s.studentId === studentId ? { ...s, status } : s))
     );
   };
+
 
   const handleMarkAllPresent = () => {
     setRoster((prev) => prev.map((s) => ({ ...s, status: 'PRESENT' })));
@@ -121,7 +135,7 @@ export const AttendanceSheet: React.FC = () => {
           remarks: r.remarks || '',
         })),
       });
-      success('Attendance Saved', `Rollcall for ${selectedSubject} on ${selectedDate} has been recorded.`);
+      success('Attendance Saved', `Attendance for ${selectedSubject} on ${formatDate(selectedDate)} has been recorded.`);
       fetchAttendanceSheet();
     } catch (err: any) {
       error('Save Failed', err.response?.data?.message || 'Could not save attendance sheet');
@@ -130,47 +144,75 @@ export const AttendanceSheet: React.FC = () => {
     }
   };
 
-  const presentCount = roster.filter((r) => r.status === 'PRESENT').length;
-  const lateCount = roster.filter((r) => r.status === 'LATE').length;
-  const absentCount = roster.filter((r) => r.status === 'ABSENT').length;
-  const totalCount = roster.length || 1;
-  const attendanceRate = Math.round(((presentCount + lateCount) / totalCount) * 100);
-
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Banner */}
       <PageHeader
-        title="Daily Attendance Rollcall"
-        subtitle="Mark and monitor batch attendance, tracking daily presence rates and remarks."
-        badge={`${roster.length} Students`}
+        title="Attendance"
         actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              leftIcon={CheckCheck}
-              onClick={handleMarkAllPresent}
-            >
-              Mark All Present
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              leftIcon={Save}
-              isLoading={saving}
-              onClick={handleSaveAttendance}
-            >
-              Save Attendance
-            </Button>
-          </div>
+          activeTab === 'daily' && !isAccountant ? (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                leftIcon={CheckCheck}
+                onClick={handleMarkAllPresent}
+              >
+                Mark All Present
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={Save}
+                isLoading={saving}
+                onClick={handleSaveAttendance}
+              >
+                Save Attendance
+              </Button>
+            </div>
+          ) : isAccountant && activeTab === 'daily' ? (
+            <Badge variant="primary" size="sm" dot>
+              Audit & View Mode
+            </Badge>
+          ) : null
         }
       />
 
-      {/* Top Controls Bar */}
-      <div className="bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Mode Switcher Tabs */}
+      <div className="flex items-center gap-2 p-1.5 bg-slate-100 border border-slate-200/80 rounded-2xl w-fit print:hidden">
+        <button
+          onClick={() => setActiveTab('daily')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'daily'
+              ? 'bg-white text-blue-600 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <CalendarCheck className="w-4 h-4" />
+          Mark Daily Attendance
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'history'
+              ? 'bg-white text-purple-600 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Calendar className="w-4 h-4" />
+          Previous Attendance Records
+        </button>
+      </div>
+
+      {activeTab === 'history' ? (
+        <PreviousAttendanceRecords />
+      ) : (
+        <>
+          {/* Top Controls Bar */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Date Selector */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+          <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-blue-600" />
             Session Date:
           </label>
@@ -178,20 +220,20 @@ export const AttendanceSheet: React.FC = () => {
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900 dark:text-slate-100"
+            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900"
           />
         </div>
 
         {/* Batch Selector */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+          <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
             <Layers className="w-3.5 h-3.5 text-purple-600" />
-            Select Batch Cohort:
+            Select Batch:
           </label>
           <select
             value={selectedBatchId}
             onChange={(e) => setSelectedBatchId(e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900 dark:text-slate-100"
+            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900"
           >
             {batches.map((b) => (
               <option key={b.id} value={b.id}>
@@ -203,14 +245,14 @@ export const AttendanceSheet: React.FC = () => {
 
         {/* Subject Selector */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+          <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
             <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
             Lecture Subject:
           </label>
           <select
             value={selectedSubject}
             onChange={(e) => setSelectedSubject(e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900 dark:text-slate-100"
+            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900"
           >
             {availableSubjects.map((s) => (
               <option key={s} value={s}>
@@ -221,42 +263,8 @@ export const AttendanceSheet: React.FC = () => {
         </div>
       </div>
 
-      {/* Live Summary Metrics & Mini-Visualization */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="p-4 bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Roster</span>
-          <span className="text-xl font-black text-slate-900 dark:text-slate-100 mt-1 block">
-            {roster.length} Students
-          </span>
-        </div>
-
-        <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 rounded-2xl shadow-xs">
-          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">Present</span>
-          <span className="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1 block">
-            {presentCount} Students
-          </span>
-        </div>
-
-        <div className="p-4 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 rounded-2xl shadow-xs">
-          <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">Late</span>
-          <span className="text-xl font-black text-amber-700 dark:text-amber-300 mt-1 block">
-            {lateCount} Students
-          </span>
-        </div>
-
-        <div className="p-4 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/40 rounded-2xl shadow-xs">
-          <div className="flex justify-between items-start">
-            <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider block">Absent</span>
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{attendanceRate}% Rate</span>
-          </div>
-          <span className="text-xl font-black text-rose-700 dark:text-rose-300 mt-1 block">
-            {absentCount} Students
-          </span>
-        </div>
-      </div>
-
-      {/* Roster Rollcall Table */}
-      <div className="bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+      {/* Roster Attendance Table */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
         {loading ? (
           <div className="p-8">
             <LoadingSkeleton count={5} />
@@ -268,23 +276,22 @@ export const AttendanceSheet: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200/80 dark:border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <thead className="bg-slate-50 border-b border-slate-200/80 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 <tr>
                   <th className="px-5 py-3 w-12 text-center">#</th>
                   <th className="px-5 py-3">Student Name</th>
                   <th className="px-5 py-3">Contact</th>
                   <th className="px-5 py-3 text-center">Attendance Status</th>
-                  <th className="px-5 py-3">Remarks / Notes</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <tbody className="divide-y divide-slate-100">
                 {roster.map((s, idx) => (
-                  <tr key={s.studentId} className="hover:bg-slate-50/70 dark:hover:bg-slate-900/40 transition-colors">
+                  <tr key={s.studentId} className="hover:bg-slate-50/70 transition-colors">
                     <td className="px-5 py-3.5 text-center font-mono text-slate-400 font-bold">
                       {idx + 1}
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className="font-bold text-slate-900 dark:text-slate-100 block">
+                      <span className="font-bold text-slate-900 block">
                         {s.firstName} {s.lastName}
                       </span>
                       <span className="text-[10px] text-slate-400 font-mono">{s.studentCustomId}</span>
@@ -293,59 +300,43 @@ export const AttendanceSheet: React.FC = () => {
                       <span>{s.phone}</span>
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setStudentStatus(s.studentId, 'PRESENT')}
-                          className={`px-3 py-1 rounded-lg font-bold text-xs transition-all ${
-                            s.status === 'PRESENT'
-                              ? 'bg-emerald-600 text-white shadow-xs'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-emerald-100 hover:text-emerald-700'
-                          }`}
-                        >
-                          Present
-                        </button>
+                      {isAccountant ? (
+                        <div className="flex items-center justify-center">
+                          <Badge
+                            variant={s.status === 'PRESENT' ? 'success' : 'danger'}
+                            size="xs"
+                            dot
+                          >
+                            {s.status}
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setStudentStatus(s.studentId, 'PRESENT')}
+                            className={`px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                              s.status === 'PRESENT'
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'bg-slate-100 text-slate-600 hover:bg-emerald-100 hover:text-emerald-700'
+                            }`}
+                          >
+                            Present
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => setStudentStatus(s.studentId, 'LATE')}
-                          className={`px-3 py-1 rounded-lg font-bold text-xs transition-all ${
-                            s.status === 'LATE'
-                              ? 'bg-amber-500 text-white shadow-xs'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-amber-100 hover:text-amber-700'
-                          }`}
-                        >
-                          Late
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setStudentStatus(s.studentId, 'ABSENT')}
-                          className={`px-3 py-1 rounded-lg font-bold text-xs transition-all ${
-                            s.status === 'ABSENT'
-                              ? 'bg-rose-600 text-white shadow-xs'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-rose-100 hover:text-rose-700'
-                          }`}
-                        >
-                          Absent
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <input
-                        type="text"
-                        value={s.remarks || ''}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setRoster((prev) =>
-                            prev.map((item) =>
-                              item.studentId === s.studentId ? { ...item, remarks: val } : item
-                            )
-                          );
-                        }}
-                        placeholder="e.g., Medical leave, Homework submitted"
-                        className="w-full px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
+                          <button
+                            type="button"
+                            onClick={() => setStudentStatus(s.studentId, 'ABSENT')}
+                            className={`px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                              s.status === 'ABSENT'
+                                ? 'bg-rose-600 text-white shadow-xs'
+                                : 'bg-slate-100 text-slate-600 hover:bg-rose-100 hover:text-rose-700'
+                            }`}
+                          >
+                            Absent
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -354,6 +345,8 @@ export const AttendanceSheet: React.FC = () => {
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 };
