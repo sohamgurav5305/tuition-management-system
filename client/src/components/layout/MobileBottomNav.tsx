@@ -10,6 +10,7 @@ import {
   Download,
   HelpCircle,
   BarChart3,
+  GraduationCap,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -53,8 +54,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = () => {
         return [
           { label: 'Overview', path: '/dashboard', icon: LayoutDashboard },
           { label: 'Students', path: '/students', icon: Users },
+          { label: 'Faculty', path: '/faculty', icon: GraduationCap },
           { label: 'Batches', path: '/batches', icon: Layers },
-          { label: 'Attendance', path: '/attendance', icon: CalendarCheck },
           { label: 'Fee Desk', path: '/fees', icon: CreditCard },
         ];
     }
