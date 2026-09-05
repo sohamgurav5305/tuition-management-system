@@ -5,12 +5,12 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon --watch src --exec ts-node src/server.ts",
-    "build": "npx prisma generate && npx tsc",
+    "build": "node ./node_modules/prisma/build/index.js generate && node ./node_modules/typescript/bin/tsc",
     "start": "node dist/server.js",
-    "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push",
+    "prisma:generate": "node ./node_modules/prisma/build/index.js generate",
+    "prisma:push": "node ./node_modules/prisma/build/index.js db push",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "db:setup": "prisma db push && ts-node prisma/seed.ts"
+    "db:setup": "node ./node_modules/prisma/build/index.js db push && ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
