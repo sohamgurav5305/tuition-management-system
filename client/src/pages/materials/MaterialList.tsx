@@ -19,6 +19,7 @@ import { StudyMaterial, Batch } from '../../types';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
+import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { MaterialUploadModal } from './MaterialUploadModal';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { getMediaUrl, downloadMediaFile } from '../../utils/media';
@@ -198,8 +199,8 @@ export const MaterialList: React.FC = () => {
       {/* Materials Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading ? (
-          <div className="col-span-full p-12 text-center text-slate-400 dark:text-slate-500 text-xs">
-            Loading batch study materials...
+          <div className="col-span-full">
+            <LoadingSkeleton label="Loading batch study materials..." minHeight="min-h-[320px]" />
           </div>
         ) : materials.length === 0 ? (
           <div className="col-span-full p-12 text-center bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl">

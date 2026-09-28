@@ -10,6 +10,7 @@ import { ProtectedRoute } from './components/guards/ProtectedRoute';
 import { RoleGuard } from './components/guards/RoleGuard';
 import { MainLayout } from './components/layout/MainLayout';
 import { LoadingSkeleton } from './components/common/LoadingSkeleton';
+import { FreeworkLoader } from './components/common/FreeworkLoader';
 
 // Auth
 const Login = lazy(() => import('./pages/auth/Login').then((m) => ({ default: m.Login })));
@@ -44,9 +45,8 @@ const MyProfile = lazy(() => import('./pages/student-portal/MyProfile').then((m)
 const FacultyProfile = lazy(() => import('./pages/faculty/FacultyProfile').then((m) => ({ default: m.FacultyProfile })));
 
 const PageFallback = () => (
-  <div className="p-6 max-w-7xl mx-auto space-y-6 animate-pulse">
-    <div className="h-8 bg-slate-200 rounded-xl w-64"></div>
-    <LoadingSkeleton count={5} />
+  <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <FreeworkLoader label="Loading Module..." minHeight="min-h-[420px]" />
   </div>
 );
 

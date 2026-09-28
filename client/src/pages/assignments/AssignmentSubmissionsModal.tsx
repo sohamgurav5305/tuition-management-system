@@ -22,6 +22,7 @@ import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
+import { FreeworkLoader } from '../../components/common/FreeworkLoader';
 import { formatDate, formatDateTime } from '../../utils/date';
 import { getMediaUrl, downloadMediaFile } from '../../utils/media';
 
@@ -155,7 +156,12 @@ export const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProp
 
           {/* Submissions List in Row Format */}
           {loading ? (
-            <div className="p-12 text-center text-slate-400 text-xs">Loading student submissions...</div>
+            <FreeworkLoader
+              label="Loading student submissions..."
+              minHeight="min-h-[260px]"
+              card={false}
+              size="sm"
+            />
           ) : filtered.length === 0 ? (
             <div className="p-12 text-center bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200/60 dark:border-slate-800">
               <FileText className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
