@@ -13,7 +13,9 @@
   }
 }
 
-/* Light mode high-contrast borders */
+/* -------------------------------------------------------------
+   LIGHT MODE STYLING & BORDERS
+   ------------------------------------------------------------- */
 html:not(.dark) .border-slate-100,
 html:not(.dark) .border-gray-100 {
   border-color: #cbd5e1 !important;
@@ -54,9 +56,61 @@ html:not(.dark) textarea {
   border-color: #94a3b8 !important;
 }
 
+/* -------------------------------------------------------------
+   COMPREHENSIVE DARK MODE SYSTEM OVERRIDES
+   Ensures every surface, card, header, and text is high-contrast
+   ------------------------------------------------------------- */
+html.dark .bg-white {
+  background-color: #0f172a !important;
+}
+
+html.dark .bg-slate-50 {
+  background-color: #1e293b !important;
+}
+
+html.dark .bg-slate-50\/50,
+html.dark .bg-slate-50\/60,
+html.dark .bg-slate-50\/70,
+html.dark .bg-slate-50\/80 {
+  background-color: rgba(30, 41, 59, 0.7) !important;
+}
+
+html.dark .bg-slate-100 {
+  background-color: #1e293b !important;
+}
+
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-50\/50:hover,
+html.dark .hover\:bg-slate-50\/70:hover,
+html.dark .hover\:bg-slate-100:hover {
+  background-color: #334155 !important;
+}
+
+/* Dark mode typography contrast */
+html.dark .text-slate-900 {
+  color: #f8fafc !important;
+}
+
+html.dark .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+html.dark .text-slate-700 {
+  color: #e2e8f0 !important;
+}
+
+html.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+html.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
 /* Dark mode refined borders */
 html.dark .border-slate-100,
-html.dark .border-gray-100 {
+html.dark .border-gray-100,
+html.dark .border-slate-100\/80 {
   border-color: #1e293b !important;
 }
 
@@ -64,7 +118,8 @@ html.dark .border-slate-200,
 html.dark .border-gray-200,
 html.dark .border-slate-200\/80,
 html.dark .border-slate-200\/90,
-html.dark .border-slate-200\/60 {
+html.dark .border-slate-200\/60,
+html.dark .border-slate-200\/70 {
   border-color: #334155 !important;
 }
 
@@ -79,6 +134,14 @@ html.dark td {
   border-color: #334155 !important;
 }
 
+html.dark thead {
+  background-color: #1e293b !important;
+}
+
+html.dark thead th {
+  color: #94a3b8 !important;
+}
+
 html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
 html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
   border-color: #1e293b !important;
@@ -89,6 +152,7 @@ html.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
   border-color: #334155 !important;
 }
 
+/* Form controls in dark mode */
 html.dark input,
 html.dark select,
 html.dark textarea {
@@ -97,10 +161,53 @@ html.dark textarea {
   color: #f8fafc !important;
 }
 
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
   border-color: #3b82f6 !important;
+}
+
+/* Soft accent surfaces in dark mode */
+html.dark .bg-blue-50,
+html.dark .bg-blue-50\/40,
+html.dark .bg-blue-50\/50,
+html.dark .bg-blue-50\/70 {
+  background-color: rgba(30, 58, 138, 0.3) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/40,
+html.dark .bg-emerald-50\/50 {
+  background-color: rgba(6, 78, 59, 0.3) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+html.dark .bg-rose-50,
+html.dark .bg-rose-50\/40,
+html.dark .bg-rose-50\/50 {
+  background-color: rgba(136, 19, 55, 0.3) !important;
+  border-color: rgba(244, 63, 94, 0.3) !important;
+}
+
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/40,
+html.dark .bg-amber-50\/50 {
+  background-color: rgba(120, 53, 15, 0.3) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+html.dark .bg-purple-50,
+html.dark .bg-purple-50\/40,
+html.dark .bg-purple-50\/50,
+html.dark .bg-purple-50\/60 {
+  background-color: rgba(88, 28, 135, 0.3) !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
 }
 
 /* Clean, crisp SaaS scrollbars */
@@ -174,4 +281,3 @@ html.dark .glass-panel {
     color: #000000 !important;
   }
 }
-

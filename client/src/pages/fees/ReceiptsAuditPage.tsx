@@ -71,17 +71,17 @@ export const ReceiptsAuditPage: React.FC = () => {
       header: 'Student Name',
       cell: (p) => (
         <div>
-          <span className="font-bold text-slate-900 block text-xs">
+          <span className="font-bold text-slate-900 dark:text-slate-100 block text-xs">
             {p.student ? `${p.student.firstName} ${p.student.lastName}` : 'Enrolled Student'}
           </span>
-          <span className="text-[10px] text-slate-400 font-mono">{p.student?.studentId}</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{p.student?.studentId}</span>
         </div>
       ),
     },
     {
       header: 'Amount Received',
       cell: (p) => (
-        <span className="text-xs font-black text-emerald-600 tabular-nums">
+        <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
           {formatCurrency(p.amount)}
         </span>
       ),
@@ -100,14 +100,14 @@ export const ReceiptsAuditPage: React.FC = () => {
     {
       header: 'Txn Reference',
       cell: (p) => (
-        <span className="text-[11px] font-mono text-slate-500">
+        <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
           {p.transactionReference || '—'}
         </span>
       ),
     },
     {
       header: 'Date',
-      cell: (p) => <span className="text-xs text-slate-500 font-mono">{formatDate(p.paymentDate)}</span>,
+      cell: (p) => <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">{formatDate(p.paymentDate)}</span>,
     },
     {
       header: 'Receipt',
@@ -166,7 +166,7 @@ export const ReceiptsAuditPage: React.FC = () => {
             <select
               value={selectedMode}
               onChange={(e) => setSelectedMode(e.target.value)}
-              className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-medium"
+              className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-slate-700 dark:text-slate-200 font-medium"
             >
               <option value="">All Payment Modes</option>
               <option value="UPI">UPI / Digital</option>

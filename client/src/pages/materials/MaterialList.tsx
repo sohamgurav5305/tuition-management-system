@@ -147,14 +147,14 @@ export const MaterialList: React.FC = () => {
       />
 
       {/* Filter Bar */}
-      <div className="p-3.5 bg-white border border-slate-200/80 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
+      <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
         <div className="flex flex-wrap items-center gap-2">
-          <Filter className="w-3.5 h-3.5 text-slate-400" />
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Category:</span>
+          <Filter className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category:</span>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none"
+            className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none"
           >
             <option value="">All Categories</option>
             <option value="DPP">Daily Practice Problems (DPP)</option>
@@ -166,11 +166,11 @@ export const MaterialList: React.FC = () => {
 
           {canUpload && (
             <>
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-2">Batch:</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider ml-2">Batch:</span>
               <select
                 value={batchFilter}
                 onChange={(e) => setBatchFilter(e.target.value)}
-                className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none max-w-[200px]"
+                className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none max-w-[200px]"
               >
                 <option value="">All Batches</option>
                 {batches.map((b) => (
@@ -184,13 +184,13 @@ export const MaterialList: React.FC = () => {
         </div>
 
         <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Search by topic, subject..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -198,16 +198,16 @@ export const MaterialList: React.FC = () => {
       {/* Materials Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading ? (
-          <div className="col-span-full p-12 text-center text-slate-400 text-xs">
+          <div className="col-span-full p-12 text-center text-slate-400 dark:text-slate-500 text-xs">
             Loading batch study materials...
           </div>
         ) : materials.length === 0 ? (
-          <div className="col-span-full p-12 text-center bg-white border border-slate-200/80 rounded-2xl">
-            <FileText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-            <h3 className="text-xs font-bold text-slate-800">
+          <div className="col-span-full p-12 text-center bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl">
+            <FileText className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
               {isStudent ? 'No Study Materials for Your Batch' : 'No Study Materials Found'}
             </h3>
-            <p className="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">
               {isStudent
                 ? 'Your faculty mentors will publish DPPs and lecture notes for your batch here.'
                 : 'No documents match the chosen category or batch filter.'}
@@ -217,7 +217,7 @@ export const MaterialList: React.FC = () => {
           materials.map((m) => (
             <div
               key={m.id}
-              className="p-4 rounded-xl border border-slate-200/80 bg-white shadow-xs space-y-3 flex flex-col justify-between hover:border-blue-500/40 transition-colors"
+              className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3 flex flex-col justify-between hover:border-blue-500/40 dark:hover:border-blue-500/40 transition-colors"
             >
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
@@ -225,12 +225,12 @@ export const MaterialList: React.FC = () => {
                     {m.materialType.replace('_', ' ')}
                   </Badge>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono text-slate-400 font-bold">{m.materialId}</span>
+                    <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 font-bold">{m.materialId}</span>
                     {canUpload && (
                       <button
                         onClick={() => setDeletingId(m.id)}
                         title="Remove Document"
-                        className="p-1 rounded text-slate-400 hover:text-rose-600 transition-colors"
+                        className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -238,24 +238,24 @@ export const MaterialList: React.FC = () => {
                   </div>
                 </div>
 
-                <h3 className="text-xs font-bold text-slate-900 leading-snug line-clamp-2">
+                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2">
                   {m.title}
                 </h3>
 
-                <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                  <span className="font-semibold text-slate-700">{m.subject}</span>
+                <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">{m.subject}</span>
                   {m.chapterName && <span>&bull; {m.chapterName}</span>}
                 </div>
 
-                <p className="text-[11px] text-slate-400 line-clamp-2">
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-2">
                   {(m as any).description || `Official study material and practice problem sheets for ${m.chapterName || m.subject}.`}
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-slate-100">
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
                 {m.files && m.files.length > 1 ? (
                   <div className="space-y-1.5">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
                       Documents ({m.files.length}):
                     </span>
                     <div className="flex flex-col gap-1.5">
@@ -265,9 +265,9 @@ export const MaterialList: React.FC = () => {
                         return (
                           <div
                             key={fIdx}
-                            className="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-slate-50 border border-slate-200/70 rounded-xl text-xs"
+                            className="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700 rounded-xl text-xs"
                           >
-                            <span className="truncate text-slate-700 font-medium max-w-[140px]" title={cleanName}>
+                            <span className="truncate text-slate-700 dark:text-slate-300 font-medium max-w-[140px]" title={cleanName}>
                               {cleanName}
                             </span>
                             <div className="flex items-center gap-1">
@@ -276,7 +276,7 @@ export const MaterialList: React.FC = () => {
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={() => materialApi.trackDownload(m.id)}
-                                className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors flex items-center gap-1 text-[11px] font-bold"
+                                className="p-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-md transition-colors flex items-center gap-1 text-[11px] font-bold"
                                 title="View Document"
                               >
                                 <Eye className="w-3.5 h-3.5" />
@@ -285,7 +285,7 @@ export const MaterialList: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDownloadFile(m, fUrl)}
-                                className="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-colors"
+                                className="p-1 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
                                 title="Download Document"
                               >
                                 <Download className="w-3.5 h-3.5" />
@@ -303,7 +303,7 @@ export const MaterialList: React.FC = () => {
                       target="_blank"
                       rel="noreferrer"
                       onClick={() => materialApi.trackDownload(m.id)}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 rounded-xl text-xs font-bold transition-colors"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200/80 dark:border-blue-800 rounded-xl text-xs font-bold transition-colors"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>View</span>
@@ -311,7 +311,7 @@ export const MaterialList: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleDownloadFile(m, m.files?.[0] || m.fileUrl || undefined)}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold transition-colors shadow-2xs"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition-colors shadow-2xs"
                     >
                       <Download className="w-3.5 h-3.5" />
                       <span>Download</span>

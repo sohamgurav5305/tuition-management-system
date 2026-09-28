@@ -10,6 +10,7 @@ import { attendanceApi, batchApi } from '../../services/api';
 import { Batch } from '../../types';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { Button } from '../../components/common/Button';
+import { Badge } from '../../components/common/Badge';
 import { useToast } from '../../context/ToastContext';
 import { useSettings } from '../../context/SettingsContext';
 import { printAttendanceReport } from '../../utils/printAttendanceReport';
@@ -38,7 +39,6 @@ interface StudentSummary {
     }
   >;
 }
-
 
 interface AttendanceRangeData {
   batch: {
@@ -100,72 +100,56 @@ export const PreviousAttendanceRecords: React.FC = () => {
       return;
     }
 
-    if (showLoading) setLoading(true);
+    setLoading(true);
     try {
-      const res = await attendanceApi.getAttendanceRange(selectedBatchId, startDate, endDate);
+      const res = await attendanceApi.getAttendanceRange(
+        selectedBatchId,
+        startDate,
+        endDate
+      );
       setReportData(res.data.data);
     } catch (err: any) {
-      if (showLoading) error('Error', err.response?.data?.message || 'Failed to fetch attendance history.');
+      error('Fetch Failed', err.response?.data?.message || 'Could not fetch historical attendance.');
     } finally {
-      if (showLoading) setLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (selectedBatchId) {
-      handleFetchRecords(true);
-      const interval = setInterval(() => {
-        handleFetchRecords(false);
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [selectedBatchId, startDate, endDate]);
-
-  // Auto fetch when initial batch loads
-  useEffect(() => {
-    if (selectedBatchId && !reportData) {
-      handleFetchRecords();
+    if (selectedBatchId && startDate && endDate && startDate <= endDate) {
+      handleFetchRecords(false);
     }
   }, [selectedBatchId]);
 
   const handlePrint = () => {
     if (!reportData) return;
-    printAttendanceReport({
-      batch: reportData.batch,
-      startDate: reportData.startDate,
-      endDate: reportData.endDate,
-      totalLecturesConducted: reportData.totalLecturesConducted,
-      allSubjects: reportData.allSubjects,
-      subjectLecturesMap: reportData.subjectLecturesMap,
-      students: filteredStudents,
-      settings,
-    });
+    printAttendanceReport({ ...reportData, settings });
   };
 
   const filteredStudents = (reportData?.students || []).filter((s) => {
     if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase().trim();
     const fullName = `${s.firstName} ${s.lastName}`.toLowerCase();
-    const sid = (s.studentCustomId || '').toLowerCase();
+    const customId = (s.studentCustomId || '').toLowerCase();
     const roll = (s.rollNumber || '').toLowerCase();
-    return fullName.includes(q) || sid.includes(q) || roll.includes(q);
+    return fullName.includes(q) || customId.includes(q) || roll.includes(q);
   });
 
   return (
     <div className="space-y-6">
-      {/* Search & Filter Controls (Hidden during print) */}
-      <div className="print:hidden bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
+      {/* Search and Filters Bar */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 print:hidden">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Batch Selector */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-purple-600" />
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
               Select Batch:
             </label>
             <select
               value={selectedBatchId}
               onChange={(e) => setSelectedBatchId(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900"
+              className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900 dark:text-slate-100"
             >
               {batches.map((b) => (
                 <option key={b.id} value={b.id}>
@@ -175,37 +159,37 @@ export const PreviousAttendanceRecords: React.FC = () => {
             </select>
           </div>
 
-          {/* From Date */}
+          {/* Start Date */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-blue-600" />
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               From Date:
             </label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900"
+              className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900 dark:text-slate-100"
             />
           </div>
 
-          {/* To Date */}
+          {/* End Date */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-blue-600" />
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               To Date:
             </label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900"
+              className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900 dark:text-slate-100"
             />
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
           <div className="relative flex-1 max-w-xs">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
@@ -213,7 +197,7 @@ export const PreviousAttendanceRecords: React.FC = () => {
               placeholder="Search Student by Name or ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-slate-900"
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 placeholder-slate-400"
             />
           </div>
 
@@ -259,15 +243,15 @@ export const PreviousAttendanceRecords: React.FC = () => {
           </div>
 
           {/* Main Attendance Records Table */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden print:border-none print:shadow-none">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between print:hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden print:border-none print:shadow-none">
+            <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between print:hidden">
               <div className="flex items-center gap-2">
-                <FileSpreadsheet className="w-4 h-4 text-blue-600" />
-                <h3 className="text-sm font-bold text-slate-900">
+                <FileSpreadsheet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                   Subject-wise Attendance & Overall Percentage
                 </h3>
               </div>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">
                 Showing {filteredStudents.length} of {reportData.students.length} students
               </span>
             </div>
@@ -275,27 +259,27 @@ export const PreviousAttendanceRecords: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
-                    <th className="py-3 px-4">#</th>
-                    <th className="py-3 px-4">Student Name & ID</th>
+                  <tr className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+                    <th className="py-3.5 px-4">#</th>
+                    <th className="py-3.5 px-4">Student Name & ID</th>
                     {reportData.allSubjects.map((subj) => (
-                      <th key={subj} className="py-3 px-3 text-center">
+                      <th key={subj} className="py-3.5 px-3 text-center">
                         {subj}
                         <span className="block font-normal text-[9px] text-slate-400 normal-case">
                           ({reportData.subjectLecturesMap[subj] || 0} Lectures)
                         </span>
                       </th>
                     ))}
-                    <th className="py-3 px-4 text-center">Total Attended</th>
-                    <th className="py-3 px-4 text-center">Percentage</th>
+                    <th className="py-3.5 px-4 text-center">Total Attended</th>
+                    <th className="py-3.5 px-4 text-center">Percentage</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
                   {filteredStudents.length === 0 ? (
                     <tr>
                       <td
                         colSpan={reportData.allSubjects.length + 4}
-                        className="py-8 text-center text-slate-400 text-xs"
+                        className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs"
                       >
                         No student attendance records match the selected date range and filter.
                       </td>
@@ -306,11 +290,11 @@ export const PreviousAttendanceRecords: React.FC = () => {
                       return (
                         <tr
                           key={s.studentId}
-                          className="hover:bg-slate-50/70 transition-colors"
+                          className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
                         >
-                          <td className="py-3 px-4 text-slate-400 font-mono">{idx + 1}</td>
-                          <td className="py-3 px-4">
-                            <div className="font-bold text-slate-900">
+                          <td className="py-3.5 px-4 text-slate-400 dark:text-slate-500 font-mono font-bold">{idx + 1}</td>
+                          <td className="py-3.5 px-4">
+                            <div className="font-bold text-slate-900 dark:text-slate-100">
                               {s.firstName} {s.lastName}
                             </div>
                             <span className="text-[10px] text-slate-400 font-mono">
@@ -326,41 +310,41 @@ export const PreviousAttendanceRecords: React.FC = () => {
                             const pct = subjData?.percentage || 0;
 
                             return (
-                              <td key={subj} className="py-3 px-3 text-center">
+                              <td key={subj} className="py-3.5 px-3 text-center">
                                 {totalSubj > 0 ? (
                                   <div>
-                                    <span className="font-bold text-slate-800">
+                                    <span className="font-bold text-slate-800 dark:text-slate-200">
                                       {attendedSubj} / {totalSubj}
                                     </span>
                                     <span
                                       className={`block text-[10px] font-bold ${
                                         pct >= 75
-                                          ? 'text-emerald-600'
-                                          : 'text-amber-600'
+                                          ? 'text-emerald-600 dark:text-emerald-400'
+                                          : 'text-amber-600 dark:text-amber-400'
                                       }`}
                                     >
                                       {pct}%
                                     </span>
                                   </div>
                                 ) : (
-                                  <span className="text-slate-300">-</span>
+                                  <span className="text-slate-300 dark:text-slate-600">-</span>
                                 )}
                               </td>
                             );
                           })}
 
                           {/* Total Attended across all subjects */}
-                          <td className="py-3 px-4 text-center font-bold text-slate-900">
+                          <td className="py-3.5 px-4 text-center font-bold text-slate-900 dark:text-slate-100">
                             {s.totalAttended} / {s.totalLecturesConducted}
                           </td>
 
                           {/* Overall Percentage */}
-                          <td className="py-3 px-4 text-center">
+                          <td className="py-3.5 px-4 text-center">
                             <span
-                              className={`px-2.5 py-1 rounded-lg text-xs font-black tabular-nums ${
+                              className={`px-2.5 py-1 rounded-xl text-xs font-black tabular-nums inline-block ${
                                 isGood
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : 'bg-rose-100 text-rose-800'
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800'
+                                  : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800'
                               }`}
                             >
                               {s.overallPercentage}%

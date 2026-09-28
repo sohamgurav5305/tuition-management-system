@@ -50,17 +50,17 @@ export const FacultyProfile: React.FC = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+        <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
           My Profile
         </h1>
-        <p className="text-xs text-slate-500 mt-1">
-          
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Faculty educator profile, contact particulars, and assigned classroom batches
         </p>
       </div>
 
       {/* Main Profile Header Card */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-slate-100 text-center sm:text-left">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-slate-100 dark:border-slate-800 text-center sm:text-left">
           <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white text-3xl font-black overflow-hidden flex-shrink-0 shadow-lg shadow-purple-500/20 relative">
             <span className="select-none">{initials}</span>
             {faculty.avatarUrl && (
@@ -76,21 +76,21 @@ export const FacultyProfile: React.FC = () => {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
-              <h2 className="text-2xl font-black text-slate-900">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100">
                 {faculty.firstName} {faculty.lastName}
               </h2>
-              <span className="font-mono text-xs font-bold px-3 py-1 bg-purple-50 text-purple-700 rounded-full border border-purple-200">
+              <span className="font-mono text-xs font-bold px-3 py-1 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 rounded-full border border-purple-200 dark:border-purple-800">
                 {faculty.facultyId}
               </span>
               <Badge variant="success">Active Faculty Specialist</Badge>
             </div>
-            <p className="text-sm font-bold text-purple-600 mt-1">
+            <p className="text-sm font-bold text-purple-600 dark:text-purple-400 mt-1">
               Department: {faculty.subjectTaught}
             </p>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {faculty.qualification} &bull; {faculty.experienceYears} Years Experience
             </p>
-            <p className="text-[11px] text-slate-400 mt-1.5 font-mono">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 font-mono">
               Joined Institute: {formatDate(faculty.joiningDate)}
             </p>
           </div>
@@ -100,19 +100,19 @@ export const FacultyProfile: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Contact Details */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
               Contact Particulars
             </h4>
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 text-xs">
-              <div className="flex items-center gap-2.5 text-slate-700">
+            <div className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3 text-xs">
+              <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300">
                 <Phone className="w-4 h-4 text-purple-500 flex-shrink-0" />
                 <span className="font-medium">{faculty.phone}</span>
               </div>
-              <div className="flex items-center gap-2.5 text-slate-700">
+              <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300">
                 <Mail className="w-4 h-4 text-purple-500 flex-shrink-0" />
                 <span className="font-medium">{faculty.email}</span>
               </div>
-              <div className="flex items-center gap-2.5 text-slate-700">
+              <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300">
                 <Award className="w-4 h-4 text-purple-500 flex-shrink-0" />
                 <span className="font-medium">Primary Subject: {faculty.subjectTaught}</span>
               </div>
@@ -121,23 +121,23 @@ export const FacultyProfile: React.FC = () => {
 
           {/* Teaching Summary */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
               Academic Responsibilities
             </h4>
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 text-xs">
+            <div className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Assigned Batches:</span>
-                <span className="font-bold text-slate-900">
+                <span className="text-slate-500 dark:text-slate-400">Assigned Batches:</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100">
                   {faculty.batches?.length || 0} Batches
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Status:</span>
+                <span className="text-slate-500 dark:text-slate-400">Status:</span>
                 <Badge variant="success" size="xs">Active</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">User Account:</span>
-                <span className="font-mono text-slate-700 font-bold">
+                <span className="text-slate-500 dark:text-slate-400">User Account:</span>
+                <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">
                   {faculty.user?.username || 'teacher'}
                 </span>
               </div>
@@ -146,17 +146,17 @@ export const FacultyProfile: React.FC = () => {
         </div>
 
         {/* Account Security & Password Management */}
-        <div className="pt-2 border-t border-slate-100">
-          <div className="bg-gradient-to-r from-purple-50/70 to-indigo-50/70 p-5 rounded-2xl border border-purple-200/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="bg-gradient-to-r from-purple-50/70 to-indigo-50/70 dark:from-purple-950/30 dark:to-indigo-950/30 p-5 rounded-2xl border border-purple-200/70 dark:border-purple-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-purple-100 text-purple-700 rounded-xl flex-shrink-0">
+              <div className="p-2.5 bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 rounded-xl flex-shrink-0">
                 <KeyRound className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-slate-900">
+                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
                   Account Credentials & Password Security
                 </h4>
-                <p className="text-[11px] text-slate-500 mt-0.5">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                   Update your faculty portal password and protect your educator account.
                 </p>
               </div>
@@ -176,23 +176,23 @@ export const FacultyProfile: React.FC = () => {
         {/* Assigned Teaching Batches */}
         {faculty.batches && faculty.batches.length > 0 && (
           <div className="space-y-3 pt-2">
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
               Assigned Batches
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {faculty.batches.map((b) => (
                 <div
                   key={b.id}
-                  className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2"
+                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700">
+                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
                       {b.batchId}
                     </span>
                     <Badge variant="success" size="xs">Active</Badge>
                   </div>
-                  <h5 className="font-bold text-xs text-slate-900">{b.name}</h5>
-                  <div className="pt-2 border-t border-slate-200/60 flex flex-wrap gap-3 text-[11px] text-slate-500">
+                  <h5 className="font-bold text-xs text-slate-900 dark:text-slate-100">{b.name}</h5>
+                  <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700 flex flex-wrap gap-3 text-[11px] text-slate-500 dark:text-slate-400">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-blue-500" /> {b.startTime} - {b.endTime}
                     </span>

@@ -96,18 +96,18 @@ export const BatchList: React.FC = () => {
         <div>
           <span
             onClick={() => handleOpenDetail(b)}
-            className="font-bold text-slate-900 hover:text-blue-600 cursor-pointer block text-xs sm:text-sm truncate"
+            className="font-bold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer block text-xs sm:text-sm truncate"
           >
             {b.name}
           </span>
-          <span className="text-[11px] text-slate-400 font-mono">{b.batchId}</span>
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{b.batchId}</span>
         </div>
       ),
     },
     {
       header: 'Course',
       cell: (b) => (
-        <span className="text-xs font-semibold text-slate-800">
+        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
           {b.course?.name}
         </span>
       ),
@@ -122,7 +122,7 @@ export const BatchList: React.FC = () => {
           : [];
 
         if (instructors.length === 0) {
-          return <span className="text-xs text-slate-400">Unassigned</span>;
+          return <span className="text-xs text-slate-400 dark:text-slate-500">Unassigned</span>;
         }
 
         return (
@@ -130,7 +130,7 @@ export const BatchList: React.FC = () => {
             {instructors.map((inst, idx) => (
               <span
                 key={idx}
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-semibold border border-purple-200/60"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 text-[10px] font-semibold border border-purple-200/60 dark:border-purple-800"
                 title={`${inst.subject}: ${inst.facultyName}`}
               >
                 <span className="font-bold">{inst.subject}:</span> {inst.facultyName}
@@ -151,10 +151,10 @@ export const BatchList: React.FC = () => {
         }
         return (
           <div className="text-xs space-y-0.5">
-            <p className="font-semibold text-slate-800">
+            <p className="font-semibold text-slate-800 dark:text-slate-200">
               {b.startTime} - {b.endTime}
             </p>
-            <p className="text-[11px] text-slate-400">{days.join(', ')}</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500">{days.join(', ')}</p>
           </div>
         );
       },
@@ -164,8 +164,8 @@ export const BatchList: React.FC = () => {
       cell: (b) => {
         const enrolled = b._count?.students || 0;
         return (
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-900 tabular-nums">
-            <Users className="w-3.5 h-3.5 text-slate-400" />
+          <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+            <Users className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
             <span>{enrolled} Students</span>
           </span>
         );
@@ -179,7 +179,7 @@ export const BatchList: React.FC = () => {
           <button
             onClick={() => handleOpenDetail(b)}
             title="View Enrolled Students"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
           >
             <Users className="w-4 h-4" />
           </button>
@@ -191,14 +191,14 @@ export const BatchList: React.FC = () => {
                   setIsFormOpen(true);
                 }}
                 title="Edit Batch"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
               >
                 <Edit className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setDeletingId(b.id)}
                 title="Delete Batch"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -234,12 +234,12 @@ export const BatchList: React.FC = () => {
 
       {/* Filter Bar */}
       {courses.length > 0 && (
-        <div className="p-3.5 bg-white border border-slate-200/80 rounded-2xl flex items-center gap-3 shadow-xs">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Filter Course:</span>
+        <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl flex items-center gap-3 shadow-xs">
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Filter Course:</span>
           <select
             value={selectedCourse}
             onChange={(e) => setSelectedCourse(e.target.value)}
-            className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none"
+            className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none"
           >
             <option value="">All Courses</option>
             {courses.map((c) => (
@@ -251,7 +251,7 @@ export const BatchList: React.FC = () => {
           {selectedCourse && (
             <button
               onClick={() => setSelectedCourse('')}
-              className="text-xs text-blue-600 font-semibold hover:underline"
+              className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
             >
               Clear
             </button>

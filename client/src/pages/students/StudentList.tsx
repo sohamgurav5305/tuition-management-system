@@ -100,7 +100,7 @@ export const StudentList: React.FC = () => {
       header: 'Student Name',
       cell: (s) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs overflow-hidden flex-shrink-0 relative">
+          <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-bold flex items-center justify-center text-xs overflow-hidden flex-shrink-0 relative">
             <span className="select-none">
               {s.firstName?.[0] || 'S'}{s.lastName?.[0] || ''}
             </span>
@@ -118,11 +118,11 @@ export const StudentList: React.FC = () => {
           <div className="min-w-0">
             <span
               onClick={() => navigate(`/students/${s.id}`)}
-              className="font-bold text-slate-900 hover:text-blue-600 cursor-pointer block truncate"
+              className="font-bold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer block truncate"
             >
               {s.firstName} {s.lastName}
             </span>
-            <span className="text-[11px] text-slate-400 font-mono">{s.studentId}</span>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{s.studentId}</span>
           </div>
         </div>
       ),
@@ -132,11 +132,11 @@ export const StudentList: React.FC = () => {
       cell: (s) => (
         <div className="text-xs">
           {s.batch ? (
-            <span className="font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200/60">
+            <span className="font-semibold text-purple-700 bg-purple-50 dark:bg-purple-950/60 dark:text-purple-300 px-2 py-0.5 rounded-md border border-purple-200/60 dark:border-purple-800">
               {s.batch.name}
             </span>
           ) : (
-            <span className="text-slate-400 italic">Unassigned</span>
+            <span className="text-slate-400 dark:text-slate-500 italic">Unassigned</span>
           )}
         </div>
       ),
@@ -145,8 +145,8 @@ export const StudentList: React.FC = () => {
       header: 'Contact',
       cell: (s) => (
         <div className="text-xs">
-          <span className="text-slate-800 block font-medium">{s.phone}</span>
-          <span className="text-[11px] text-slate-400 truncate block max-w-[150px]">{s.email}</span>
+          <span className="text-slate-800 dark:text-slate-200 block font-medium">{s.phone}</span>
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate block max-w-[150px]">{s.email}</span>
         </div>
       ),
     },
@@ -158,10 +158,10 @@ export const StudentList: React.FC = () => {
               const rate = s.attendancePercentage ?? s.attendanceStats?.percentage ?? 0;
               return (
                 <div className="w-24 space-y-1">
-                  <div className="flex justify-between text-[11px] font-bold text-slate-700">
+                  <div className="flex justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
                     <span>{rate}%</span>
                   </div>
-                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div
                       style={{ width: `${rate}%` }}
                       className={`h-full rounded-full ${
@@ -188,7 +188,7 @@ export const StudentList: React.FC = () => {
                     {isPaid ? 'PAID' : isPartial ? 'PARTIAL' : 'PENDING'}
                   </Badge>
                   {s.pendingFee > 0 && (
-                    <span className="text-[10px] text-rose-600 font-mono block">
+                    <span className="text-[10px] text-rose-600 dark:text-rose-400 font-mono block">
                       Due: {formatCurrency(s.pendingFee)}
                     </span>
                   )}
@@ -216,7 +216,7 @@ export const StudentList: React.FC = () => {
         <div className="flex items-center gap-1">
           <button
             onClick={() => navigate(`/students/${s.id}`)}
-            className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100"
+            className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             title="View Full Profile"
           >
             <Eye className="w-4 h-4" />
@@ -228,14 +228,14 @@ export const StudentList: React.FC = () => {
                   setEditingStudent(s);
                   setIsFormOpen(true);
                 }}
-                className="p-1.5 text-slate-400 hover:text-amber-600 rounded-lg hover:bg-slate-100"
+                className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 title="Edit Record"
               >
                 <Edit className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setDeletingId(s.id)}
-                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100"
+                className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 title="Delete Student"
               >
                 <Trash2 className="w-4 h-4" />
@@ -294,7 +294,7 @@ export const StudentList: React.FC = () => {
             <select
               value={selectedBatch}
               onChange={(e) => setSelectedBatch(e.target.value)}
-              className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-medium"
+              className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-slate-700 dark:text-slate-200 font-medium"
             >
               <option value="">All Batches</option>
               {batches.map((b) => (
@@ -309,7 +309,7 @@ export const StudentList: React.FC = () => {
               <select
                 value={selectedFeeStatus}
                 onChange={(e) => setSelectedFeeStatus(e.target.value)}
-                className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-medium"
+                className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-slate-700 dark:text-slate-200 font-medium"
               >
                 <option value="">All Fee Statuses</option>
                 <option value="PAID">Paid in Full</option>
@@ -323,7 +323,7 @@ export const StudentList: React.FC = () => {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-medium"
+                className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-slate-700 dark:text-slate-200 font-medium"
               >
                 <option value="">All Statuses</option>
                 <option value="ACTIVE">Active</option>

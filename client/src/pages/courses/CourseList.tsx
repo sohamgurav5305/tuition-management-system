@@ -69,18 +69,18 @@ export const CourseList: React.FC = () => {
       header: 'Course Name',
       cell: (c) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 flex items-center justify-center flex-shrink-0">
             <BookOpen className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-slate-900 text-xs sm:text-sm">{c.name}</p>
+            <p className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">{c.name}</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               {c.targetExam && c.targetExam !== 'General' && (
                 <Badge variant="primary" size="xs">
                   {c.targetExam}
                 </Badge>
               )}
-              <span className="text-[11px] text-slate-400 font-mono">
+              <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
                 {c.gradeLevel && c.gradeLevel !== 'General' ? `Class ${c.gradeLevel} • ` : ''}{c.courseId}
               </span>
             </div>
@@ -103,13 +103,13 @@ export const CourseList: React.FC = () => {
               subjectsList.map((s, idx) => (
                 <span
                   key={idx}
-                  className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700"
+                  className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                 >
                   {s}
                 </span>
               ))
             ) : (
-              <span className="text-xs text-slate-400">All Core Subjects</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">All Core Subjects</span>
             )}
           </div>
         );
@@ -118,15 +118,15 @@ export const CourseList: React.FC = () => {
     {
       header: 'Duration',
       cell: (c) => (
-        <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700">
-          <Clock className="w-3.5 h-3.5 text-slate-400" /> {c.duration}
+        <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" /> {c.duration}
         </span>
       ),
     },
     {
       header: 'Fees',
       cell: (c) => (
-        <span className="text-xs font-bold text-slate-900 tabular-nums">
+        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 tabular-nums">
           {formatCurrency(c.fee)}
         </span>
       ),
@@ -134,8 +134,8 @@ export const CourseList: React.FC = () => {
     {
       header: 'Batches Running',
       cell: (c) => (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700">
-          <Layers className="w-3.5 h-3.5 text-purple-600" />
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+          <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
           <span>{c._count?.batches || 0} Batches</span>
         </span>
       ),
@@ -152,7 +152,7 @@ export const CourseList: React.FC = () => {
                 setIsFormOpen(true);
               }}
               title="Edit Course"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
             >
               <Edit className="w-4 h-4" />
             </button>
@@ -161,7 +161,7 @@ export const CourseList: React.FC = () => {
             <button
               onClick={() => setDeletingId(c.id)}
               title="Delete Course"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
             </button>

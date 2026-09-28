@@ -214,39 +214,39 @@ export const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">
+          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
             Assignment Title *
           </label>
           <input
             type="text"
             {...register('title')}
             placeholder=""
-            className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900"
+            className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
           />
           {errors.title && <p className="text-xs text-rose-500 mt-1">{errors.title.message}</p>}
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">
+          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
             Description & Instructions *
           </label>
           <textarea
             rows={3}
             {...register('description')}
             placeholder="Please write down full solutions for questions 1 to 15..."
-            className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900"
+            className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
           />
           {errors.description && <p className="text-xs text-rose-500 mt-1">{errors.description.message}</p>}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
               Assigned Batch *
             </label>
             <select
               {...register('batchId')}
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900"
+              className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100"
             >
               <option value="">Select Batch</option>
               {batches.map((b) => (
@@ -259,12 +259,12 @@ export const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1 flex items-center gap-1">
-              <BookOpen className="w-3 h-3 text-blue-600" /> Subject *
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1 flex items-center gap-1">
+              <BookOpen className="w-3 h-3 text-blue-600 dark:text-blue-400" /> Subject *
             </label>
             <select
               {...register('subject')}
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 font-semibold"
+              className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 font-semibold"
             >
               {availableSubjects.map((s) => (
                 <option key={s} value={s}>
@@ -275,61 +275,61 @@ export const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
               Submission Due Date *
             </label>
             <input
               type="date"
               {...register('dueDate')}
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900"
+              className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
               Maximum Marks *
             </label>
             <input
               type="number"
               step="any"
               {...register('totalMarks')}
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900"
+              className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1 flex items-center justify-between">
+          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1 flex items-center justify-between">
             <span className="flex items-center gap-1.5 font-bold">
-              <Paperclip className="w-3.5 h-3.5 text-blue-600" /> Attachments (Multiple Files Allowed)
+              <Paperclip className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> Attachments (Multiple Files Allowed)
             </span>
-            <span className="text-[11px] text-slate-400 font-normal">PDF, Word, Excel, Images (Max 25MB each)</span>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">PDF, Word, Excel, Images (Max 25MB each)</span>
           </label>
           <input
             type="file"
             multiple
             onChange={handleFileChange}
-            className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            className="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 dark:file:bg-blue-950/60 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/60"
           />
 
           {/* List of newly selected files */}
           {selectedFiles.length > 0 && (
             <div className="mt-3 space-y-1.5">
-              <p className="text-[11px] font-bold text-slate-600">
+              <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
                 Selected Files to Upload ({selectedFiles.length}):
               </p>
               <div className="flex flex-wrap gap-3 pt-1">
                 {selectedFiles.map((file, idx) => (
                   <div
                     key={idx}
-                    className="relative group flex items-center gap-2 pl-3 pr-4 py-2 rounded-xl bg-blue-50 border border-blue-200/80 text-blue-900 text-xs font-semibold shadow-sm"
+                    className="relative group flex items-center gap-2 pl-3 pr-4 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-800 text-blue-900 dark:text-blue-200 text-xs font-semibold shadow-sm"
                   >
-                    <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                    <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                     <div className="flex flex-col">
                       <span className="truncate max-w-[170px]" title={file.name}>
                         {file.name}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-normal">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
                         {(file.size / 1024).toFixed(0)} KB
                       </span>
                     </div>
@@ -350,9 +350,9 @@ export const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({
 
           {/* Existing attachments when editing */}
           {initialAssignment && (
-            <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2">
+            <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 text-xs space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                   Existing Attachments on File ({existingAttachments.length}):
                 </span>
                 {existingAttachments.length === 0 && (
@@ -369,17 +369,17 @@ export const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({
                     return (
                       <div
                         key={i}
-                        className="relative group inline-flex items-center gap-2 pl-3 pr-3.5 py-1.5 bg-blue-50/70 border border-blue-200/80 rounded-xl text-slate-700 text-xs font-medium shadow-2xs"
+                        className="relative group inline-flex items-center gap-2 pl-3 pr-3.5 py-1.5 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-medium shadow-2xs"
                       >
-                        <Paperclip className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-                        <span className="font-semibold text-blue-900 truncate max-w-[150px]" title={displayName}>
+                        <Paperclip className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                        <span className="font-semibold text-blue-900 dark:text-blue-200 truncate max-w-[150px]" title={displayName}>
                           {displayName}
                         </span>
                         <a
                           href={getMediaUrl(url)}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100/80 rounded-md transition-colors text-[11px] font-bold ml-0.5"
+                          className="inline-flex items-center gap-1 p-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-100/80 dark:hover:bg-blue-900/60 rounded-md transition-colors text-[11px] font-bold ml-0.5"
                           title={`View: ${displayName}`}
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -403,17 +403,17 @@ export const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({
                   })}
                 </div>
               ) : (
-                <p className="text-[11px] text-slate-400 italic">No existing attachments remaining on file.</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 italic">No existing attachments remaining on file.</p>
               )}
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-xl"
+            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors"
           >
             Cancel
           </button>

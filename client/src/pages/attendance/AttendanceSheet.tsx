@@ -115,7 +115,6 @@ export const AttendanceSheet: React.FC = () => {
     );
   };
 
-
   const handleMarkAllPresent = () => {
     setRoster((prev) => prev.map((s) => ({ ...s, status: 'PRESENT' })));
     success('Marked', 'All students marked Present.');
@@ -149,6 +148,7 @@ export const AttendanceSheet: React.FC = () => {
       {/* Top Banner */}
       <PageHeader
         title="Attendance"
+        subtitle="Mark session-wise attendance rolls, verify batch headcounts, and inspect historical attendance logs."
         actions={
           activeTab === 'daily' && !isAccountant ? (
             <div className="flex items-center gap-2">
@@ -179,13 +179,13 @@ export const AttendanceSheet: React.FC = () => {
       />
 
       {/* Mode Switcher Tabs */}
-      <div className="flex items-center gap-2 p-1.5 bg-slate-100 border border-slate-200/80 rounded-2xl w-fit print:hidden">
+      <div className="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 rounded-2xl w-fit print:hidden">
         <button
           onClick={() => setActiveTab('daily')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'daily'
-              ? 'bg-white text-blue-600 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <CalendarCheck className="w-4 h-4" />
@@ -195,8 +195,8 @@ export const AttendanceSheet: React.FC = () => {
           onClick={() => setActiveTab('history')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'history'
-              ? 'bg-white text-purple-600 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Calendar className="w-4 h-4" />
@@ -209,142 +209,142 @@ export const AttendanceSheet: React.FC = () => {
       ) : (
         <>
           {/* Top Controls Bar */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Date Selector */}
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-blue-600" />
-            Session Date:
-          </label>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900"
-          />
-        </div>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Date Selector */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                Session Date:
+              </label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900 dark:text-slate-100"
+              />
+            </div>
 
-        {/* Batch Selector */}
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-purple-600" />
-            Select Batch:
-          </label>
-          <select
-            value={selectedBatchId}
-            onChange={(e) => setSelectedBatchId(e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900"
-          >
-            {batches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name} ({b.course?.name || 'Academic'})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Subject Selector */}
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
-            Lecture Subject:
-          </label>
-          <select
-            value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900"
-          >
-            {availableSubjects.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Roster Attendance Table */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
-        {loading ? (
-          <div className="p-8">
-            <LoadingSkeleton count={5} />
-          </div>
-        ) : roster.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 text-xs">
-            No students currently enrolled in this batch.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200/80 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                <tr>
-                  <th className="px-5 py-3 w-12 text-center">#</th>
-                  <th className="px-5 py-3">Student Name</th>
-                  <th className="px-5 py-3">Contact</th>
-                  <th className="px-5 py-3 text-center">Attendance Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {roster.map((s, idx) => (
-                  <tr key={s.studentId} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="px-5 py-3.5 text-center font-mono text-slate-400 font-bold">
-                      {idx + 1}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className="font-bold text-slate-900 block">
-                        {s.firstName} {s.lastName}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono">{s.studentCustomId}</span>
-                    </td>
-                    <td className="px-5 py-3.5 text-slate-500">
-                      <span>{s.phone}</span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      {isAccountant ? (
-                        <div className="flex items-center justify-center">
-                          <Badge
-                            variant={s.status === 'PRESENT' ? 'success' : 'danger'}
-                            size="xs"
-                            dot
-                          >
-                            {s.status}
-                          </Badge>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setStudentStatus(s.studentId, 'PRESENT')}
-                            className={`px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all ${
-                              s.status === 'PRESENT'
-                                ? 'bg-emerald-600 text-white shadow-xs'
-                                : 'bg-slate-100 text-slate-600 hover:bg-emerald-100 hover:text-emerald-700'
-                            }`}
-                          >
-                            Present
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setStudentStatus(s.studentId, 'ABSENT')}
-                            className={`px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all ${
-                              s.status === 'ABSENT'
-                                ? 'bg-rose-600 text-white shadow-xs'
-                                : 'bg-slate-100 text-slate-600 hover:bg-rose-100 hover:text-rose-700'
-                            }`}
-                          >
-                            Absent
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
+            {/* Batch Selector */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                Select Batch:
+              </label>
+              <select
+                value={selectedBatchId}
+                onChange={(e) => setSelectedBatchId(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900 dark:text-slate-100"
+              >
+                {batches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} ({b.course?.name || 'Academic'})
+                  </option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+            </div>
+
+            {/* Subject Selector */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                Lecture Subject:
+              </label>
+              <select
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-900 dark:text-slate-100"
+              >
+                {availableSubjects.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Roster Attendance Table */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden">
+            {loading ? (
+              <div className="p-8">
+                <LoadingSkeleton count={5} />
+              </div>
+            ) : roster.length === 0 ? (
+              <div className="p-12 text-center text-slate-400 text-xs">
+                No students currently enrolled in this batch.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <tr>
+                      <th className="px-5 py-3 w-12 text-center">#</th>
+                      <th className="px-5 py-3">Student Name</th>
+                      <th className="px-5 py-3">Contact</th>
+                      <th className="px-5 py-3 text-center">Attendance Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {roster.map((s, idx) => (
+                      <tr key={s.studentId} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="px-5 py-3.5 text-center font-mono text-slate-400 dark:text-slate-500 font-bold">
+                          {idx + 1}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span className="font-bold text-slate-900 dark:text-slate-100 block">
+                            {s.firstName} {s.lastName}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">{s.studentCustomId}</span>
+                        </td>
+                        <td className="px-5 py-3.5 text-slate-500 dark:text-slate-400">
+                          <span>{s.phone}</span>
+                        </td>
+                        <td className="px-5 py-3.5">
+                          {isAccountant ? (
+                            <div className="flex items-center justify-center">
+                              <Badge
+                                variant={s.status === 'PRESENT' ? 'success' : 'danger'}
+                                size="xs"
+                                dot
+                              >
+                                {s.status}
+                              </Badge>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setStudentStatus(s.studentId, 'PRESENT')}
+                                className={`px-4 py-1.5 rounded-xl font-bold text-xs transition-all ${
+                                  s.status === 'PRESENT'
+                                    ? 'bg-emerald-600 text-white shadow-xs'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 hover:text-emerald-700 dark:hover:text-emerald-300'
+                                }`}
+                              >
+                                Present
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => setStudentStatus(s.studentId, 'ABSENT')}
+                                className={`px-4 py-1.5 rounded-xl font-bold text-xs transition-all ${
+                                  s.status === 'ABSENT'
+                                    ? 'bg-rose-600 text-white shadow-xs'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-rose-100 dark:hover:bg-rose-950/60 hover:text-rose-700 dark:hover:text-rose-300'
+                                }`}
+                              >
+                                Absent
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>

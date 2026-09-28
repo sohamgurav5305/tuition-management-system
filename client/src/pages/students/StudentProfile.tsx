@@ -142,7 +142,7 @@ export const StudentProfile: React.FC = () => {
       </div>
 
       {/* Main Student Header Card */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
           <div className="w-20 h-20 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-2xl font-black overflow-hidden flex-shrink-0 shadow-sm relative">
             <span className="select-none">{`${student.firstName[0]}${student.lastName[0]}`}</span>
@@ -160,10 +160,10 @@ export const StudentProfile: React.FC = () => {
 
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                 {student.firstName} {student.lastName}
               </h1>
-              <span className="font-mono text-xs font-bold px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded-full border border-blue-200/80">
+              <span className="font-mono text-xs font-bold px-2.5 py-0.5 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 rounded-full border border-blue-200/80 dark:border-blue-800">
                 {student.studentId}
               </span>
               {!isAccountant && (
@@ -173,11 +173,11 @@ export const StudentProfile: React.FC = () => {
               )}
             </div>
 
-            <p className="text-xs font-semibold text-slate-500 mt-1">
-              Course: <span className="text-blue-600 font-bold">{student.course?.name || 'Unassigned Course'}</span> &bull; Batch: <span className="text-purple-600 font-bold">{student.batch?.name || 'Unassigned Batch'}</span>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+              Course: <span className="text-blue-600 dark:text-blue-400 font-bold">{student.course?.name || 'Unassigned Course'}</span> &bull; Batch: <span className="text-purple-600 dark:text-purple-400 font-bold">{student.batch?.name || 'Unassigned Batch'}</span>
             </p>
 
-            <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-500">
+            <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-1">
                 <Phone className="w-3.5 h-3.5" /> {student.phone}
               </span>
@@ -191,21 +191,21 @@ export const StudentProfile: React.FC = () => {
           </div>
 
           {/* Quick Metrics */}
-          <div className="flex md:flex-col items-center md:items-end gap-3 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-slate-100">
+          <div className="flex md:flex-col items-center md:items-end gap-3 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
             {!isAccountant && (
               <div className="text-left md:text-right">
-                <span className="text-[11px] text-slate-400 block">Attendance Rate</span>
-                <span className="text-lg font-black text-emerald-600 tabular-nums">
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 block">Attendance Rate</span>
+                <span className="text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
                   {attendanceStats.percentage}%
                 </span>
               </div>
             )}
             {!isTeacher && (
               <div className="text-left md:text-right">
-                <span className="text-[11px] text-slate-400 block">Pending Fee Balance</span>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 block">Pending Fee Balance</span>
                 <span
                   className={`text-lg font-black tabular-nums ${
-                    student.pendingFee > 0 ? 'text-rose-600' : 'text-emerald-600'
+                    student.pendingFee > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
                   }`}
                 >
                   {formatCurrency(student.pendingFee)}
@@ -216,15 +216,15 @@ export const StudentProfile: React.FC = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 mt-6 pt-5 border-t border-slate-100 overflow-x-auto">
+        <div className="flex items-center gap-2 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'bg-blue-50 text-blue-700 font-bold'
-                  : 'text-slate-600 hover:bg-slate-100'
+                  ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-800'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               {tab.label}
@@ -236,50 +236,50 @@ export const StudentProfile: React.FC = () => {
       {/* Tab 1: Overview */}
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-3">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-3">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Academic & Personal Info
             </h3>
-            <div className="divide-y divide-slate-100 text-xs">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
               <div className="py-2.5 flex justify-between">
-                <span className="text-slate-500">Date of Birth:</span>
-                <span className="font-semibold text-slate-900">{formatDate(student.dateOfBirth)}</span>
+                <span className="text-slate-500 dark:text-slate-400">Date of Birth:</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{formatDate(student.dateOfBirth)}</span>
               </div>
               <div className="py-2.5 flex justify-between">
-                <span className="text-slate-500">Gender:</span>
-                <span className="font-semibold text-slate-900">{student.gender}</span>
+                <span className="text-slate-500 dark:text-slate-400">Gender:</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{student.gender}</span>
               </div>
               <div className="py-2.5 flex justify-between">
-                <span className="text-slate-500">Residential Address:</span>
-                <span className="font-semibold text-slate-900 text-right max-w-xs">{student.address}</span>
+                <span className="text-slate-500 dark:text-slate-400">Residential Address:</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100 text-right max-w-xs">{student.address}</span>
               </div>
               <div className="py-2.5 flex justify-between">
-                <span className="text-slate-500">Course Enrolled:</span>
-                <span className="font-semibold text-blue-600">{student.course?.name || 'Unassigned'}</span>
+                <span className="text-slate-500 dark:text-slate-400">Course Enrolled:</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400">{student.course?.name || 'Unassigned'}</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-3">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-3">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Guardian Details
             </h3>
-            <div className="divide-y divide-slate-100 text-xs">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
               <div className="py-2.5 flex justify-between">
-                <span className="text-slate-500">Primary Guardian:</span>
-                <span className="font-semibold text-slate-900">{student.guardianName}</span>
+                <span className="text-slate-500 dark:text-slate-400">Primary Guardian:</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{student.guardianName}</span>
               </div>
               <div className="py-2.5 flex justify-between">
-                <span className="text-slate-500">Relationship:</span>
-                <span className="font-semibold text-slate-900">{student.guardianRelation}</span>
+                <span className="text-slate-500 dark:text-slate-400">Relationship:</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{student.guardianRelation}</span>
               </div>
               <div className="py-2.5 flex justify-between">
-                <span className="text-slate-500">Guardian Contact:</span>
-                <span className="font-semibold text-slate-900">{student.guardianPhone}</span>
+                <span className="text-slate-500 dark:text-slate-400">Guardian Contact:</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{student.guardianPhone}</span>
               </div>
               <div className="py-2.5 flex justify-between">
-                <span className="text-slate-500">Emergency Contact:</span>
-                <span className="font-semibold text-slate-900">{student.emergencyContact || 'Same as primary'}</span>
+                <span className="text-slate-500 dark:text-slate-400">Emergency Contact:</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{student.emergencyContact || 'Same as primary'}</span>
               </div>
             </div>
           </div>
@@ -288,37 +288,37 @@ export const StudentProfile: React.FC = () => {
 
       {/* Tab 2: Attendance */}
       {!isAccountant && activeTab === 'attendance' && (
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-5">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="p-3.5 bg-slate-50 rounded-xl text-center">
-              <span className="text-xs text-slate-500">Total Lectures</span>
-              <p className="text-lg font-black text-slate-900 mt-1 tabular-nums">{attendanceStats.total}</p>
+            <div className="p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl text-center">
+              <span className="text-xs text-slate-500 dark:text-slate-400">Total Lectures</span>
+              <p className="text-lg font-black text-slate-900 dark:text-slate-100 mt-1 tabular-nums">{attendanceStats.total}</p>
             </div>
-            <div className="p-3.5 bg-emerald-50 rounded-xl text-center">
-              <span className="text-xs text-emerald-600">Present</span>
-              <p className="text-lg font-black text-emerald-700 mt-1 tabular-nums">{attendanceStats.present}</p>
+            <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-center">
+              <span className="text-xs text-emerald-600 dark:text-emerald-400">Present</span>
+              <p className="text-lg font-black text-emerald-700 dark:text-emerald-300 mt-1 tabular-nums">{attendanceStats.present}</p>
             </div>
-            <div className="p-3.5 bg-rose-50 rounded-xl text-center">
-              <span className="text-xs text-rose-600">Absent</span>
-              <p className="text-lg font-black text-rose-700 mt-1 tabular-nums">{attendanceStats.absent}</p>
+            <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 rounded-xl text-center">
+              <span className="text-xs text-rose-600 dark:text-rose-400">Absent</span>
+              <p className="text-lg font-black text-rose-700 dark:text-rose-300 mt-1 tabular-nums">{attendanceStats.absent}</p>
             </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200/80">
+              <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-800">
                 <tr>
                   <th className="px-4 py-3">Date</th>
                   <th className="px-4 py-3">Topic / Subject</th>
                   <th className="px-4 py-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {student.attendance && student.attendance.length > 0 ? (
                   student.attendance.map((a: Attendance) => (
-                    <tr key={a.id} className="hover:bg-slate-50/60">
-                      <td className="px-4 py-3 font-mono text-slate-600">{formatDate(a.date)}</td>
-                      <td className="px-4 py-3 font-medium text-slate-900">{(a as any).topic || a.subject || 'Class Session'}</td>
+                    <tr key={a.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                      <td className="px-4 py-3 font-mono text-slate-600 dark:text-slate-400">{formatDate(a.date)}</td>
+                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{(a as any).topic || a.subject || 'Class Session'}</td>
                       <td className="px-4 py-3">
                         <Badge
                           variant={a.status === 'PRESENT' ? 'success' : 'danger'}
@@ -332,7 +332,7 @@ export const StudentProfile: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-slate-400">
+                    <td colSpan={3} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
                       No attendance sessions recorded yet for this session.
                     </td>
                   </tr>
@@ -347,27 +347,27 @@ export const StudentProfile: React.FC = () => {
       {!isTeacher && activeTab === 'fees' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 bg-white border border-slate-200/80 rounded-2xl">
-              <span className="text-xs text-slate-500">Agreed Course Tuition</span>
-              <p className="text-xl font-black text-slate-900 mt-1 tabular-nums">{formatCurrency(student.totalFee)}</p>
+            <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl">
+              <span className="text-xs text-slate-500 dark:text-slate-400">Agreed Course Tuition</span>
+              <p className="text-xl font-black text-slate-900 dark:text-slate-100 mt-1 tabular-nums">{formatCurrency(student.totalFee)}</p>
             </div>
-            <div className="p-4 bg-white border border-slate-200/80 rounded-2xl">
-              <span className="text-xs text-emerald-600">Paid Amount</span>
-              <p className="text-xl font-black text-emerald-600 mt-1 tabular-nums">{formatCurrency(student.paidFee)}</p>
+            <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl">
+              <span className="text-xs text-emerald-600 dark:text-emerald-400">Paid Amount</span>
+              <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1 tabular-nums">{formatCurrency(student.paidFee)}</p>
             </div>
-            <div className="p-4 bg-white border border-slate-200/80 rounded-2xl">
-              <span className="text-xs text-rose-600">Pending Balance</span>
-              <p className="text-xl font-black text-rose-600 mt-1 tabular-nums">{formatCurrency(student.pendingFee)}</p>
+            <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl">
+              <span className="text-xs text-rose-600 dark:text-rose-400">Pending Balance</span>
+              <p className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1 tabular-nums">{formatCurrency(student.pendingFee)}</p>
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Payment Receipts History
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200/80">
+                <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-800">
                   <tr>
                     <th className="px-4 py-3">Receipt No</th>
                     <th className="px-4 py-3">Mode</th>
@@ -376,20 +376,20 @@ export const StudentProfile: React.FC = () => {
                     <th className="px-4 py-3 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {student.payments && student.payments.length > 0 ? (
                     student.payments.map((p) => (
-                      <tr key={p.id} className="hover:bg-slate-50/60">
-                        <td className="px-4 py-3 font-mono font-bold text-blue-600">{p.receiptId}</td>
+                      <tr key={p.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                        <td className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400">{p.receiptId}</td>
                         <td className="px-4 py-3">
                           <Badge variant="neutral" size="xs">{p.paymentMode}</Badge>
                         </td>
-                        <td className="px-4 py-3 font-bold text-emerald-600 tabular-nums">{formatCurrency(p.amount)}</td>
-                        <td className="px-4 py-3 text-slate-500 font-mono">{formatDate(p.paymentDate)}</td>
+                        <td className="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{formatCurrency(p.amount)}</td>
+                        <td className="px-4 py-3 text-slate-500 dark:text-slate-400 font-mono">{formatDate(p.paymentDate)}</td>
                         <td className="px-4 py-3 text-right">
                           <button
                             onClick={() => setSelectedReceipt(p)}
-                            className="text-xs font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1"
+                            className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 inline-flex items-center gap-1"
                           >
                             <FileText className="w-3.5 h-3.5" /> View Receipt
                           </button>
@@ -398,7 +398,7 @@ export const StudentProfile: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                      <td colSpan={5} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
                         No payments recorded yet.
                       </td>
                     </tr>
@@ -412,13 +412,13 @@ export const StudentProfile: React.FC = () => {
 
       {/* Tab 4: Assignments */}
       {activeTab === 'assignments' && (
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
+          <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             Assignment Problem Sets 
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200/80">
+              <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-800">
                 <tr>
                   <th className="px-4 py-3">Assignment Title</th>
                   <th className="px-4 py-3">Subject</th>
@@ -427,24 +427,24 @@ export const StudentProfile: React.FC = () => {
                   <th className="px-4 py-3">Score / Grade</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {(student as any).submissions && (student as any).submissions.length > 0 ? (
                   (student as any).submissions.map((sub: any) => (
-                    <tr key={sub.id} className="hover:bg-slate-50/60">
-                      <td className="px-4 py-3 font-bold text-slate-900">{sub.assignment?.title}</td>
-                      <td className="px-4 py-3 text-slate-500">{sub.assignment?.subject}</td>
-                      <td className="px-4 py-3 text-slate-500 font-mono">{formatDate(sub.assignment?.dueDate)}</td>
+                    <tr key={sub.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-100">{sub.assignment?.title}</td>
+                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{sub.assignment?.subject}</td>
+                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400 font-mono">{formatDate(sub.assignment?.dueDate)}</td>
                       <td className="px-4 py-3">
                         <Badge variant="success" size="xs" dot>Submitted</Badge>
                       </td>
-                      <td className="px-4 py-3 font-bold text-slate-800">
+                      <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-200">
                         {sub.marksObtained ?? 'Pending Eval'}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                    <td colSpan={5} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
                       No assignment submissions recorded yet for this session.
                     </td>
                   </tr>

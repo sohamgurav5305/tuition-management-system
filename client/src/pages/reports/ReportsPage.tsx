@@ -151,15 +151,15 @@ export const ReportsPage: React.FC = () => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex items-center gap-2 border-b border-slate-200/80 pb-2 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-2 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
               activeTab === tab.id
-                ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/80'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 font-bold border border-blue-200/80 dark:border-blue-800/60'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             {tab.label}
@@ -173,37 +173,37 @@ export const ReportsPage: React.FC = () => {
       ) : activeTab === 'revenue' ? (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 bg-white border border-slate-200/80 rounded-2xl">
-              <span className="text-xs text-slate-500">UPI / Digital Receipts</span>
-              <p className="text-xl font-black text-slate-900 mt-1 tabular-nums">
+            <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
+              <span className="text-xs text-slate-500 dark:text-slate-400">UPI / Digital Receipts</span>
+              <p className="text-xl font-black text-slate-900 dark:text-slate-100 mt-1 tabular-nums">
                 {formatCurrency(reportData?.modeBreakdown?.UPI?.total || 0)}
               </p>
-              <span className="text-[11px] text-slate-400">{reportData?.modeBreakdown?.UPI?.count || 0} transactions</span>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">{reportData?.modeBreakdown?.UPI?.count || 0} transactions</span>
             </div>
-            <div className="p-4 bg-white border border-slate-200/80 rounded-2xl">
-              <span className="text-xs text-slate-500">Cash Collections</span>
-              <p className="text-xl font-black text-slate-900 mt-1 tabular-nums">
+            <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
+              <span className="text-xs text-slate-500 dark:text-slate-400">Cash Collections</span>
+              <p className="text-xl font-black text-slate-900 dark:text-slate-100 mt-1 tabular-nums">
                 {formatCurrency(reportData?.modeBreakdown?.CASH?.total || 0)}
               </p>
-              <span className="text-[11px] text-slate-400">{reportData?.modeBreakdown?.CASH?.count || 0} transactions</span>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">{reportData?.modeBreakdown?.CASH?.count || 0} transactions</span>
             </div>
-            <div className="p-4 bg-white border border-slate-200/80 rounded-2xl">
-              <span className="text-xs text-slate-500">Bank Transfer / NEFT</span>
-              <p className="text-xl font-black text-slate-900 mt-1 tabular-nums">
+            <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
+              <span className="text-xs text-slate-500 dark:text-slate-400">Bank Transfer / NEFT</span>
+              <p className="text-xl font-black text-slate-900 dark:text-slate-100 mt-1 tabular-nums">
                 {formatCurrency(reportData?.modeBreakdown?.BANK_TRANSFER?.total || 0)}
               </p>
-              <span className="text-[11px] text-slate-400">{reportData?.modeBreakdown?.BANK_TRANSFER?.count || 0} transactions</span>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">{reportData?.modeBreakdown?.BANK_TRANSFER?.count || 0} transactions</span>
             </div>
           </div>
         </div>
       ) : activeTab === 'pending' ? (
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
+          <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             Overdue Student Tuition Accounts
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200/80">
+              <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-700/80">
                 <tr>
                   <th className="px-4 py-3">Student</th>
                   <th className="px-4 py-3">Course & Batch</th>
@@ -213,24 +213,24 @@ export const ReportsPage: React.FC = () => {
                   <th className="px-4 py-3">Outstanding Due</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {reportData && reportData.length > 0 ? (
                   reportData.map((s: any) => (
-                    <tr key={s.id} className="hover:bg-slate-50/60">
-                      <td className="px-4 py-3 font-bold text-slate-900">
+                    <tr key={s.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-100">
                         {s.firstName} {s.lastName}
-                        <span className="block text-[11px] font-normal text-slate-400 font-mono">{s.studentId}</span>
+                        <span className="block text-[11px] font-normal text-slate-400 dark:text-slate-500 font-mono">{s.studentId}</span>
                       </td>
-                      <td className="px-4 py-3 text-slate-600">{s.course?.name || '—'}</td>
-                      <td className="px-4 py-3 font-mono text-slate-500">{s.phone}</td>
-                      <td className="px-4 py-3 font-bold tabular-nums">{formatCurrency(s.totalFee)}</td>
-                      <td className="px-4 py-3 text-emerald-600 font-bold tabular-nums">{formatCurrency(s.paidFee)}</td>
-                      <td className="px-4 py-3 text-rose-600 font-black tabular-nums">{formatCurrency(s.pendingFee)}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{s.course?.name || '—'}</td>
+                      <td className="px-4 py-3 font-mono text-slate-500 dark:text-slate-400">{s.phone}</td>
+                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-100 tabular-nums">{formatCurrency(s.totalFee)}</td>
+                      <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold tabular-nums">{formatCurrency(s.paidFee)}</td>
+                      <td className="px-4 py-3 text-rose-600 dark:text-rose-400 font-black tabular-nums">{formatCurrency(s.pendingFee)}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                    <td colSpan={6} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
                       Zero pending dues recorded across the institute.
                     </td>
                   </tr>
@@ -239,14 +239,71 @@ export const ReportsPage: React.FC = () => {
             </table>
           </div>
         </div>
+      ) : activeTab === 'batches' ? (
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
+          <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            Batch Strength & Capacity Utilization
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-700/80">
+                <tr>
+                  <th className="px-4 py-3">Batch Name</th>
+                  <th className="px-4 py-3">Course</th>
+                  <th className="px-4 py-3">Timing</th>
+                  <th className="px-4 py-3">Enrolled / Capacity</th>
+                  <th className="px-4 py-3">Occupancy %</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {reportData && reportData.length > 0 ? (
+                  reportData.map((b: any) => {
+                    const enrolled = b._count?.students || b.enrolledStudents || 0;
+                    const max = b.maxCapacity || b.capacity || 30;
+                    const pct = Math.min(100, Math.round((enrolled / max) * 100));
+                    return (
+                      <tr key={b.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                        <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-100">{b.name}</td>
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{b.course?.name || '—'}</td>
+                        <td className="px-4 py-3 font-mono text-slate-500 dark:text-slate-400">{b.startTime ? `${b.startTime} - ${b.endTime}` : 'Regular'}</td>
+                        <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+                          {enrolled} / {max}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden max-w-[100px]">
+                              <div
+                                className={`h-full rounded-full ${
+                                  pct >= 90 ? 'bg-rose-500' : pct >= 70 ? 'bg-amber-500' : 'bg-emerald-500'
+                                }`}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300 tabular-nums">{pct}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
+                      No batch occupancy data available.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       ) : activeTab === 'courses' ? (
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
+          <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             Academic Course Program Revenue Analysis
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200/80">
+              <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-700/80">
                 <tr>
                   <th className="px-4 py-3">Course Program</th>
                   <th className="px-4 py-3">Target Exam</th>
@@ -255,26 +312,26 @@ export const ReportsPage: React.FC = () => {
                   <th className="px-4 py-3">Potential Revenue</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {reportData && reportData.length > 0 ? (
                   reportData.map((c: any) => (
-                    <tr key={c.id} className="hover:bg-slate-50/60">
-                      <td className="px-4 py-3 font-bold text-slate-900">{c.name}</td>
+                    <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-100">{c.name}</td>
                       <td className="px-4 py-3">
                         <Badge variant="primary" size="xs">{c.targetExam}</Badge>
                       </td>
-                      <td className="px-4 py-3 font-semibold tabular-nums">{formatCurrency(c.fee)}</td>
-                      <td className="px-4 py-3 font-bold text-blue-600 tabular-nums">
+                      <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100 tabular-nums">{formatCurrency(c.fee)}</td>
+                      <td className="px-4 py-3 font-bold text-blue-600 dark:text-blue-400 tabular-nums">
                         {c._count?.students || 0}
                       </td>
-                      <td className="px-4 py-3 font-black text-emerald-600 tabular-nums">
+                      <td className="px-4 py-3 font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
                         {formatCurrency((c._count?.students || 0) * (c.fee || 0))}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                    <td colSpan={5} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
                       No courses recorded yet.
                     </td>
                   </tr>
