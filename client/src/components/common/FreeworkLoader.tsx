@@ -80,22 +80,14 @@ export const FreeworkLoader: React.FC<FreeworkLoaderProps> = ({
   card = true,
   className = '',
 }) => {
-  // Pick random initial quote and cycle smoothly every 4 seconds
-  const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * EDUCATION_QUOTES.length));
-  const [fadeKey, setFadeKey] = useState(0);
-
-  useEffect(() => {
-    if (customQuote) return;
-    const interval = setInterval(() => {
-      setQuoteIndex((prev) => (prev + 1) % EDUCATION_QUOTES.length);
-      setFadeKey((prev) => prev + 1);
-    }, 4500);
-    return () => clearInterval(interval);
-  }, [customQuote]);
-
-  const activeQuote = customQuote
-    ? { quote: customQuote, author: customAuthor || 'Thought for Today' }
-    : EDUCATION_QUOTES[quoteIndex];
+  // Select one single thought per loading instance (stays stable and does not change during loading)
+  const [activeQuote] = useState<EducationQuote>(() => {
+    if (customQuote) {
+      return { quote: customQuote, author: customAuthor || 'Thought for Today' };
+    }
+    const randomIndex = Math.floor(Math.random() * EDUCATION_QUOTES.length);
+    return EDUCATION_QUOTES[randomIndex];
+  });
 
   // Dimension scaling
   const sizeMap = {
@@ -231,7 +223,6 @@ export const FreeworkLoader: React.FC<FreeworkLoaderProps> = ({
       {/* Inspirational Education Thought Banner */}
       {showQuote && (
         <div
-          key={fadeKey}
           className="animate-quote-fade max-w-md mx-auto mt-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-purple-50/70 dark:from-slate-800/80 dark:via-slate-800/50 dark:to-indigo-950/40 border border-blue-100/90 dark:border-slate-700/80 shadow-2xs transition-all"
         >
           <div className="flex items-start gap-2.5 text-left">
