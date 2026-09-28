@@ -79,26 +79,26 @@ export const Breadcrumbs: React.FC = () => {
     >
       <Link
         to="/dashboard"
-        className="inline-flex items-center gap-2 font-bold text-slate-900 hover:text-blue-600 transition-colors group"
+        className="inline-flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors group"
       >
-        <Home className="w-4 h-4 fill-slate-900 text-slate-900 group-hover:fill-blue-600 group-hover:text-blue-600 transition-colors" />
+        <Home className="w-4 h-4 fill-slate-900 dark:fill-slate-100 text-slate-900 dark:text-slate-100 group-hover:fill-blue-600 dark:group-hover:fill-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
         <span>Home</span>
       </Link>
 
       {trail.map((item, index) => (
         <React.Fragment key={index}>
-          <span className="text-slate-400 font-light text-base sm:text-lg">
+          <span className="text-slate-400 dark:text-slate-600 font-light text-base sm:text-lg">
             /
           </span>
           {item.path ? (
             <Link
               to={item.path}
-              className="text-slate-600 hover:text-blue-600 transition-colors font-medium"
+              className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
             >
               {item.label}
             </Link>
           ) : (
-            <span className="text-slate-500 font-normal">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">
               {item.label}
             </span>
           )}

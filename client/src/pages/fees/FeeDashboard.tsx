@@ -117,25 +117,24 @@ export const FeeDashboard: React.FC = () => {
   const studentsWithDues = students.filter((s) => s.pendingFee > 0).length;
 
   const studentColumns: Column<Student>[] = [
-
     {
       header: 'Student',
       cell: (s) => (
         <div>
           <span
             onClick={() => navigate(`/students/${s.id}`)}
-            className="font-bold text-slate-900 hover:text-blue-600 cursor-pointer block text-xs sm:text-sm truncate"
+            className="font-bold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer block text-xs sm:text-sm truncate"
           >
             {s.firstName} {s.lastName}
           </span>
-          <span className="text-[11px] text-slate-400 font-mono">{s.studentId}</span>
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{s.studentId}</span>
         </div>
       ),
     },
     {
       header: 'Batch',
       cell: (s) => (
-        <span className="text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200/60">
+        <span className="text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 px-2 py-0.5 rounded-md border border-purple-200/60 dark:border-purple-900">
           {s.batch?.name || 'Unassigned'}
         </span>
       ),
@@ -143,7 +142,7 @@ export const FeeDashboard: React.FC = () => {
     {
       header: 'Total Agreed Fee',
       cell: (s) => (
-        <span className="text-xs font-bold text-slate-900 tabular-nums">
+        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 tabular-nums">
           {formatCurrency(s.totalFee)}
         </span>
       ),
@@ -151,7 +150,7 @@ export const FeeDashboard: React.FC = () => {
     {
       header: 'Paid Amount',
       cell: (s) => (
-        <span className="text-xs font-bold text-emerald-600 tabular-nums">
+        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
           {formatCurrency(s.paidFee)}
         </span>
       ),
@@ -161,7 +160,7 @@ export const FeeDashboard: React.FC = () => {
       cell: (s) => (
         <span
           className={`text-xs font-black tabular-nums ${
-            s.pendingFee > 0 ? 'text-rose-600' : 'text-slate-400'
+            s.pendingFee > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500'
           }`}
         >
           {formatCurrency(s.pendingFee)}
@@ -171,7 +170,7 @@ export const FeeDashboard: React.FC = () => {
     {
       header: 'Due Date',
       cell: (s) => (
-        <span className="text-xs text-slate-500 font-mono">
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
           {s.installments?.[0]?.dueDate ? formatDate(s.installments[0].dueDate) : 'End of Term'}
         </span>
       ),
@@ -219,7 +218,7 @@ export const FeeDashboard: React.FC = () => {
       cell: (p) => (
         <span
           onClick={() => setSelectedReceipt(p)}
-          className="text-xs font-mono font-bold text-blue-600 hover:underline cursor-pointer"
+          className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
         >
           {p.receiptId}
         </span>
@@ -229,17 +228,17 @@ export const FeeDashboard: React.FC = () => {
       header: 'Student Name',
       cell: (p) => (
         <div>
-          <span className="font-bold text-slate-900 block text-xs">
+          <span className="font-bold text-slate-900 dark:text-slate-100 block text-xs">
             {p.student ? `${p.student.firstName} ${p.student.lastName}` : 'Enrolled Student'}
           </span>
-          <span className="text-[10px] text-slate-400 font-mono">{p.student?.studentId}</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{p.student?.studentId}</span>
         </div>
       ),
     },
     {
       header: 'Amount Received',
       cell: (p) => (
-        <span className="text-xs font-black text-emerald-600 tabular-nums">
+        <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
           {formatCurrency(p.amount)}
         </span>
       ),
@@ -251,14 +250,14 @@ export const FeeDashboard: React.FC = () => {
     {
       header: 'Txn Reference',
       cell: (p) => (
-        <span className="text-[11px] font-mono text-slate-500">
+        <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
           {p.transactionReference || '—'}
         </span>
       ),
     },
     {
       header: 'Date',
-      cell: (p) => <span className="text-xs text-slate-500 font-mono">{formatDate(p.paymentDate)}</span>,
+      cell: (p) => <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">{formatDate(p.paymentDate)}</span>,
     },
     {
       header: 'Receipt',
@@ -305,14 +304,14 @@ export const FeeDashboard: React.FC = () => {
       />
 
       {/* Segmented Tabs (Student Fee Accounts Ledger vs Fee Records vs Official Receipts Audit) */}
-      <div className="flex items-center justify-between gap-4 border-b border-slate-200/80 pb-2">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-2">
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleTabChange('students')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
               activeTab === 'students'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             Student Accounts Ledger ({students.length})
@@ -322,7 +321,7 @@ export const FeeDashboard: React.FC = () => {
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
               activeTab === 'records'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             Fee Records & Print Register
@@ -332,7 +331,7 @@ export const FeeDashboard: React.FC = () => {
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
               activeTab === 'receipts'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             Payment Receipts ({payments.length})
@@ -354,7 +353,7 @@ export const FeeDashboard: React.FC = () => {
               <select
                 value={selectedBatch}
                 onChange={(e) => setSelectedBatch(e.target.value)}
-                className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-medium"
+                className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-700 dark:text-slate-300 font-medium"
               >
                 <option value="">All Batches</option>
                 {batches.map((b) => (
@@ -367,7 +366,7 @@ export const FeeDashboard: React.FC = () => {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-medium"
+                className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-700 dark:text-slate-300 font-medium"
               >
                 <option value="">All Fee Statuses</option>
                 <option value="PAID">Paid in Full</option>

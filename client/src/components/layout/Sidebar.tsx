@@ -20,6 +20,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Shield,
   Download,
   HelpCircle,
@@ -49,7 +50,7 @@ const ADMIN_NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: 'STUDENTS',
+    title: 'STUDENTS & OPS',
     items: [
       { label: 'Students', path: '/students', icon: Users },
       { label: 'Attendance', path: '/attendance', icon: CalendarCheck },
@@ -62,13 +63,6 @@ const ADMIN_NAV_GROUPS: NavGroup[] = [
       { label: 'Courses', path: '/courses', icon: BookOpen },
       { label: 'Batches', path: '/batches', icon: Layers },
       { label: 'Faculty', path: '/faculty', icon: GraduationCap },
-    ],
-  },
-  {
-    title: 'EXAMS',
-    items: [
-      { label: 'Test Series & Exams', path: '/exams', icon: FileSpreadsheet },
-      { label: 'AIR Results & Ranks', path: '/results', icon: Award },
       { label: 'Assignments', path: '/assignments', icon: FileText },
     ],
   },
@@ -76,6 +70,7 @@ const ADMIN_NAV_GROUPS: NavGroup[] = [
     title: 'FINANCE',
     items: [
       { label: 'Fee Ledger & Invoices', path: '/fees', icon: CreditCard },
+      { label: 'Payment Receipts', path: '/receipts', icon: Receipt },
     ],
   },
   {
@@ -101,8 +96,6 @@ const TEACHER_NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Attendance', path: '/attendance', icon: CalendarCheck },
       { label: 'Assignments', path: '/assignments', icon: FileText },
-      { label: 'Test Series & Exams', path: '/exams', icon: FileSpreadsheet },
-      { label: 'Scorecard Grading', path: '/results', icon: Award },
       { label: 'Study Materials', path: '/materials', icon: Download },
       { label: 'Student Doubts', path: '/doubts', icon: HelpCircle },
       { label: 'Leave Requests', path: '/leaves', icon: CalendarRange },
@@ -130,10 +123,9 @@ const STUDENT_NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: 'ASSESSMENTS & FEES',
+    title: 'HOMEWORK & FEES',
     items: [
-      { label: 'Exams & Results', path: '/student/exams', icon: FileSpreadsheet },
-      { label: 'Homework Assignments', path: '/student/assignments', icon: FileText },
+      { label: 'My Assignments', path: '/student/assignments', icon: FileText },
       { label: 'Fee Receipts & Ledger', path: '/student/fees', icon: CreditCard },
     ],
   },
@@ -200,22 +192,22 @@ export const Sidebar: React.FC<{
 
   const sidebarContent = (
     <aside
-      className={`flex flex-col h-full bg-white border-r border-slate-200 select-none transition-all duration-200 ${
+      className={`flex flex-col h-full bg-[#0B1528] text-slate-200 border-r border-[#1E293B] select-none transition-all duration-200 ${
         isCollapsed ? 'w-[72px]' : 'w-64'
       }`}
     >
       {/* Brand Header */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-slate-200 flex-shrink-0">
+      <div className="h-16 px-4 flex items-center justify-between border-b border-[#1E293B] flex-shrink-0">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-md flex-shrink-0">
             <Shield className="w-5 h-5" />
           </div>
           {!isCollapsed && (
             <div className="min-w-0">
-              <h1 className="text-sm sm:text-base font-extrabold text-slate-900 truncate tracking-tight uppercase leading-tight">
-                {settings.instituteName || 'Apex Institute'}
+              <h1 className="text-sm sm:text-base font-extrabold text-white truncate tracking-tight leading-tight">
+                {settings.instituteName || 'Apex Academy'}
               </h1>
-              <p className="text-[11px] text-slate-500 font-semibold truncate">
+              <p className="text-[11px] text-blue-400 font-medium truncate">
                 {roleLabel}
               </p>
             </div>
@@ -226,7 +218,7 @@ export const Sidebar: React.FC<{
         {onCloseMobile && (
           <button
             onClick={onCloseMobile}
-            className="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
+            className="lg:hidden p-1.5 text-slate-400 hover:text-white rounded-lg"
           >
             <X className="w-5 h-5" />
           </button>
@@ -236,7 +228,7 @@ export const Sidebar: React.FC<{
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className="hidden lg:flex p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+            className="hidden lg:flex p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/60 transition-colors"
             title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
           >
             {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -245,7 +237,7 @@ export const Sidebar: React.FC<{
       </div>
 
       {/* Navigation List */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-800">
         {navGroups.map((group) => (
           <div key={group.title} className="space-y-1">
             {!isCollapsed && (
@@ -263,12 +255,12 @@ export const Sidebar: React.FC<{
                     onClick={handleNavClick}
                     title={isCollapsed ? item.label : undefined}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                      `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                         isCollapsed ? 'justify-center px-0' : ''
                       } ${
                         isActive
-                          ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/60'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                          ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
                       }`
                     }
                   >
@@ -282,35 +274,32 @@ export const Sidebar: React.FC<{
         ))}
       </div>
 
-      {/* Bottom Profile Footer */}
-      <div className="p-3 border-t border-slate-200 flex-shrink-0 bg-slate-50">
-        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} gap-2`}>
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-bold text-xs flex-shrink-0">
-              {user?.username?.[0]?.toUpperCase() || 'U'}
-            </div>
-            {!isCollapsed && (
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">
-                  {user?.username || 'Authenticated User'}
-                </p>
-                <span className="text-[10px] text-slate-400 font-medium block truncate">
-                  {user?.role || 'Session'}
-                </span>
+      {/* Bottom Workspace Selector Widget */}
+      <div className="p-3 border-t border-[#1E293B] flex-shrink-0 bg-[#0B1528]">
+        {!isCollapsed ? (
+          <div className="p-2.5 rounded-xl bg-[#111C33] border border-slate-700/60 flex items-center justify-between gap-2 cursor-pointer hover:border-slate-600 transition-colors">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center flex-shrink-0">
+                <Shield className="w-3.5 h-3.5" />
               </div>
-            )}
+              <div className="min-w-0">
+                <span className="text-[10px] text-slate-400 font-medium block leading-none">
+                  Academic Session
+                </span>
+                <p className="text-xs font-bold text-white truncate mt-1 leading-none">
+                  2025 &ndash; 2026 Batch
+                </p>
+              </div>
+            </div>
+            <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
           </div>
-
-          {!isCollapsed && (
-            <button
-              onClick={logout}
-              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-              title="Sign Out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+        ) : (
+          <div className="flex justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#111C33] border border-slate-700 text-blue-400 flex items-center justify-center cursor-pointer">
+              <Shield className="w-4 h-4" />
+            </div>
+          </div>
+        )}
       </div>
     </aside>
   );
@@ -326,10 +315,10 @@ export const Sidebar: React.FC<{
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
             onClick={onCloseMobile}
           />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white z-10">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-slate-900 z-10 shadow-2xl">
             {sidebarContent}
           </div>
         </div>

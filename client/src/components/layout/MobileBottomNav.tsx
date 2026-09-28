@@ -64,7 +64,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = () => {
   const navLinks = getNavLinks();
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 lg:hidden px-1.5 py-1.5">
+    <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800/80 lg:hidden px-1.5 py-1.5 shadow-lg transition-colors">
       <div className="flex items-center justify-around">
         {navLinks.map((item) => {
           const Icon = item.icon;
@@ -75,8 +75,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = () => {
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
                   isActive
-                    ? 'text-blue-600 font-bold'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'text-blue-600 dark:text-blue-400 font-bold scale-105'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`
               }
             >

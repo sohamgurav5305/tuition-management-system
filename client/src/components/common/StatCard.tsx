@@ -6,9 +6,11 @@ export interface StatCardProps {
   value: string | number;
   subtitle?: string;
   icon: LucideIcon;
+  comparisonText?: string;
   trend?: {
     value: string;
     isPositive?: boolean;
+    comparisonPeriod?: string;
   };
   colorScheme?: 'blue' | 'indigo' | 'emerald' | 'amber' | 'rose' | 'purple' | 'slate';
   onClick?: () => void;
@@ -17,25 +19,25 @@ export interface StatCardProps {
 
 const colorMaps = {
   blue: {
-    iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
+    iconBg: 'bg-blue-600 text-white shadow-xs',
   },
   indigo: {
-    iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
+    iconBg: 'bg-indigo-600 text-white shadow-xs',
   },
   emerald: {
-    iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
+    iconBg: 'bg-emerald-500 text-white shadow-xs',
   },
   amber: {
-    iconBg: 'bg-amber-50 text-amber-600 border border-amber-100',
+    iconBg: 'bg-amber-500 text-white shadow-xs',
   },
   rose: {
-    iconBg: 'bg-rose-50 text-rose-600 border border-rose-100',
+    iconBg: 'bg-rose-500 text-white shadow-xs',
   },
   purple: {
-    iconBg: 'bg-purple-50 text-purple-600 border border-purple-100',
+    iconBg: 'bg-purple-600 text-white shadow-xs',
   },
   slate: {
-    iconBg: 'bg-slate-100 text-slate-600 border border-slate-200',
+    iconBg: 'bg-slate-700 text-white shadow-xs',
   },
 };
 
@@ -45,6 +47,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   subtitle,
   icon: Icon,
   trend,
+  comparisonText,
   colorScheme = 'blue',
   onClick,
   className = '',
@@ -54,44 +57,58 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`bg-white border border-slate-200 rounded-2xl p-5 shadow-xs transition-all ${
-        onClick ? 'cursor-pointer hover:border-slate-300 hover:shadow-sm active:scale-[0.99]' : ''
+      className={`bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-xs transition-all flex flex-col justify-between ${
+        onClick ? 'cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm active:scale-[0.99]' : ''
       } ${className}`}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-slate-500 truncate tracking-normal">
-          {title}
-        </span>
-        <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${conf.iconBg}`}>
-          <Icon className="w-4 h-4" />
+      {/* Top Section with Icon and Numbers */}
+      <div className="flex items-start gap-4">
+        {/* Left: Square Icon Badge */}
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${conf.iconBg}`}>
+          <Icon className="w-5 h-5 text-white" />
+        </div>
+
+        {/* Right: Title & Big Stat Value */}
+        <div className="min-w-0 flex-1">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block truncate">
+            {title}
+          </span>
+          <p className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mt-1 tabular-nums">
+            {value}
+          </p>
         </div>
       </div>
 
-      <div className="mt-3">
-        <p className="text-2xl font-black tracking-tight text-slate-900 tabular-nums">
-          {value}
-        </p>
-      </div>
-
-      {(subtitle || trend) && (
-        <div className="mt-2.5 flex items-center justify-between text-[11px] text-slate-500">
-          {subtitle && <span className="truncate">{subtitle}</span>}
-          {trend && (
+      {/* Bottom Trend & Comparison Row */}
+      {(trend || comparisonText || subtitle) && (
+        <div className="mt-4 pt-2 flex items-center gap-1.5 text-xs">
+          {trend ? (
             <span
-              className={`inline-flex items-center gap-1 font-semibold ml-auto flex-shrink-0 ${
-                trend.isPositive
-                  ? 'text-emerald-600'
-                  : 'text-rose-600'
+              className={`inline-flex items-center gap-1 font-bold ${
+                trend.isPositive !== false
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-rose-600 dark:text-rose-400'
               }`}
             >
-              {trend.isPositive ? (
-                <TrendingUp className="w-3 h-3" />
+              {trend.isPositive !== false ? (
+                <span>&uarr;</span>
               ) : (
-                <TrendingDown className="w-3 h-3" />
+                <span>&darr;</span>
               )}
-              {trend.value}
+              <span>{trend.value}</span>
+              <span className="font-normal text-slate-400 dark:text-slate-500">
+                {trend.comparisonPeriod || 'vs Apr 18 &ndash; May 17, 2025'}
+              </span>
             </span>
-          )}
+          ) : comparisonText ? (
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+              <span>&uarr;</span> {comparisonText}
+            </span>
+          ) : subtitle ? (
+            <span className="text-slate-500 dark:text-slate-400 text-[11px] font-medium truncate">
+              {subtitle}
+            </span>
+          ) : null}
         </div>
       )}
     </div>

@@ -283,15 +283,15 @@ export const FeeRecordsSection: React.FC<FeeRecordsSectionProps> = ({
   return (
     <div className="space-y-5">
       {/* Top Filter & Action Bar */}
-      <div className="p-4 sm:p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs space-y-4">
+      <div className="p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Filter className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Filter className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               Fee Records & Recovery Register
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Multi-filter student fee ledger with batch segmentation and official printable receipts.
             </p>
           </div>
 
@@ -307,16 +307,16 @@ export const FeeRecordsSection: React.FC<FeeRecordsSectionProps> = ({
         </div>
 
         {/* 3-Way Filters Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-100 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
           {/* 1. Target Scope (All Students vs Specific Batch) */}
           <div className="space-y-1">
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               1. Choose Audience / Batch
             </label>
             <select
               value={selectedScope}
               onChange={(e) => setSelectedScope(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="ALL">All Enrolled Students ({students.length})</option>
               {batches.map((b) => {
@@ -332,13 +332,13 @@ export const FeeRecordsSection: React.FC<FeeRecordsSectionProps> = ({
 
           {/* 2. Fee Component / Admin Fine Category */}
           <div className="space-y-1">
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               2. Fee Type / Fine Category
             </label>
             <select
               value={selectedFeeType}
               onChange={(e) => setSelectedFeeType(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="ALL">All Fee Charges (Tuition + Admin)</option>
               <option value="REGULAR_TUITION">Regular Batch Tuition Fee</option>
@@ -353,13 +353,13 @@ export const FeeRecordsSection: React.FC<FeeRecordsSectionProps> = ({
 
           {/* 3. Payment Clearance Status */}
           <div className="space-y-1">
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               3. Payment / Dues Status
             </label>
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="ALL">All Fee Statuses</option>
               <option value="PENDING">Pending Dues Only</option>
@@ -370,7 +370,7 @@ export const FeeRecordsSection: React.FC<FeeRecordsSectionProps> = ({
 
           {/* 4. Student Search */}
           <div className="space-y-1">
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Search Student
             </label>
             <div className="relative">
@@ -380,7 +380,7 @@ export const FeeRecordsSection: React.FC<FeeRecordsSectionProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Name, ID, roll..."
-                className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full pl-8 pr-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -389,67 +389,67 @@ export const FeeRecordsSection: React.FC<FeeRecordsSectionProps> = ({
 
       {/* Aggregate KPI Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-4 bg-white border border-slate-200/80 rounded-2xl shadow-xs">
+        <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
             Students in Record
           </span>
-          <p className="text-xl font-black text-slate-900 mt-0.5">
+          <p className="text-xl font-black text-slate-900 dark:text-slate-100 mt-0.5">
             {recordsData.length}
           </p>
-          <span className="text-[10px] text-slate-500">{scopeLabel}</span>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400">{scopeLabel}</span>
         </div>
 
-        <div className="p-4 bg-white border border-slate-200/80 rounded-2xl shadow-xs">
+        <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
             Total Agreed Billed
           </span>
-          <p className="text-xl font-black text-slate-900 mt-0.5 tabular-nums">
+          <p className="text-xl font-black text-slate-900 dark:text-slate-100 mt-0.5 tabular-nums">
             {formatCurrency(totalBilled)}
           </p>
-          <span className="text-[10px] text-slate-500">{feeTypeLabel}</span>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400">{feeTypeLabel}</span>
         </div>
 
-        <div className="p-4 bg-emerald-50/50 border border-emerald-200/60 rounded-2xl shadow-xs">
-          <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">
+        <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/60 rounded-2xl shadow-xs">
+          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
             Total Collected
           </span>
-          <p className="text-xl font-black text-emerald-700 mt-0.5 tabular-nums">
+          <p className="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-0.5 tabular-nums">
             {formatCurrency(totalCollected)}
           </p>
-          <span className="text-[10px] text-emerald-600 font-semibold">{realizationPct}% Realized</span>
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">{realizationPct}% Realized</span>
         </div>
 
-        <div className="p-4 bg-rose-50/50 border border-rose-200/60 rounded-2xl shadow-xs">
-          <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider block">
+        <div className="p-4 bg-rose-50/50 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-900/60 rounded-2xl shadow-xs">
+          <span className="text-[10px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider block">
             Pending Balance
           </span>
-          <p className="text-xl font-black text-rose-700 mt-0.5 tabular-nums">
+          <p className="text-xl font-black text-rose-700 dark:text-rose-300 mt-0.5 tabular-nums">
             {formatCurrency(totalPending)}
           </p>
-          <span className="text-[10px] text-rose-600 font-semibold">Uncollected Dues</span>
+          <span className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold">Uncollected Dues</span>
         </div>
       </div>
 
       {/* Main Student Fee Records Register Table */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h4 className="text-xs font-bold text-slate-900">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
               Student Fee Ledger Records
             </h4>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
               {recordsData.length} Records
             </span>
           </div>
 
-          <span className="text-[11px] text-slate-400 font-mono">
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
             {feeTypeLabel} • {statusLabel}
           </span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50/80 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200/80">
+            <thead className="bg-slate-50/80 dark:bg-slate-950/80 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-800">
               <tr>
                 <th className="px-4 py-3 text-center w-10">#</th>
                 <th className="px-4 py-3">Student Name</th>
@@ -463,7 +463,7 @@ export const FeeRecordsSection: React.FC<FeeRecordsSectionProps> = ({
                 <th className="px-4 py-3 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {recordsData.length > 0 ? (
                 recordsData.map((r, idx) => {
                   const studentObj = students.find((s) => s.studentId === r.studentId);
@@ -471,44 +471,44 @@ export const FeeRecordsSection: React.FC<FeeRecordsSectionProps> = ({
                   return (
                     <tr
                       key={`${r.studentId}-${idx}`}
-                      className="hover:bg-slate-50/60 transition-colors"
+                      className="hover:bg-slate-50/60 dark:hover:bg-slate-800/50 transition-colors"
                     >
-                      <td className="px-4 py-3 text-center text-slate-400 font-mono text-[11px]">
+                      <td className="px-4 py-3 text-center text-slate-400 dark:text-slate-500 font-mono text-[11px]">
                         {idx + 1}
                       </td>
                       <td className="px-4 py-3">
                         <span
                           onClick={() => studentObj && navigate(`/students/${studentObj.id}`)}
-                          className="font-bold text-slate-900 hover:text-blue-600 cursor-pointer block text-xs"
+                          className="font-bold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer block text-xs"
                         >
                           {r.name}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-mono">
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
                           {r.studentId}
                           {r.rollNumber ? ` • Roll: ${r.rollNumber}` : ''}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded text-[11px] border border-purple-200/60 block w-fit">
+                        <span className="font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 px-2 py-0.5 rounded text-[11px] border border-purple-200/60 dark:border-purple-900 block w-fit">
                           {r.batchName}
                         </span>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">{r.courseName}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">{r.courseName}</span>
                       </td>
-                      <td className="px-4 py-3 max-w-xs text-slate-700 text-[11px]">
+                      <td className="px-4 py-3 max-w-xs text-slate-700 dark:text-slate-300 text-[11px]">
                         {r.feeTitle}
                       </td>
-                      <td className="px-4 py-3 text-right font-bold text-slate-900 tabular-nums">
+                      <td className="px-4 py-3 text-right font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                         {formatCurrency(r.totalFee)}
                       </td>
-                      <td className="px-4 py-3 text-right font-bold text-emerald-600 tabular-nums">
+                      <td className="px-4 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                         {formatCurrency(r.paidFee)}
                       </td>
                       <td className="px-4 py-3 text-right font-black tabular-nums">
-                        <span className={r.pendingFee > 0 ? 'text-rose-600' : 'text-slate-400'}>
+                        <span className={r.pendingFee > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500'}>
                           {formatCurrency(r.pendingFee)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center font-mono text-[11px] text-slate-500">
+                      <td className="px-4 py-3 text-center font-mono text-[11px] text-slate-500 dark:text-slate-400">
                         {formatDate(r.dueDate)}
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -547,10 +547,10 @@ export const FeeRecordsSection: React.FC<FeeRecordsSectionProps> = ({
                 })
               ) : (
                 <tr>
-                  <td colSpan={10} className="px-4 py-12 text-center text-slate-400">
-                    <BookOpen className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                    <p className="font-semibold text-xs">No fee records found matching active filter criteria.</p>
-                    <p className="text-[11px] mt-0.5">Try selecting "All Students" or "All Fee Charges".</p>
+                  <td colSpan={10} className="px-4 py-12 text-center text-slate-400 dark:text-slate-500">
+                    <BookOpen className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                    <p className="font-semibold text-xs text-slate-700 dark:text-slate-300">No fee records found matching active filter criteria.</p>
+                    <p className="text-[11px] mt-0.5 text-slate-400 dark:text-slate-500">Try selecting "All Students" or "All Fee Charges".</p>
                   </td>
                 </tr>
               )}

@@ -9,51 +9,98 @@
 
   body {
     font-family: var(--font-sans);
-    @apply bg-slate-50 text-slate-900 antialiased;
-  }
-
-  /* Crisp, distinctly visible borders across every element */
-  *, ::before, ::after {
-    border-color: #cbd5e1;
+    @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200;
   }
 }
 
-/* Enhanced high-contrast borders for structural cards, tables, inputs, and containers */
-.border-slate-100, .border-gray-100 {
+/* Light mode high-contrast borders */
+html:not(.dark) .border-slate-100,
+html:not(.dark) .border-gray-100 {
   border-color: #cbd5e1 !important;
 }
 
-.border-slate-200, .border-gray-200, .border-slate-200\/80, .border-slate-200\/90, .border-slate-200\/60 {
+html:not(.dark) .border-slate-200,
+html:not(.dark) .border-gray-200,
+html:not(.dark) .border-slate-200\/80,
+html:not(.dark) .border-slate-200\/90,
+html:not(.dark) .border-slate-200\/60 {
   border-color: #94a3b8 !important;
 }
 
-.border-slate-300, .border-gray-300 {
+html:not(.dark) .border-slate-300,
+html:not(.dark) .border-gray-300 {
   border-color: #64748b !important;
 }
 
-/* Table boundaries and cell dividers */
-table, th, td {
+html:not(.dark) table,
+html:not(.dark) th,
+html:not(.dark) td {
   border-color: #cbd5e1 !important;
 }
 
-/* Divide utilities */
-.divide-slate-100 > :not([hidden]) ~ :not([hidden]),
-.divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+html:not(.dark) .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html:not(.dark) .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
   border-color: #cbd5e1 !important;
 }
 
-.divide-slate-200 > :not([hidden]) ~ :not([hidden]),
-.divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+html:not(.dark) .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+html:not(.dark) .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
   border-color: #94a3b8 !important;
 }
 
-/* Inputs, textareas & select dropdowns */
-input, select, textarea {
+html:not(.dark) input,
+html:not(.dark) select,
+html:not(.dark) textarea {
   border-color: #94a3b8 !important;
 }
 
-input:focus, select:focus, textarea:focus {
-  border-color: #2563eb !important;
+/* Dark mode refined borders */
+html.dark .border-slate-100,
+html.dark .border-gray-100 {
+  border-color: #1e293b !important;
+}
+
+html.dark .border-slate-200,
+html.dark .border-gray-200,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-200\/90,
+html.dark .border-slate-200\/60 {
+  border-color: #334155 !important;
+}
+
+html.dark .border-slate-300,
+html.dark .border-gray-300 {
+  border-color: #475569 !important;
+}
+
+html.dark table,
+html.dark th,
+html.dark td {
+  border-color: #334155 !important;
+}
+
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1e293b !important;
+}
+
+html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #334155 !important;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  border-color: #334155 !important;
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #3b82f6 !important;
 }
 
 /* Clean, crisp SaaS scrollbars */
@@ -67,22 +114,56 @@ input:focus, select:focus, textarea:focus {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-400 rounded-full transition-colors;
+  @apply bg-slate-300 dark:bg-slate-700 rounded-full transition-colors;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-500;
+  @apply bg-slate-400 dark:bg-slate-600;
 }
 
 /* Clear, distinct card surfaces */
 .saas-card {
-  @apply bg-white rounded-2xl shadow-sm transition-all;
-  border: 1px solid #cbd5e1 !important;
+  @apply rounded-2xl shadow-sm transition-all;
+}
+
+html:not(.dark) .saas-card {
+  background-color: #ffffff;
+  border: 1px solid #94a3b8;
+}
+
+html.dark .saas-card {
+  background-color: #0f172a;
+  border: 1px solid #334155;
 }
 
 .saas-card-subtle {
-  @apply bg-slate-50 rounded-xl;
-  border: 1px solid #cbd5e1 !important;
+  @apply rounded-xl;
+}
+
+html:not(.dark) .saas-card-subtle {
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+}
+
+html.dark .saas-card-subtle {
+  background-color: rgba(15, 23, 42, 0.5);
+  border: 1px solid #334155;
+}
+
+/* Glassmorphic utilities */
+.glass-panel {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+html:not(.dark) .glass-panel {
+  background-color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+}
+
+html.dark .glass-panel {
+  background-color: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(51, 65, 85, 0.6);
 }
 
 /* Print Styles */
