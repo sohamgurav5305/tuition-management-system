@@ -150,7 +150,7 @@ export const BatchList: React.FC = () => {
               leftIcon={PlusCircle}
               onClick={() => navigate('/batches/new')}
             >
-              Create Batch
+              Create New Batch
             </Button>
           )
         }
@@ -191,7 +191,7 @@ export const BatchList: React.FC = () => {
         emptyAction={
           canEdit
             ? {
-                label: '+ Create Batch',
+                label: '+ Create New Batch',
                 onClick: () => navigate('/batches/new'),
               }
             : undefined
