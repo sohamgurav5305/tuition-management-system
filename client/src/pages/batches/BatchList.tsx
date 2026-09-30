@@ -172,33 +172,41 @@ export const BatchList: React.FC = () => {
       },
     },
     {
-      header: 'Actions',
+      header: 'Details',
       className: 'text-right',
       cell: (b) => (
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex items-center justify-end gap-1.5">
           <button
-            onClick={() => handleOpenDetail(b)}
-            title="View Enrolled Students"
-            className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenDetail(b);
+            }}
+            title="View Batch Details & Enrolled Students"
+            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800 transition-colors cursor-pointer"
           >
-            <Users className="w-4 h-4" />
+            <Users className="w-3.5 h-3.5" />
+            <span>Details</span>
           </button>
           {canEdit && (
             <>
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   setEditingBatch(b);
                   setIsFormOpen(true);
                 }}
                 title="Edit Batch"
-                className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
               >
                 <Edit className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setDeletingId(b.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeletingId(b.id);
+                }}
                 title="Delete Batch"
-                className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -214,7 +222,6 @@ export const BatchList: React.FC = () => {
       {/* Top Banner */}
       <PageHeader
         title={user?.role === 'TEACHER' ? 'My Assigned Batches' : 'Batches'}
-        badge={`${batches.length} Batches`}
         actions={
           canEdit && (
             <Button
@@ -264,6 +271,7 @@ export const BatchList: React.FC = () => {
         data={batches}
         columns={columns}
         keyExtractor={(b) => b.id}
+        onRowClick={(b) => handleOpenDetail(b)}
         searchPlaceholder="Search Batches"
         searchableFields={['name', 'batchId', 'course', 'faculty', 'subjectTeachers']}
         emptyTitle="No batches created yet"
