@@ -215,7 +215,7 @@ export const LeaveManagement: React.FC = () => {
               onChange={(e) => setApplicantTypeFilter(e.target.value)}
               className="px-3 py-2 text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100"
             >
-              <option value="ALL">All Categories</option>
+              <option value="ALL">All</option>
               <option value="STUDENT">Student Leaves</option>
               <option value="FACULTY">{isTeacher ? 'My Leaves' : 'Faculty Leaves'}</option>
             </select>
@@ -227,7 +227,7 @@ export const LeaveManagement: React.FC = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-3 py-2 text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100"
           >
-            <option value="">All Categories</option>
+            <option value="">All</option>
             <option value="PENDING">Pending</option>
             <option value="APPROVED">Approved</option>
             <option value="REJECTED">Rejected</option>
