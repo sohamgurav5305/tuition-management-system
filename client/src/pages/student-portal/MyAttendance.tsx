@@ -275,6 +275,77 @@ export const MyAttendance: React.FC = () => {
                 );
               })}
             </tbody>
+            <tfoot className="bg-slate-50 dark:bg-slate-800/90 border-t-2 border-slate-200 dark:border-slate-700 font-bold">
+              <tr className="border-b border-slate-200/80 dark:border-slate-800">
+                <td className="px-4 py-3 text-slate-700 dark:text-slate-300 uppercase text-[11px] font-bold">
+                  Total Lectures
+                </td>
+                {subjects.map((sub) => {
+                  const subRecords = monthRecords.filter(
+                    (r: any) =>
+                      r.subject?.toLowerCase() === sub.toLowerCase() &&
+                      (r.status === 'PRESENT' || r.status === 'ABSENT')
+                  );
+                  return (
+                    <td key={sub} className="px-4 py-3 text-center">
+                      <span className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                        {subRecords.length}
+                      </span>
+                    </td>
+                  );
+                })}
+              </tr>
+              <tr className="border-b border-slate-200/80 dark:border-slate-800">
+                <td className="px-4 py-3 text-slate-700 dark:text-slate-300 uppercase text-[11px] font-bold">
+                  Present Count
+                </td>
+                {subjects.map((sub) => {
+                  const subRecords = monthRecords.filter(
+                    (r: any) =>
+                      r.subject?.toLowerCase() === sub.toLowerCase() &&
+                      (r.status === 'PRESENT' || r.status === 'ABSENT')
+                  );
+                  const presentCount = subRecords.filter((r: any) => r.status === 'PRESENT').length;
+                  return (
+                    <td key={sub} className="px-4 py-3 text-center">
+                      <span className="inline-block px-3 py-1 bg-emerald-50 dark:bg-emerald-950/60 rounded-lg text-xs font-black text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        {presentCount}
+                      </span>
+                    </td>
+                  );
+                })}
+              </tr>
+              <tr>
+                <td className="px-4 py-3 text-slate-700 dark:text-slate-300 uppercase text-[11px] font-bold">
+                  Attendance Rate
+                </td>
+                {subjects.map((sub) => {
+                  const subRecords = monthRecords.filter(
+                    (r: any) =>
+                      r.subject?.toLowerCase() === sub.toLowerCase() &&
+                      (r.status === 'PRESENT' || r.status === 'ABSENT')
+                  );
+                  const total = subRecords.length;
+                  const presentCount = subRecords.filter((r: any) => r.status === 'PRESENT').length;
+                  const rate = total > 0 ? Math.round((presentCount / total) * 100) : 0;
+                  return (
+                    <td key={sub} className="px-4 py-3 text-center">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-lg text-xs font-black border ${
+                          total === 0
+                            ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 border-slate-200 dark:border-slate-700'
+                            : rate >= 75
+                            ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                            : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                        }`}
+                      >
+                        {total > 0 ? `${rate}%` : 'N/A'}
+                      </span>
+                    </td>
+                  );
+                })}
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>
