@@ -31,18 +31,18 @@ export const FeeDashboard: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
 
   const tabFromUrl = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState<'students' | 'records' | 'receipts'>(
-    tabFromUrl === 'records' || tabFromUrl === 'receipts' ? tabFromUrl : 'students'
+  const [activeTab, setActiveTab] = useState<'students' | 'records'>(
+    tabFromUrl === 'records' ? 'records' : 'students'
   );
 
   useEffect(() => {
     const t = searchParams.get('tab');
-    if (t === 'records' || t === 'receipts' || t === 'students') {
+    if (t === 'records' || t === 'students') {
       setActiveTab(t);
     }
   }, [searchParams]);
 
-  const handleTabChange = (tab: 'students' | 'records' | 'receipts') => {
+  const handleTabChange = (tab: 'students' | 'records') => {
     setActiveTab(tab);
     setSearchParams(tab === 'students' ? {} : { tab });
   };
@@ -205,68 +205,6 @@ export const FeeDashboard: React.FC = () => {
     },
   ];
 
-  const receiptColumns: Column<Payment>[] = [
-    {
-      header: 'Receipt No',
-      cell: (p) => (
-        <span
-          onClick={() => setSelectedReceipt(p)}
-          className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-        >
-          {p.receiptId}
-        </span>
-      ),
-    },
-    {
-      header: 'Student Name',
-      cell: (p) => (
-        <div>
-          <span className="font-bold text-slate-900 dark:text-slate-100 block text-xs">
-            {p.student ? `${p.student.firstName} ${p.student.lastName}` : 'Enrolled Student'}
-          </span>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{p.student?.studentId}</span>
-        </div>
-      ),
-    },
-    {
-      header: 'Amount Received',
-      cell: (p) => (
-        <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
-          {formatCurrency(p.amount)}
-        </span>
-      ),
-    },
-    {
-      header: 'Mode',
-      cell: (p) => <Badge variant="neutral" size="xs">{p.paymentMode}</Badge>,
-    },
-    {
-      header: 'Txn Reference',
-      cell: (p) => (
-        <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-          {p.transactionReference || '—'}
-        </span>
-      ),
-    },
-    {
-      header: 'Date',
-      cell: (p) => <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">{formatDate(p.paymentDate)}</span>,
-    },
-    {
-      header: 'Receipt',
-      cell: (p) => (
-        <Button
-          variant="secondary"
-          size="xs"
-          leftIcon={Receipt}
-          onClick={() => setSelectedReceipt(p)}
-        >
-          View / Print
-        </Button>
-      ),
-    },
-  ];
-
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Banner */}
@@ -294,7 +232,7 @@ export const FeeDashboard: React.FC = () => {
         }
       />
 
-      {/* Segmented Tabs (Student Fee Accounts Ledger vs Fee Records vs Official Receipts Audit) */}
+      {/* Segmented Tabs (Student Fee Accounts Ledger vs Fee Records & Print Register) */}
       <div className="flex items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-2">
         <div className="flex items-center gap-2">
           <button
@@ -305,7 +243,7 @@ export const FeeDashboard: React.FC = () => {
                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
-            Student Accounts Ledger ({students.length})
+            Student Accounts Ledger
           </button>
           <button
             onClick={() => handleTabChange('records')}
@@ -316,16 +254,6 @@ export const FeeDashboard: React.FC = () => {
             }`}
           >
             Fee Records & Print Register
-          </button>
-          <button
-            onClick={() => handleTabChange('receipts')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-              activeTab === 'receipts'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            Payment Receipts ({payments.length})
           </button>
         </div>
       </div>
@@ -389,20 +317,6 @@ export const FeeDashboard: React.FC = () => {
           batches={batches}
           loading={loading}
           onOpenCollect={handleOpenCollect}
-        />
-      )}
-
-      {/* Tab 3: Payment Receipts Table */}
-      {activeTab === 'receipts' && (
-        <DataTable
-          columns={receiptColumns}
-          data={payments}
-          keyExtractor={(p: Payment) => p.id}
-          isLoading={loading}
-          searchPlaceholder="Search receipt number, transaction ref, student name, or mode..."
-          searchableFields={['receiptId', 'transactionReference', 'student', 'paymentMode', 'remarks']}
-          emptyTitle="No Payment Receipts"
-          emptySubtitle="No official payment receipts have been generated yet."
         />
       )}
 
