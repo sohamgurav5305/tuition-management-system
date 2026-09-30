@@ -75,11 +75,11 @@ export class AttendanceService {
     };
   }
 
-  async getBatchAttendanceRange(batchId: string, startDate: string, endDate: string) {
+  async getBatchAttendanceRange(batchId: string, startDate: string, endDate: string, subject?: string) {
     const batch = await batchRepository.findById(batchId);
     if (!batch) throw new Error('Batch not found');
 
-    const records = await attendanceRepository.findByBatchAndDateRange(batchId, startDate, endDate);
+    const records = await attendanceRepository.findByBatchAndDateRange(batchId, startDate, endDate, subject);
 
     // Extract subjects list
     let subjectsList: string[] = ['Physics', 'Chemistry', 'Mathematics'];
@@ -176,6 +176,7 @@ export class AttendanceService {
         batchId: batch.batchId,
         name: batch.name,
         courseName: batch.course?.name || 'Academic Course',
+        subjects: allSubjects,
       },
       startDate,
       endDate,
@@ -183,7 +184,87 @@ export class AttendanceService {
       allSubjects,
       subjectLecturesMap,
       students: studentSummaries,
+      records: records.map((r) => ({
+        id: r.id,
+        studentId: r.studentId,
+        date: r.date,
+        subject: r.subject,
+        status: r.status,
+      })),
     };
+  }
+
+  async saveMonthlyGrid(data: {
+    batchId: string;
+    subject: string;
+    records: { studentId: string; date: string; status: 'PRESENT' | 'ABSENT' | 'NA' }[];
+    markedById?: string;
+  }) {
+    if (!data.records || data.records.length === 0) {
+      return { success: true, count: 0 };
+    }
+
+    const cleanSubject = data.subject || 'General';
+    const deleteList = data.records.filter((r) => r.status === 'NA');
+    const upsertList = data.records.filter((r) => r.status === 'PRESENT' || r.status === 'ABSENT');
+
+    const transactions: any[] = [];
+
+    if (deleteList.length > 0) {
+      for (const d of deleteList) {
+        transactions.push(
+          prisma.attendance.deleteMany({
+            where: {
+              batchId: data.batchId,
+              studentId: d.studentId,
+              date: d.date,
+              subject: cleanSubject,
+            },
+          })
+        );
+      }
+    }
+
+    for (const u of upsertList) {
+      transactions.push(
+        prisma.attendance.upsert({
+          where: {
+            batchId_studentId_date_subject: {
+              batchId: data.batchId,
+              studentId: u.studentId,
+              date: u.date,
+              subject: cleanSubject,
+            },
+          },
+          update: {
+            status: u.status,
+            markedById: data.markedById,
+          },
+          create: {
+            batchId: data.batchId,
+            studentId: u.studentId,
+            date: u.date,
+            subject: cleanSubject,
+            status: u.status,
+            markedById: data.markedById,
+          },
+        })
+      );
+    }
+
+    if (transactions.length > 0) {
+      await prisma.$transaction(transactions);
+    }
+
+    try {
+      realtimeHub.broadcast('attendance:saved', {
+        batchId: data.batchId,
+        subject: cleanSubject,
+        count: data.records.length,
+      });
+    } catch {}
+
+    return { success: true, count: data.records.length };
   }
 
   async markBatchAttendance(data: {

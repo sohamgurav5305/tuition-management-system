@@ -23,15 +23,20 @@ export class AttendanceRepository {
     });
   }
 
-  async findByBatchAndDateRange(batchId: string, startDate: string, endDate: string) {
-    return prisma.attendance.findMany({
-      where: {
-        batchId,
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
+  async findByBatchAndDateRange(batchId: string, startDate: string, endDate: string, subject?: string) {
+    const where: Prisma.AttendanceWhereInput = {
+      batchId,
+      date: {
+        gte: startDate,
+        lte: endDate,
       },
+    };
+    if (subject && subject !== 'ALL') {
+      where.subject = subject;
+    }
+
+    return prisma.attendance.findMany({
+      where,
       include: {
         student: true,
         faculty: true,

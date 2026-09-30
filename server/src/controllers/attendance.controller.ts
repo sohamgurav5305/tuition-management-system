@@ -33,6 +33,7 @@ export class AttendanceController {
       const batchId = req.query.batchId as string;
       const startDate = req.query.startDate as string;
       const endDate = req.query.endDate as string;
+      const subject = req.query.subject as string | undefined;
 
       if (!batchId || !startDate || !endDate) {
         sendError(res, 'batchId, startDate, and endDate are required query parameters', 400);
@@ -49,8 +50,40 @@ export class AttendanceController {
         }
       }
 
-      const result = await attendanceService.getBatchAttendanceRange(batchId, startDate, endDate);
+      const result = await attendanceService.getBatchAttendanceRange(batchId, startDate, endDate, subject);
       sendSuccess(res, result, 'Batch attendance range report fetched successfully');
+    } catch (error: any) {
+      sendError(res, error.message, 400, error);
+    }
+  }
+
+  async saveMonthlyGrid(req: Request, res: Response): Promise<void> {
+    try {
+      const { batchId, subject, records } = req.body;
+
+      if (!batchId) {
+        sendError(res, 'batchId is required', 400);
+        return;
+      }
+
+      if (req.user?.role === 'TEACHER') {
+        const facultyId = await resolveFacultyId(req.user);
+        const assignedBatchIds = facultyId ? await getFacultyAssignedBatchIds(facultyId) : [];
+        if (!assignedBatchIds.includes(batchId)) {
+          sendError(res, 'Access denied: You are not assigned to record attendance for this batch', 403);
+          return;
+        }
+      }
+
+      const markedById = req.user?.id;
+      const result = await attendanceService.saveMonthlyGrid({
+        batchId,
+        subject: subject || 'General',
+        records: records || [],
+        markedById,
+      });
+
+      sendSuccess(res, result, 'Monthly attendance saved successfully');
     } catch (error: any) {
       sendError(res, error.message, 400, error);
     }

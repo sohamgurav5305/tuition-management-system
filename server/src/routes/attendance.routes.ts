@@ -13,5 +13,6 @@ router.get('/range', authorizeRoles('ADMINISTRATOR', 'TEACHER', 'ACCOUNTANT'), (
 router.get('/batch/:batchId', authorizeRoles('ADMINISTRATOR', 'TEACHER', 'ACCOUNTANT'), (req, res) => attendanceController.getBatchAttendance(req, res));
 router.get('/student/:studentId', authorizeRoles('ADMINISTRATOR', 'TEACHER', 'RECEPTIONIST'), (req, res) => attendanceController.getStudentAttendance(req, res));
 router.post('/mark', authorizeRoles('ADMINISTRATOR', 'TEACHER'), (req, res) => attendanceController.markAttendance(req, res));
+router.post('/monthly', authorizeRoles('ADMINISTRATOR', 'TEACHER'), (req, res) => attendanceController.saveMonthlyGrid(req, res));
 
 export default router;

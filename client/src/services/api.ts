@@ -115,10 +115,12 @@ export const classroomApi = {
 export const attendanceApi = {
   getBatchAttendance: (batchId: string, date?: string, subject?: string) =>
     api.get(`/attendance/batch/${batchId}`, { params: { date, subject } }),
-  getAttendanceRange: (batchId: string, startDate: string, endDate: string) =>
-    api.get('/attendance/range', { params: { batchId, startDate, endDate } }),
+  getAttendanceRange: (batchId: string, startDate: string, endDate: string, subject?: string) =>
+    api.get('/attendance/range', { params: { batchId, startDate, endDate, subject } }),
   markAttendance: (data: { batchId: string; date: string; subject?: string; facultyId?: string; records: any[] }) =>
     api.post('/attendance/mark', data),
+  saveMonthlyGrid: (data: { batchId: string; subject: string; records: { studentId: string; date: string; status: 'PRESENT' | 'ABSENT' | 'NA' }[] }) =>
+    api.post('/attendance/monthly', data),
   getStudentAttendance: (studentId: string, subject?: string) =>
     api.get(`/attendance/student/${studentId}`, { params: { subject } }),
   getMyAttendance: (subject?: string) =>
