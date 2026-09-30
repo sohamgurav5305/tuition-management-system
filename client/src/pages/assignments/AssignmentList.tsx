@@ -58,6 +58,7 @@ export const AssignmentList: React.FC = () => {
   const [detailSubmissions, setDetailSubmissions] = useState<AssignmentSubmission[]>([]);
   const [loadingDetailSubmissions, setLoadingDetailSubmissions] = useState(false);
   const [submissionSearch, setSubmissionSearch] = useState('');
+  const [submissionStatusFilter, setSubmissionStatusFilter] = useState<'ALL' | 'GRADED' | 'PENDING'>('ALL');
   const [gradingSubmission, setGradingSubmission] = useState<AssignmentSubmission | null>(null);
   const [scoreInput, setScoreInput] = useState<string>('');
   const [feedbackInput, setFeedbackInput] = useState<string>('');
@@ -101,6 +102,8 @@ export const AssignmentList: React.FC = () => {
   useEffect(() => {
     if (selectedAssignmentId) {
       fetchDetailSubmissions(selectedAssignmentId);
+      setSubmissionStatusFilter('ALL');
+      setSubmissionSearch('');
     }
   }, [selectedAssignmentId]);
 
@@ -179,6 +182,11 @@ export const AssignmentList: React.FC = () => {
         : [];
 
     const filteredSubmissions = detailSubmissions.filter((s) => {
+      // Status Filter
+      if (submissionStatusFilter === 'GRADED' && s.status !== 'GRADED') return false;
+      if (submissionStatusFilter === 'PENDING' && s.status === 'GRADED') return false;
+
+      // Search
       if (!submissionSearch.trim()) return true;
       const words = submissionSearch.toLowerCase().trim().split(/\s+/).filter(Boolean);
       if (words.length === 0) return true;
@@ -248,7 +256,7 @@ export const AssignmentList: React.FC = () => {
                 <Clock className="w-3.5 h-3.5 text-slate-400" />
                 Deadline: {formatDate(selectedAssignment.dueDate)}
               </span>
-              <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg font-bold">
+              <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 rounded-xl font-bold">
                 Max: {selectedAssignment.totalMarks} pts
               </span>
             </div>
@@ -335,22 +343,43 @@ export const AssignmentList: React.FC = () => {
               <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                 Submitted Student Solutions
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Review submitted worksheets, verify timestamps, and evaluate scorecards.
-              </p>
             </div>
 
-            {/* Quick Metrics */}
+            {/* Interactive Filter Pills */}
             <div className="flex items-center gap-2 text-xs">
-              <span className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold border border-blue-200/60 dark:border-blue-800">
+              <button
+                type="button"
+                onClick={() => setSubmissionStatusFilter('ALL')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  submissionStatusFilter === 'ALL'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/60'
+                }`}
+              >
                 Submitted: {detailSubmissions.length}
-              </span>
-              <span className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200/60 dark:border-emerald-800">
+              </button>
+              <button
+                type="button"
+                onClick={() => setSubmissionStatusFilter('GRADED')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  submissionStatusFilter === 'GRADED'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60'
+                }`}
+              >
                 Graded: {gradedCount}
-              </span>
-              <span className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold border border-amber-200/60 dark:border-amber-800">
+              </button>
+              <button
+                type="button"
+                onClick={() => setSubmissionStatusFilter('PENDING')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  submissionStatusFilter === 'PENDING'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60'
+                }`}
+              >
                 Pending: {pendingCount}
-              </span>
+              </button>
             </div>
           </div>
 
