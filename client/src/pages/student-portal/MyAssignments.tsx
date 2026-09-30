@@ -739,7 +739,7 @@ export const MyAssignments: React.FC = () => {
           <table className="w-full text-left border-collapse min-w-[600px]">
             <thead className="bg-slate-50/70 dark:bg-slate-950/50 select-none">
               <tr className="border-b border-slate-200/90 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                <th className="py-3 px-4">Code & Assignment</th>
+                <th className="py-3 px-4">Assignment</th>
                 <th className="py-3 px-4">Subject</th>
                 <th className="py-3 px-4">Deadline</th>
                 <th className="py-3 px-4 text-right">Status</th>
@@ -763,16 +763,11 @@ export const MyAssignments: React.FC = () => {
                       onClick={() => handleSelectAssignment(a)}
                       className="hover:bg-blue-50/40 dark:hover:bg-slate-800/50 cursor-pointer transition-colors group"
                     >
-                      {/* Code & Title */}
+                      {/* Title */}
                       <td className="py-3.5 px-4">
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400">
-                            {a.assignmentId || 'ASN-CODE'}
-                          </span>
-                          <span className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
-                            {a.title}
-                          </span>
-                        </div>
+                        <span className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
+                          {a.title}
+                        </span>
                       </td>
 
                       {/* Subject */}
