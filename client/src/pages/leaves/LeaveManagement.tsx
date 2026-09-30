@@ -165,11 +165,6 @@ export const LeaveManagement: React.FC = () => {
             ? 'Student Requests & My Leaves'
             : 'Leave Requests & Approvals'
         }
-        badge={
-          isStudent
-            ? undefined
-            : `${pendingCount} Pending Review`
-        }
         actions={
           isStudent ? (
             <Button
