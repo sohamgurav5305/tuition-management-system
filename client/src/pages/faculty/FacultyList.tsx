@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PlusCircle, Edit, Trash2, Layers, Briefcase, Award } from 'lucide-react';
 import { facultyApi } from '../../services/api';
 import { Faculty } from '../../types';
@@ -11,10 +12,10 @@ import { useSettings } from '../../context/SettingsContext';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { getMediaUrl } from '../../utils/media';
-import { FacultyFormModal } from './FacultyFormModal';
 import { FacultyWorkloadModal } from './FacultyWorkloadModal';
 
 export const FacultyList: React.FC = () => {
+  const navigate = useNavigate();
   const { formatCurrency } = useSettings();
   const { success, error } = useToast();
   const { user } = useAuth();
@@ -23,8 +24,6 @@ export const FacultyList: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   // Modals
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingFaculty, setEditingFaculty] = useState<Faculty | null>(null);
   const [viewingWorkload, setViewingWorkload] = useState<Faculty | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -153,10 +152,7 @@ export const FacultyList: React.FC = () => {
           {canEdit && (
             <>
               <button
-                onClick={() => {
-                  setEditingFaculty(f);
-                  setIsFormOpen(true);
-                }}
+                onClick={() => navigate('/faculty/edit/' + f.id)}
                 title="Edit Faculty Record"
                 className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
               >
@@ -187,10 +183,7 @@ export const FacultyList: React.FC = () => {
               variant="primary"
               size="sm"
               leftIcon={PlusCircle}
-              onClick={() => {
-                setEditingFaculty(null);
-                setIsFormOpen(true);
-              }}
+              onClick={() => navigate('/faculty/new')}
             >
               Add New Faculty
             </Button>
@@ -206,14 +199,6 @@ export const FacultyList: React.FC = () => {
         searchPlaceholder="Search Faculty"
         searchableFields={['firstName', 'lastName', 'facultyId', 'subjectTaught', 'email', 'phone', 'qualification', 'batches']}
         isLoading={loading}
-      />
-
-      {/* Form Modal */}
-      <FacultyFormModal
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onSuccess={fetchFaculty}
-        initialFaculty={editingFaculty}
       />
 
       {/* Workload Modal */}

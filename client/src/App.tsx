@@ -23,6 +23,7 @@ const DashboardRouter = lazy(() => import('./pages/dashboard/DashboardRouter').t
 const StudentList = lazy(() => import('./pages/students/StudentList').then((m) => ({ default: m.StudentList })));
 const StudentProfile = lazy(() => import('./pages/students/StudentProfile').then((m) => ({ default: m.StudentProfile })));
 const FacultyList = lazy(() => import('./pages/faculty/FacultyList').then((m) => ({ default: m.FacultyList })));
+const FacultyCreatePage = lazy(() => import('./pages/faculty/FacultyCreatePage').then((m) => ({ default: m.FacultyCreatePage })));
 const CourseList = lazy(() => import('./pages/courses/CourseList').then((m) => ({ default: m.CourseList })));
 const BatchList = lazy(() => import('./pages/batches/BatchList').then((m) => ({ default: m.BatchList })));
 const AttendanceSheet = lazy(() => import('./pages/attendance/AttendanceSheet').then((m) => ({ default: m.AttendanceSheet })));
@@ -103,6 +104,22 @@ export const App: React.FC = () => {
                     element={
                       <RoleGuard allowedRoles={['ADMINISTRATOR']}>
                         <FacultyList />
+                      </RoleGuard>
+                    }
+                  />
+                  <Route
+                    path="/faculty/new"
+                    element={
+                      <RoleGuard allowedRoles={['ADMINISTRATOR']}>
+                        <FacultyCreatePage />
+                      </RoleGuard>
+                    }
+                  />
+                  <Route
+                    path="/faculty/edit/:id"
+                    element={
+                      <RoleGuard allowedRoles={['ADMINISTRATOR']}>
+                        <FacultyCreatePage />
                       </RoleGuard>
                     }
                   />
