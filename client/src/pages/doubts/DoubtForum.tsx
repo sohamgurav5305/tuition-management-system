@@ -496,14 +496,16 @@ export const DoubtForum: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
               {selectedDoubt.topic}
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Discussion routed to{' '}
-              <span className="font-semibold text-slate-800 dark:text-slate-200">
-                {selectedDoubt.faculty
-                  ? `Prof. ${selectedDoubt.faculty.firstName} ${selectedDoubt.faculty.lastName}`
-                  : 'Assigned Faculty Mentor'}
-              </span>
-            </p>
+            {isStudent && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Discussion routed to{' '}
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  {selectedDoubt.faculty
+                    ? `${selectedDoubt.faculty.firstName.startsWith('Prof') ? '' : 'Prof. '}${selectedDoubt.faculty.firstName} ${selectedDoubt.faculty.lastName}`
+                    : 'Assigned Faculty Mentor'}
+                </span>
+              </p>
+            )}
           </div>
         </div>
 
