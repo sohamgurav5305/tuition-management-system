@@ -41,7 +41,6 @@ export const NotificationCenter: React.FC = () => {
   const selectedNotificationId = searchParams.get('id');
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [filterType, setFilterType] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
@@ -162,9 +161,6 @@ export const NotificationCenter: React.FC = () => {
   };
 
   const filteredList = notifications.filter((n) => {
-    if (filterType !== 'ALL' && n.type.toUpperCase() !== filterType) {
-      return false;
-    }
     if (searchQuery.trim()) {
       const words = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
       if (words.length > 0) {
@@ -338,7 +334,6 @@ export const NotificationCenter: React.FC = () => {
       {/* Top Banner */}
       <PageHeader
         title="Announcements & Alerts"
-        subtitle="Stay updated with institute circulars, batch announcements, and operational notices."
         badge={`${unreadCount} Unread`}
         actions={
           <div className="flex items-center gap-2">
@@ -366,30 +361,9 @@ export const NotificationCenter: React.FC = () => {
         }
       />
 
-      {/* Filter Tabs & Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-          {[
-            { label: 'All Alerts', value: 'ALL' },
-            { label: 'General Info', value: 'INFORMATION' },
-            { label: 'Important Notices', value: 'WARNING' },
-            { label: 'Achievements', value: 'SUCCESS' },
-          ].map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setFilterType(tab.value)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-                filterType === tab.value
-                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-800'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="relative w-full sm:w-72 flex-shrink-0">
+      {/* Search Bar Toolbar */}
+      <div className="flex items-center justify-end">
+        <div className="relative w-full sm:w-80">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
