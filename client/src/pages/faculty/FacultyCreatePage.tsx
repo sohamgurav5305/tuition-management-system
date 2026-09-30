@@ -18,12 +18,14 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
+  Trash2,
 } from 'lucide-react';
 import { facultyApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { useSettings } from '../../context/SettingsContext';
 import { Button } from '../../components/common/Button';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { getMediaUrl } from '../../utils/media';
 import { Faculty } from '../../types';
 
@@ -54,6 +56,23 @@ export const FacultyCreatePage: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [existingFaculty, setExistingFaculty] = useState<Faculty | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!id) return;
+    setIsDeleting(true);
+    try {
+      await facultyApi.delete(id);
+      success('Faculty Removed', 'Faculty member removed successfully');
+      navigate('/faculty');
+    } catch (err: any) {
+      toastError('Cannot Delete Faculty', err.response?.data?.message || 'Deletion failed');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
 
   const {
     register,
@@ -458,14 +477,28 @@ export const FacultyCreatePage: React.FC = () => {
 
         {/* Action Controls */}
         <div className="flex items-center justify-between gap-4 pt-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="md"
-            onClick={() => navigate('/faculty')}
-          >
-            Cancel
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={() => navigate('/faculty')}
+            >
+              Cancel
+            </Button>
+
+            {isEditMode && (
+              <Button
+                type="button"
+                variant="danger"
+                size="md"
+                leftIcon={Trash2}
+                onClick={() => setIsDeleteDialogOpen(true)}
+              >
+                Delete Faculty
+              </Button>
+            )}
+          </div>
 
           <Button
             type="submit"
@@ -482,6 +515,16 @@ export const FacultyCreatePage: React.FC = () => {
           </Button>
         </div>
       </form>
+
+      {/* Confirm Deletion Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete Faculty Member"
+        message={`Are you sure you want to permanently delete ${existingFaculty?.firstName || ''} ${existingFaculty?.lastName || ''}? This action cannot be undone.`}
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

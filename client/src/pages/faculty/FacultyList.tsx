@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle, Edit, Trash2, Layers, Briefcase, Award } from 'lucide-react';
+import { PlusCircle, Layers } from 'lucide-react';
 import { facultyApi } from '../../services/api';
 import { Faculty } from '../../types';
 import { DataTable, Column } from '../../components/common/DataTable';
@@ -137,39 +137,6 @@ export const FacultyList: React.FC = () => {
         </span>
       ),
     },
-    {
-      header: 'Actions',
-      className: 'text-right',
-      cell: (f) => (
-        <div className="flex items-center justify-end gap-1">
-          <button
-            onClick={() => setViewingWorkload(f)}
-            title="Workload Summary"
-            className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"
-          >
-            <Briefcase className="w-4 h-4" />
-          </button>
-          {canEdit && (
-            <>
-              <button
-                onClick={() => navigate('/faculty/edit/' + f.id)}
-                title="Edit Faculty Record"
-                className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setDeletingId(f.id)}
-                title="Remove Faculty Member"
-                className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </>
-          )}
-        </div>
-      ),
-    },
   ];
 
   return (
@@ -196,6 +163,7 @@ export const FacultyList: React.FC = () => {
         data={facultyList}
         columns={columns}
         keyExtractor={(f) => f.id}
+        onRowClick={(f) => navigate('/faculty/edit/' + f.id)}
         searchPlaceholder="Search Faculty"
         searchableFields={['firstName', 'lastName', 'facultyId', 'subjectTaught', 'email', 'phone', 'qualification', 'batches']}
         isLoading={loading}
