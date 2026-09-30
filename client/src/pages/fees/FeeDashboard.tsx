@@ -14,7 +14,6 @@ import { Badge } from '../../components/common/Badge';
 import { useSettings } from '../../context/SettingsContext';
 import { CollectPaymentModal } from './CollectPaymentModal';
 import { AssignFeeModal } from './AssignFeeModal';
-import { ReceiptModal } from '../../components/common/ReceiptModal';
 
 export const FeeDashboard: React.FC = () => {
   const { formatCurrency, formatDate } = useSettings();
@@ -34,7 +33,6 @@ export const FeeDashboard: React.FC = () => {
   const [isCollectOpen, setIsCollectOpen] = useState(false);
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [selectedStudentForPay, setSelectedStudentForPay] = useState<Student | null>(null);
-  const [selectedReceipt, setSelectedReceipt] = useState<Payment | null>(null);
 
   const loadData = async (showLoading = false) => {
     try {
@@ -82,7 +80,7 @@ export const FeeDashboard: React.FC = () => {
   const handlePaymentRecorded = (newPayment: any) => {
     loadData();
     if (newPayment) {
-      setSelectedReceipt(newPayment);
+      navigate('/receipts/' + (newPayment.id || newPayment.receiptId));
     }
   };
 
@@ -269,15 +267,6 @@ export const FeeDashboard: React.FC = () => {
         onClose={() => setIsAssignOpen(false)}
         onSuccess={loadData}
       />
-
-      {/* Official A4 Receipt Modal */}
-      {selectedReceipt && (
-        <ReceiptModal
-          isOpen={!!selectedReceipt}
-          onClose={() => setSelectedReceipt(null)}
-          payment={selectedReceipt}
-        />
-      )}
     </div>
   );
 };

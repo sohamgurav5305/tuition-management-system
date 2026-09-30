@@ -28,7 +28,6 @@ import { getMediaUrl } from '../../utils/media';
 import { StudentFormModal } from './StudentFormModal';
 import { CollectPaymentModal } from '../fees/CollectPaymentModal';
 import { AssignFeeModal } from '../fees/AssignFeeModal';
-import { ReceiptModal } from '../../components/common/ReceiptModal';
 
 export const StudentProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,7 +42,6 @@ export const StudentProfile: React.FC = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isPayOpen, setIsPayOpen] = useState(false);
   const [isAssignOpen, setIsAssignOpen] = useState(false);
-  const [selectedReceipt, setSelectedReceipt] = useState<Payment | null>(null);
 
   const isTeacher = user?.role === 'TEACHER';
   const isAccountant = user?.role === 'ACCOUNTANT';
@@ -470,7 +468,12 @@ export const StudentProfile: React.FC = () => {
                   {student.payments && student.payments.length > 0 ? (
                     student.payments.map((p) => (
                       <tr key={p.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                        <td className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400">{p.receiptId}</td>
+                        <td
+                          onClick={() => navigate(`/receipts/${p.id || p.receiptId}`)}
+                          className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                        >
+                          {p.receiptId}
+                        </td>
                         <td className="px-4 py-3">
                           <Badge variant="neutral" size="xs">{p.paymentMode}</Badge>
                         </td>
@@ -478,7 +481,7 @@ export const StudentProfile: React.FC = () => {
                         <td className="px-4 py-3 text-slate-500 dark:text-slate-400 font-mono">{formatDate(p.paymentDate)}</td>
                         <td className="px-4 py-3 text-right">
                           <button
-                            onClick={() => setSelectedReceipt(p)}
+                            onClick={() => navigate(`/receipts/${p.id || p.receiptId}`)}
                             className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 inline-flex items-center gap-1"
                           >
                             <FileText className="w-3.5 h-3.5" /> View Receipt
@@ -572,15 +575,6 @@ export const StudentProfile: React.FC = () => {
           onClose={() => setIsAssignOpen(false)}
           onSuccess={fetchStudent}
           initialStudent={student}
-        />
-      )}
-
-      {/* Official Printable Receipt Modal */}
-      {selectedReceipt && (
-        <ReceiptModal
-          isOpen={!!selectedReceipt}
-          onClose={() => setSelectedReceipt(null)}
-          payment={selectedReceipt}
         />
       )}
     </div>

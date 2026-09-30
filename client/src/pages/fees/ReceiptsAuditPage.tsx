@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Receipt,
   PlusCircle,
@@ -13,10 +14,10 @@ import { Badge } from '../../components/common/Badge';
 import { useSettings } from '../../context/SettingsContext';
 import { CollectPaymentModal } from './CollectPaymentModal';
 import { AssignFeeModal } from './AssignFeeModal';
-import { ReceiptModal } from '../../components/common/ReceiptModal';
 
 export const ReceiptsAuditPage: React.FC = () => {
   const { formatCurrency, formatDate } = useSettings();
+  const navigate = useNavigate();
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +26,6 @@ export const ReceiptsAuditPage: React.FC = () => {
   // Modals
   const [isCollectOpen, setIsCollectOpen] = useState(false);
   const [isAssignOpen, setIsAssignOpen] = useState(false);
-  const [selectedReceipt, setSelectedReceipt] = useState<Payment | null>(null);
 
   const fetchPayments = async (showLoading = false) => {
     try {
@@ -52,7 +52,7 @@ export const ReceiptsAuditPage: React.FC = () => {
   const handlePaymentRecorded = (newPayment: any) => {
     fetchPayments();
     if (newPayment) {
-      setSelectedReceipt(newPayment);
+      navigate('/receipts/' + (newPayment.id || newPayment.receiptId));
     }
   };
 
@@ -61,7 +61,7 @@ export const ReceiptsAuditPage: React.FC = () => {
       header: 'Receipt No',
       cell: (p) => (
         <span
-          onClick={() => setSelectedReceipt(p)}
+          onClick={() => navigate(`/receipts/${p.id || p.receiptId}`)}
           className="text-xs font-mono font-bold text-blue-600 hover:underline cursor-pointer"
         >
           {p.receiptId}
@@ -117,7 +117,7 @@ export const ReceiptsAuditPage: React.FC = () => {
           variant="secondary"
           size="xs"
           leftIcon={Receipt}
-          onClick={() => setSelectedReceipt(p)}
+          onClick={() => navigate(`/receipts/${p.id || p.receiptId}`)}
         >
           View / Print
         </Button>
@@ -197,15 +197,6 @@ export const ReceiptsAuditPage: React.FC = () => {
         onClose={() => setIsAssignOpen(false)}
         onSuccess={fetchPayments}
       />
-
-      {/* Official Printable Receipt Modal */}
-      {selectedReceipt && (
-        <ReceiptModal
-          isOpen={!!selectedReceipt}
-          onClose={() => setSelectedReceipt(null)}
-          payment={selectedReceipt}
-        />
-      )}
     </div>
   );
 };

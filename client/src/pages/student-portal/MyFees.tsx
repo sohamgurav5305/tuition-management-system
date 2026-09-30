@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CreditCard, DollarSign, Clock, CheckCircle2, Receipt, Sparkles, Calendar } from 'lucide-react';
 import { paymentApi } from '../../services/api';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { Badge } from '../../components/common/Badge';
 import { useSettings } from '../../context/SettingsContext';
 import { Payment, FeeInstallment } from '../../types';
-import { ReceiptModal } from '../../components/common/ReceiptModal';
 
 export const MyFees: React.FC = () => {
   const { formatCurrency, formatDate } = useSettings();
+  const navigate = useNavigate();
   const [feeData, setFeeData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedReceipt, setSelectedReceipt] = useState<Payment | null>(null);
 
   const fetchFees = async (showLoading = false) => {
     try {
@@ -156,7 +156,10 @@ export const MyFees: React.FC = () => {
               {payments.length > 0 ? (
                 payments.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400">
+                    <td
+                      onClick={() => navigate(`/receipts/${p.id || p.receiptId}`)}
+                      className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                    >
                       {p.receiptId}
                     </td>
                     <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{formatDate(p.paymentDate)}</td>
@@ -168,7 +171,7 @@ export const MyFees: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
-                        onClick={() => setSelectedReceipt({ ...p, student: feeData?.student })}
+                        onClick={() => navigate(`/receipts/${p.id || p.receiptId}`)}
                         className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-600 dark:hover:text-white rounded-xl font-bold transition-all inline-flex items-center gap-1"
                       >
                         <Receipt className="w-3.5 h-3.5" /> View / Print
@@ -187,13 +190,6 @@ export const MyFees: React.FC = () => {
           </table>
         </div>
       </div>
-
-      {/* Official Receipt Modal */}
-      <ReceiptModal
-        isOpen={!!selectedReceipt}
-        onClose={() => setSelectedReceipt(null)}
-        payment={selectedReceipt}
-      />
     </div>
   );
 };

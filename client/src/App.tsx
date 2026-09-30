@@ -30,6 +30,7 @@ const AssignmentList = lazy(() => import('./pages/assignments/AssignmentList').t
 const FeeDashboard = lazy(() => import('./pages/fees/FeeDashboard').then((m) => ({ default: m.FeeDashboard })));
 const FeeRecordsPage = lazy(() => import('./pages/fees/FeeRecordsPage').then((m) => ({ default: m.FeeRecordsPage })));
 const ReceiptsAuditPage = lazy(() => import('./pages/fees/ReceiptsAuditPage').then((m) => ({ default: m.ReceiptsAuditPage })));
+const ReceiptDetailPage = lazy(() => import('./pages/fees/ReceiptDetailPage').then((m) => ({ default: m.ReceiptDetailPage })));
 const NotificationCenter = lazy(() => import('./pages/notifications/NotificationCenter').then((m) => ({ default: m.NotificationCenter })));
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 
@@ -206,6 +207,14 @@ export const App: React.FC = () => {
                     element={
                       <RoleGuard allowedRoles={['ADMINISTRATOR', 'ACCOUNTANT']}>
                         <ReceiptsAuditPage />
+                      </RoleGuard>
+                    }
+                  />
+                  <Route
+                    path="/receipts/:id"
+                    element={
+                      <RoleGuard allowedRoles={['ADMINISTRATOR', 'ACCOUNTANT', 'TEACHER', 'STUDENT']}>
+                        <ReceiptDetailPage />
                       </RoleGuard>
                     }
                   />
