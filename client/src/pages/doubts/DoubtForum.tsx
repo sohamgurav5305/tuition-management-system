@@ -641,12 +641,6 @@ export const DoubtForum: React.FC = () => {
       {/* Top Banner */}
       <PageHeader
         title={isStudent ? 'Ask a Doubt' : 'Doubt Forum'}
-        subtitle={
-          isStudent
-            ? 'Collaborate with your batch mentors to get rapid conceptual help and step-by-step problem solutions.'
-            : 'Review, clarify, and resolve student doubt inquiries across your active batches.'
-        }
-        badge={`${doubts.length} Discussions`}
         actions={
           isStudent && (
             <Button
@@ -666,72 +660,48 @@ export const DoubtForum: React.FC = () => {
         }
       />
 
-      {/* Filter Tabs & Search Bar */}
-      <div className="space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-            {[
-              { label: 'All Discussions', value: '' },
-              { label: 'Unresolved / Open', value: 'OPEN' },
-              { label: 'Resolved / Answered', value: 'RESOLVED' },
-            ].map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => setStatusFilter(tab.value)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-                  statusFilter === tab.value
-                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-800'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="relative w-full sm:w-72 flex-shrink-0">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+      {/* Filter Toolbar & Search Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Search Box */}
+          <div className="relative w-full sm:w-64">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by topic, mentor, student..."
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400"
+              className="w-full pl-8 pr-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400"
             />
           </div>
-        </div>
 
-        {/* Subject Filter Pills */}
-        {uniqueSubjects.length > 1 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-1">
-              Subject:
-            </span>
-            <button
-              onClick={() => setSubjectFilter('ALL')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                subjectFilter === 'ALL'
-                  ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
+          {/* Subject Filter Dropdown */}
+          {uniqueSubjects.length > 1 && (
+            <select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value)}
+              className="px-3 py-2 text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100"
             >
-              All Subjects
-            </button>
-            {uniqueSubjects.map((sub) => (
-              <button
-                key={sub}
-                onClick={() => setSubjectFilter(sub)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  subjectFilter === sub
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                {sub}
-              </button>
-            ))}
-          </div>
-        )}
+              <option value="ALL">All Subjects</option>
+              {uniqueSubjects.map((sub) => (
+                <option key={sub} value={sub}>
+                  {sub}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {/* Status Dropdown */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100"
+          >
+            <option value="">All</option>
+            <option value="OPEN">Unresolved / Open</option>
+            <option value="RESOLVED">Resolved / Answered</option>
+          </select>
+        </div>
       </div>
 
       {/* Row Table Format */}
@@ -761,8 +731,7 @@ export const DoubtForum: React.FC = () => {
                   <th className="px-4 py-3">Subject</th>
                   <th className="px-4 py-3">{isStudent ? 'Assigned Mentor' : 'Student'}</th>
                   <th className="px-4 py-3">Date Asked</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Action</th>
+                  <th className="px-4 py-3 text-right">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -838,31 +807,16 @@ export const DoubtForum: React.FC = () => {
                       {/* Date */}
                       <td className="px-4 py-3.5 whitespace-nowrap text-slate-500 dark:text-slate-400 font-mono text-[11px]">
                         <span className="inline-flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-slate-400" />
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
                           {formatDate(d.createdAt)}
                         </span>
                       </td>
 
                       {/* Status */}
-                      <td className="px-4 py-3.5 whitespace-nowrap">
+                      <td className="px-4 py-3.5 whitespace-nowrap text-right">
                         <Badge variant={isResolved ? 'success' : 'warning'} size="sm" dot>
                           {isResolved ? 'Resolved' : 'Pending Answer'}
                         </Badge>
-                      </td>
-
-                      {/* Action Chevron */}
-                      <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectDoubt(d.id);
-                          }}
-                          className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-600 dark:hover:text-white rounded-xl font-bold transition-all inline-flex items-center gap-1"
-                        >
-                          View Thread
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        </button>
                       </td>
                     </tr>
                   );
