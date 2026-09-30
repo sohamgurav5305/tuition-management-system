@@ -20,7 +20,7 @@ import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
-import { MaterialUploadModal } from './MaterialUploadModal';
+import { MaterialUploadView } from './MaterialUploadView';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { getMediaUrl, downloadMediaFile } from '../../utils/media';
 
@@ -121,6 +121,18 @@ export const MaterialList: React.FC = () => {
       default: return 'neutral';
     }
   };
+
+  if (isUploadOpen) {
+    return (
+      <MaterialUploadView
+        onBack={() => setIsUploadOpen(false)}
+        onSuccess={() => {
+          setIsUploadOpen(false);
+          fetchMaterials(true);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -311,13 +323,6 @@ export const MaterialList: React.FC = () => {
           ))
         )}
       </div>
-
-      {/* Upload Modal */}
-      <MaterialUploadModal
-        isOpen={isUploadOpen}
-        onClose={() => setIsUploadOpen(false)}
-        onSuccess={fetchMaterials}
-      />
 
       {/* Delete Confirm */}
       <ConfirmDialog
