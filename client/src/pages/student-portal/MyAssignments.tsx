@@ -38,7 +38,7 @@ export const MyAssignments: React.FC = () => {
   const [batchSubjects, setBatchSubjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSubject, setSelectedSubject] = useState<string>('ALL');
-  const [deadlineSort, setDeadlineSort] = useState<'OLDEST' | 'NEWEST'>('OLDEST');
+  const [deadlineSort, setDeadlineSort] = useState<'OLDEST' | 'NEWEST'>('NEWEST');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'OVERDUE' | 'SUBMITTED' | 'GRADED'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -715,8 +715,8 @@ export const MyAssignments: React.FC = () => {
               onChange={(e) => setDeadlineSort(e.target.value as 'OLDEST' | 'NEWEST')}
               className="w-full px-3 py-2 text-xs font-semibold bg-slate-50 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-slate-100"
             >
-              <option value="OLDEST">Oldest First</option>
               <option value="NEWEST">Newest First</option>
+              <option value="OLDEST">Oldest First</option>
             </select>
           </div>
 
