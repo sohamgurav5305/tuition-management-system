@@ -721,14 +721,6 @@ export const AssignmentList: React.FC = () => {
       ),
     },
     {
-      header: 'Max Score',
-      cell: (a) => (
-        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 tabular-nums">
-          {a.totalMarks} pts
-        </span>
-      ),
-    },
-    {
       header: 'Submissions',
       cell: (a) => {
         const subCount = (a as any)._count?.submissions ?? (a as any).submissions?.length ?? 0;
@@ -746,42 +738,6 @@ export const AssignmentList: React.FC = () => {
         );
       },
     },
-    ...(isTeacher
-      ? [
-          {
-            header: 'Actions',
-            className: 'text-right',
-            cell: (a: Assignment) => (
-              <div className="flex items-center justify-end gap-1">
-                <button
-                  onClick={() => setSearchParams({ id: a.id })}
-                  title="View Details & Submissions"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => {
-                    setEditingAssignment(a);
-                    setIsFormOpen(true);
-                  }}
-                  title="Edit Assignment"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-slate-800 transition-colors"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setDeletingId(a.id)}
-                  title="Delete Assignment"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ),
-          },
-        ]
-      : []),
   ];
 
   return (
@@ -789,12 +745,6 @@ export const AssignmentList: React.FC = () => {
       {/* Top Banner */}
       <PageHeader
         title="Assignments"
-        subtitle={
-          isTeacher
-            ? 'Publish daily worksheets, manage batch problem sets, and review student solution submissions.'
-            : 'Track, review, and evaluate course assignments across all academic batches.'
-        }
-        badge={`${assignments.length} Assignments`}
         actions={
           isTeacher && (
             <Button
@@ -841,10 +791,6 @@ export const AssignmentList: React.FC = () => {
               </button>
             )}
           </div>
-
-          <span className="text-slate-400 dark:text-slate-500 font-mono">
-            {filteredAssignments.length} of {assignments.length} sets
-          </span>
         </div>
       )}
 
