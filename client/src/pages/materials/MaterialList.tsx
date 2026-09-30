@@ -155,29 +155,45 @@ export const MaterialList: React.FC = () => {
 
       {/* Filter Bar */}
       <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
-        <div className="flex flex-wrap items-center gap-2">
-          <Filter className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category:</span>
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none"
-          >
-            <option value="">All Categories</option>
-            <option value="DPP">Daily Practice Problems (DPP)</option>
-            <option value="CLASS_NOTES">Class Notes</option>
-            <option value="FORMULA_SHEET">Formula Sheets</option>
-            <option value="QUESTION_BANK">Question Banks</option>
-            <option value="TEST_SOLUTION">Test Solution Keys</option>
-          </select>
+        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
+          {/* Search Input on the Left */}
+          <div className="relative w-full sm:w-72">
+            <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Search by topic, subject..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
 
+          {/* Category Filter */}
+          <div className="flex items-center gap-1.5">
+            <Filter className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category:</span>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+            >
+              <option value="">All Categories</option>
+              <option value="DPP">Daily Practice Problems (DPP)</option>
+              <option value="CLASS_NOTES">Class Notes</option>
+              <option value="FORMULA_SHEET">Formula Sheets</option>
+              <option value="QUESTION_BANK">Question Banks</option>
+              <option value="TEST_SOLUTION">Test Solution Keys</option>
+            </select>
+          </div>
+
+          {/* Batch Filter */}
           {canUpload && (
-            <>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider ml-2">Batch:</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Batch:</span>
               <select
                 value={batchFilter}
                 onChange={(e) => setBatchFilter(e.target.value)}
-                className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none max-w-[200px]"
+                className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none max-w-[200px] cursor-pointer"
               >
                 <option value="">All Batches</option>
                 {batches.map((b) => (
@@ -186,19 +202,8 @@ export const MaterialList: React.FC = () => {
                   </option>
                 ))}
               </select>
-            </>
+            </div>
           )}
-        </div>
-
-        <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search by topic, subject..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
         </div>
       </div>
 
