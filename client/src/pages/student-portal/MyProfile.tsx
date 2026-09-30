@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, BookOpen, Layers, Shield, Lock, KeyRound } from 'lucide-react';
+import { Phone, Mail, MapPin, Lock } from 'lucide-react';
 import { studentApi } from '../../services/api';
 import { Student } from '../../types';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
@@ -7,8 +7,6 @@ import { PageHeader } from '../../components/common/PageHeader';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { ChangePasswordModal } from '../../components/common/ChangePasswordModal';
-import { useToast } from '../../context/ToastContext';
-import { useAuth } from '../../context/AuthContext';
 import { formatDate } from '../../utils/date';
 import { getMediaUrl } from '../../utils/media';
 
@@ -50,8 +48,17 @@ export const MyProfile: React.FC = () => {
     <div className="space-y-6 max-w-4xl mx-auto">
       <PageHeader
         title="My Profile"
-        subtitle="Manage your academic enrolment credentials, contact data, guardian records, and security."
-        badge={student.studentId}
+        actions={
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            leftIcon={Lock}
+            onClick={() => setIsPasswordModalOpen(true)}
+          >
+            Change Password
+          </Button>
+        }
       />
 
       {/* Profile Card */}
@@ -75,9 +82,6 @@ export const MyProfile: React.FC = () => {
               <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100">
                 {student.firstName} {student.lastName}
               </h2>
-              <span className="font-mono text-xs font-bold px-3 py-1 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 rounded-full border border-blue-200 dark:border-blue-800">
-                {student.studentId}
-              </span>
               <Badge variant="success" size="sm" dot>Active Learner</Badge>
             </div>
             <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mt-1">
@@ -133,34 +137,6 @@ export const MyProfile: React.FC = () => {
                 <span className="font-bold text-rose-600 dark:text-rose-400">{student.emergencyContact}</span>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Student Account Security & Password */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div className="bg-blue-50/50 dark:bg-blue-950/30 p-5 rounded-2xl border border-blue-200/70 dark:border-blue-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 rounded-xl flex-shrink-0">
-                <KeyRound className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  Student Account & Password Security
-                </h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Change your student login password to secure your academic profile and submissions.
-                </p>
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              leftIcon={Lock}
-              onClick={() => setIsPasswordModalOpen(true)}
-            >
-              Change Password
-            </Button>
           </div>
         </div>
       </div>
