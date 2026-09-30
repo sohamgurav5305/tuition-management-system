@@ -1,23 +1,74 @@
 import React, { useEffect, useState } from 'react';
-import { Filter, Calendar, CheckCircle2, XCircle, Clock } from 'lucide-react';
-import { attendanceApi } from '../../services/api';
+import { Calendar } from 'lucide-react';
+import { attendanceApi, studentApi } from '../../services/api';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { PageHeader } from '../../components/common/PageHeader';
-import { Badge } from '../../components/common/Badge';
-import { formatDate } from '../../utils/date';
+
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
 export const MyAttendance: React.FC = () => {
   const [data, setData] = useState<any>(null);
+  const [batchSubjects, setBatchSubjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>('ALL');
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+
+  const fetchBatchSubjects = async () => {
+    try {
+      const res = await studentApi.getMyProfile();
+      const profile = res.data?.data;
+      const subs: string[] = [];
+      if (profile?.batch?.subjectInstructors && Array.isArray(profile.batch.subjectInstructors)) {
+        profile.batch.subjectInstructors.forEach((inst: any) => {
+          if (inst.subject) subs.push(inst.subject);
+        });
+      }
+      if (profile?.batch?.faculty?.subjectTaught) {
+        subs.push(profile.batch.faculty.subjectTaught);
+      }
+      if (profile?.course?.subjects) {
+        if (Array.isArray(profile.course.subjects)) {
+          subs.push(...profile.course.subjects);
+        } else if (typeof profile.course.subjects === 'string') {
+          try {
+            const parsed = JSON.parse(profile.course.subjects);
+            if (Array.isArray(parsed)) subs.push(...parsed);
+          } catch {
+            subs.push(profile.course.subjects);
+          }
+        }
+      }
+      setBatchSubjects(Array.from(new Set(subs.filter(Boolean))));
+    } catch {
+      // ignore
+    }
+  };
 
   const fetchAttendance = async (showLoading = false) => {
     try {
       if (showLoading) setLoading(true);
-      const res = await attendanceApi.getMyAttendance(
-        selectedSubjectFilter !== 'ALL' ? selectedSubjectFilter : undefined
-      );
+      const res = await attendanceApi.getMyAttendance();
       setData(res.data.data);
+      if (res.data?.data?.records?.length > 0) {
+        const latestDate = new Date(res.data.data.records[0].date);
+        if (!isNaN(latestDate.getTime())) {
+          setSelectedYear(latestDate.getFullYear());
+          setSelectedMonth(latestDate.getMonth());
+        }
+      }
     } catch (err) {
       console.error('Failed to load my attendance', err);
     } finally {
@@ -27,27 +78,43 @@ export const MyAttendance: React.FC = () => {
 
   useEffect(() => {
     fetchAttendance(true);
+    fetchBatchSubjects();
     const interval = setInterval(() => {
       fetchAttendance(false);
-    }, 5000);
+    }, 8000);
     return () => clearInterval(interval);
-  }, [selectedSubjectFilter]);
+  }, []);
 
   if (loading && !data) return <LoadingSkeleton count={5} />;
 
   const stats = data?.stats || { total: 0, present: 0, absent: 0, percentage: 0, subjects: {} };
   const records = data?.records || [];
-  const subjectStats = stats.subjects || {};
-  const subjectList = Object.keys(subjectStats);
+
+  const subjects = Array.from(
+    new Set([
+      ...batchSubjects,
+      ...records.map((r: any) => r.subject).filter(Boolean),
+      ...Object.keys(stats.subjects || {}),
+    ])
+  ).filter(Boolean);
+
+  if (subjects.length === 0) {
+    subjects.push('Physics');
+  }
+
+  // Filter records matching the selected month & year
+  const monthRecords = records.filter((r: any) => {
+    const d = new Date(r.date);
+    return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+  });
+
+  const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+  const daysList = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
-      <PageHeader
-        title="My Attendance Record"
-        subtitle="Track your lecture attendance compliance, verified present sessions, and subject-wise logs."
-        badge={`${stats.percentage}% Compliance`}
-      />
+      <PageHeader title="My Attendance Record" />
 
       {/* Overall KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -77,42 +144,58 @@ export const MyAttendance: React.FC = () => {
         </div>
       </div>
 
-      {/* Attendance History Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4 overflow-hidden">
+      {/* 12 Months Selection Buttons Bar */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-3 shadow-xs">
+        <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-12 gap-1.5">
+          {MONTHS.map((monthName, idx) => {
+            const isSelected = selectedMonth === idx;
+            return (
+              <button
+                key={monthName}
+                type="button"
+                onClick={() => setSelectedMonth(idx)}
+                className={`py-2 px-1 text-xs font-bold rounded-2xl transition-all text-center ${
+                  isSelected
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 scale-[1.02]'
+                    : 'bg-slate-50 dark:bg-slate-800/70 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span className="hidden xl:inline">{monthName}</span>
+                <span className="xl:hidden">{monthName.slice(0, 3)}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Month Attendance Matrix Table */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm overflow-hidden space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            Session History Log
+            {MONTHS[selectedMonth]} {selectedYear} Attendance
           </h3>
 
-          {/* Subject Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="text-slate-400 dark:text-slate-500 font-semibold flex items-center gap-1 mr-1">
-              <Filter className="w-3 h-3" /> Filter:
+          {/* Quick Legend */}
+          <div className="flex items-center gap-3 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-5 h-5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center justify-center">
+                P
+              </span>
+              <span className="text-slate-600 dark:text-slate-400">Present</span>
             </span>
-            <button
-              onClick={() => setSelectedSubjectFilter('ALL')}
-              className={`px-3 py-1 rounded-xl font-bold transition-all ${
-                selectedSubjectFilter === 'ALL'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-            >
-              All Subjects
-            </button>
-            {subjectList.map((s) => (
-              <button
-                key={s}
-                onClick={() => setSelectedSubjectFilter(s)}
-                className={`px-3 py-1 rounded-xl font-bold transition-all ${
-                  selectedSubjectFilter === s
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                {s}
-              </button>
-            ))}
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-5 h-5 rounded-md bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 font-bold text-[10px] flex items-center justify-center">
+                A
+              </span>
+              <span className="text-slate-600 dark:text-slate-400">Absent</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-5 h-5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 font-bold text-[10px] flex items-center justify-center">
+                NA
+              </span>
+              <span className="text-slate-400">Not Applicable</span>
+            </span>
           </div>
         </div>
 
@@ -120,49 +203,77 @@ export const MyAttendance: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 uppercase text-[11px] font-semibold border-b border-slate-200/80 dark:border-slate-800">
               <tr>
-                <th className="px-4 py-3">Session Date</th>
-                <th className="px-4 py-3">Subject</th>
-                <th className="px-4 py-3">Faculty Instructor</th>
-                <th className="px-4 py-3">Batch</th>
-                <th className="px-4 py-3 text-right">Status</th>
+                <th className="px-4 py-3">Date</th>
+                {subjects.map((sub) => (
+                  <th key={sub} className="px-4 py-3 text-center">
+                    {sub}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {records.length > 0 ? (
-                records.map((r: any) => (
-                  <tr key={r.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-4 py-3.5 font-semibold text-slate-900 dark:text-slate-100 font-mono">
-                      {formatDate(r.date)}
+              {daysList.map((day) => {
+                const dateStr = `${String(day).padStart(2, '0')}/${String(selectedMonth + 1).padStart(2, '0')}/${selectedYear}`;
+                const dateObj = new Date(selectedYear, selectedMonth, day);
+                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+                const isSunday = dateObj.getDay() === 0;
+
+                return (
+                  <tr
+                    key={day}
+                    className={`hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors ${
+                      isSunday ? 'bg-slate-50/30 dark:bg-slate-800/20' : ''
+                    }`}
+                  >
+                    <td className="px-4 py-3 font-mono font-bold text-slate-800 dark:text-slate-200">
+                      <div className="flex items-center gap-2">
+                        <span>{dateStr}</span>
+                        <span className="text-[10px] font-medium text-slate-400">({dayName})</span>
+                      </div>
                     </td>
-                    <td className="px-4 py-3.5">
-                      <span className="font-bold text-blue-600 dark:text-blue-400">
-                        {r.subject || 'General'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300">
-                      {r.faculty ? `${r.faculty.firstName} ${r.faculty.lastName}` : '-'}
-                    </td>
-                    <td className="px-4 py-3.5 text-slate-500 dark:text-slate-400">
-                      {r.batch?.name || 'Class Batch'}
-                    </td>
-                    <td className="px-4 py-3.5 text-right">
-                      <Badge
-                        variant={r.status === 'PRESENT' ? 'success' : 'danger'}
-                        size="sm"
-                        dot
-                      >
-                        {r.status}
-                      </Badge>
-                    </td>
+
+                    {subjects.map((sub) => {
+                      const match = monthRecords.find((r: any) => {
+                        const recDate = new Date(r.date);
+                        return (
+                          recDate.getDate() === day &&
+                          recDate.getMonth() === selectedMonth &&
+                          recDate.getFullYear() === selectedYear &&
+                          r.subject?.toLowerCase() === sub.toLowerCase()
+                        );
+                      });
+
+                      let statusBadge = (
+                        <span className="inline-block px-2.5 py-0.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200/60 dark:border-slate-700">
+                          NA
+                        </span>
+                      );
+
+                      if (match) {
+                        if (match.status === 'PRESENT') {
+                          statusBadge = (
+                            <span className="inline-block px-3 py-0.5 rounded-lg text-xs font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shadow-2xs">
+                              P
+                            </span>
+                          );
+                        } else if (match.status === 'ABSENT') {
+                          statusBadge = (
+                            <span className="inline-block px-3 py-0.5 rounded-lg text-xs font-extrabold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 shadow-2xs">
+                              A
+                            </span>
+                          );
+                        }
+                      }
+
+                      return (
+                        <td key={sub} className="px-4 py-3 text-center">
+                          {statusBadge}
+                        </td>
+                      );
+                    })}
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
-                    No attendance records found for this subject filter.
-                  </td>
-                </tr>
-              )}
+                );
+              })}
             </tbody>
           </table>
         </div>
