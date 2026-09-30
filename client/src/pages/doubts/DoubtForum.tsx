@@ -477,7 +477,7 @@ export const DoubtForum: React.FC = () => {
                 {selectedDoubt.subject}
               </span>
               <Badge variant={isResolved ? 'success' : 'warning'} size="sm" dot>
-                {isResolved ? 'Resolved / Answered' : 'Pending Mentor Answer'}
+                {isResolved ? 'Resolved' : 'Unresolved'}
               </Badge>
             </div>
 
@@ -985,7 +985,7 @@ export const DoubtForum: React.FC = () => {
                       {/* Status */}
                       <td className="px-4 py-3.5 whitespace-nowrap text-right">
                         <Badge variant={isResolved ? 'success' : 'warning'} size="sm" dot>
-                          {isResolved ? 'Resolved' : 'Pending Answer'}
+                          {isResolved ? 'Resolved' : 'Unresolved'}
                         </Badge>
                       </td>
                     </tr>
