@@ -274,30 +274,35 @@ export const Sidebar: React.FC<{
         ))}
       </div>
 
-      {/* Bottom Workspace Selector Widget */}
+      {/* Bottom Logout Button */}
       <div className="p-3 border-t border-[#1E293B] flex-shrink-0 bg-[#0B1528]">
         {!isCollapsed ? (
-          <div className="p-2.5 rounded-xl bg-[#111C33] border border-slate-700/60 flex items-center justify-between gap-2 cursor-pointer hover:border-slate-600 transition-colors">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center flex-shrink-0">
-                <Shield className="w-3.5 h-3.5" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10px] text-slate-400 font-medium block leading-none">
-                  Academic Session
-                </span>
-                <p className="text-xs font-bold text-white truncate mt-1 leading-none">
-                  2025 &ndash; 2026 Batch
-                </p>
-              </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (onCloseMobile) onCloseMobile();
+              logout();
+            }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 border border-transparent hover:border-rose-900/50 transition-all cursor-pointer group"
+          >
+            <div className="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 group-hover:bg-rose-500/20 flex items-center justify-center flex-shrink-0 transition-colors">
+              <LogOut className="w-3.5 h-3.5" />
             </div>
-            <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
-          </div>
+            <span className="truncate">Log Out</span>
+          </button>
         ) : (
           <div className="flex justify-center">
-            <div className="w-8 h-8 rounded-lg bg-[#111C33] border border-slate-700 text-blue-400 flex items-center justify-center cursor-pointer">
-              <Shield className="w-4 h-4" />
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (onCloseMobile) onCloseMobile();
+                logout();
+              }}
+              title="Log Out"
+              className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 flex items-center justify-center cursor-pointer transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         )}
       </div>
