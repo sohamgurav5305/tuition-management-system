@@ -131,14 +131,20 @@ export const StudentProfile: React.FC = () => {
         try {
           const parsed = JSON.parse(student.course.subjects);
           if (Array.isArray(parsed)) potentialSubjects.push(...parsed);
+          else potentialSubjects.push(student.course.subjects);
         } catch {
-          potentialSubjects.push(student.course.subjects);
+          const split = student.course.subjects.split(',').map((s: string) => s.trim()).filter(Boolean);
+          if (split.length > 0) {
+            potentialSubjects.push(...split);
+          } else {
+            potentialSubjects.push(student.course.subjects);
+          }
         }
       }
     }
     if (student?.batch?.subjectInstructors && Array.isArray(student.batch.subjectInstructors)) {
       student.batch.subjectInstructors.forEach((s: any) => {
-        if (s.subject) potentialSubjects.push(s.subject);
+        if (s?.subject) potentialSubjects.push(s.subject);
       });
     }
 
@@ -193,7 +199,7 @@ export const StudentProfile: React.FC = () => {
               Assign Fee / Fine
             </Button>
           )}
-          {!isTeacher && student.pendingFee > 0 && (
+          {!isTeacher && (student.pendingFee || 0) > 0 && (
             <Button
               variant="primary"
               size="sm"
@@ -210,7 +216,7 @@ export const StudentProfile: React.FC = () => {
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
           <div className="w-20 h-20 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-2xl font-black overflow-hidden flex-shrink-0 shadow-sm relative">
-            <span className="select-none">{`${student.firstName[0]}${student.lastName[0]}`}</span>
+            <span className="select-none">{`${student.firstName?.[0] || 'S'}${student.lastName?.[0] || ''}`}</span>
             {student.avatarUrl && (
               <img
                 src={getMediaUrl(student.avatarUrl)}
@@ -270,10 +276,10 @@ export const StudentProfile: React.FC = () => {
                 <span className="text-[11px] text-slate-400 dark:text-slate-500 block">Pending Fee Balance</span>
                 <span
                   className={`text-lg font-black tabular-nums ${
-                    student.pendingFee > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
+                    (student.pendingFee || 0) > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
                   }`}
                 >
-                  {formatCurrency(student.pendingFee)}
+                  {formatCurrency(student.pendingFee || 0)}
                 </span>
               </div>
             )}
@@ -540,28 +546,34 @@ export const StudentProfile: React.FC = () => {
       )}
 
       {/* Edit Modal */}
-      <StudentFormModal
-        isOpen={isEditOpen}
-        onClose={() => setIsEditOpen(false)}
-        onSuccess={fetchStudent}
-        initialStudent={student}
-      />
+      {canEdit && (
+        <StudentFormModal
+          isOpen={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+          onSuccess={fetchStudent}
+          initialStudent={student}
+        />
+      )}
 
       {/* Payment Modal */}
-      <CollectPaymentModal
-        isOpen={isPayOpen}
-        onClose={() => setIsPayOpen(false)}
-        onSuccess={fetchStudent}
-        student={student}
-      />
+      {!isTeacher && (
+        <CollectPaymentModal
+          isOpen={isPayOpen}
+          onClose={() => setIsPayOpen(false)}
+          onSuccess={fetchStudent}
+          student={student}
+        />
+      )}
 
       {/* Assign Fee Modal */}
-      <AssignFeeModal
-        isOpen={isAssignOpen}
-        onClose={() => setIsAssignOpen(false)}
-        onSuccess={fetchStudent}
-        initialStudent={student}
-      />
+      {!isTeacher && (
+        <AssignFeeModal
+          isOpen={isAssignOpen}
+          onClose={() => setIsAssignOpen(false)}
+          onSuccess={fetchStudent}
+          initialStudent={student}
+        />
+      )}
 
       {/* Official Printable Receipt Modal */}
       {selectedReceipt && (
