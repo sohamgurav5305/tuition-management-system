@@ -209,15 +209,10 @@ export const FacultyCreatePage: React.FC = () => {
       {/* Main Page Title Header */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
+          <div>
             <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
               {isEditMode ? `Edit Faculty Record` : `Add New Faculty Member`}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              {isEditMode
-                ? `Update academic specialization, contact credentials, and payroll terms for ${existingFaculty?.facultyId || 'Faculty'}`
-                : `Register a new teacher or academic instructor with subject specialization and payroll details`}
-            </p>
           </div>
 
           {existingFaculty?.facultyId && (
