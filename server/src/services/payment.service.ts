@@ -11,13 +11,19 @@ export class PaymentService {
   }
 
   async getPaymentById(id: string) {
-    const payment = await paymentRepository.findById(id);
+    let payment = await paymentRepository.findById(id);
+    if (!payment) {
+      payment = await paymentRepository.findByReceiptId(id);
+    }
     if (!payment) throw new Error('Payment receipt not found');
     return payment;
   }
 
   async getPaymentByReceiptId(receiptId: string) {
-    const payment = await paymentRepository.findByReceiptId(receiptId);
+    let payment = await paymentRepository.findByReceiptId(receiptId);
+    if (!payment) {
+      payment = await paymentRepository.findById(receiptId);
+    }
     if (!payment) throw new Error('Payment receipt not found');
     return payment;
   }
