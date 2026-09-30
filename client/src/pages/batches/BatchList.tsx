@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PlusCircle, Edit, Trash2, Users, Clock, MapPin, Calendar, Layers, Filter } from 'lucide-react';
 import { batchApi, courseApi } from '../../services/api';
 import { Batch, Course } from '../../types';
@@ -9,10 +10,10 @@ import { Badge } from '../../components/common/Badge';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
-import { BatchFormModal } from './BatchFormModal';
 import { BatchDetailModal } from './BatchDetailModal';
 
 export const BatchList: React.FC = () => {
+  const navigate = useNavigate();
   const { success, error } = useToast();
   const { user } = useAuth();
 
@@ -24,8 +25,6 @@ export const BatchList: React.FC = () => {
   const [selectedCourse, setSelectedCourse] = useState<string>('');
 
   // Modals
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
   const [viewingBatch, setViewingBatch] = useState<Batch | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -192,8 +191,7 @@ export const BatchList: React.FC = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setEditingBatch(b);
-                  setIsFormOpen(true);
+                  navigate(`/batches/edit/${b.id}`);
                 }}
                 title="Edit Batch"
                 className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
@@ -228,10 +226,7 @@ export const BatchList: React.FC = () => {
               variant="primary"
               size="sm"
               leftIcon={PlusCircle}
-              onClick={() => {
-                setEditingBatch(null);
-                setIsFormOpen(true);
-              }}
+              onClick={() => navigate('/batches/new')}
             >
               Create Batch
             </Button>
@@ -275,22 +270,11 @@ export const BatchList: React.FC = () => {
           canEdit
             ? {
                 label: '+ Create Batch',
-                onClick: () => {
-                  setEditingBatch(null);
-                  setIsFormOpen(true);
-                },
+                onClick: () => navigate('/batches/new'),
               }
             : undefined
         }
         isLoading={loading}
-      />
-
-      {/* Form Modal */}
-      <BatchFormModal
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onSuccess={fetchBatches}
-        initialBatch={editingBatch}
       />
 
       {/* Detail Modal */}

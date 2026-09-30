@@ -26,6 +26,7 @@ const FacultyList = lazy(() => import('./pages/faculty/FacultyList').then((m) =>
 const FacultyCreatePage = lazy(() => import('./pages/faculty/FacultyCreatePage').then((m) => ({ default: m.FacultyCreatePage })));
 const CourseList = lazy(() => import('./pages/courses/CourseList').then((m) => ({ default: m.CourseList })));
 const BatchList = lazy(() => import('./pages/batches/BatchList').then((m) => ({ default: m.BatchList })));
+const BatchCreatePage = lazy(() => import('./pages/batches/BatchCreatePage').then((m) => ({ default: m.BatchCreatePage })));
 const AttendanceSheet = lazy(() => import('./pages/attendance/AttendanceSheet').then((m) => ({ default: m.AttendanceSheet })));
 const AssignmentList = lazy(() => import('./pages/assignments/AssignmentList').then((m) => ({ default: m.AssignmentList })));
 const FeeDashboard = lazy(() => import('./pages/fees/FeeDashboard').then((m) => ({ default: m.FeeDashboard })));
@@ -140,6 +141,22 @@ export const App: React.FC = () => {
                     element={
                       <RoleGuard allowedRoles={['ADMINISTRATOR']}>
                         <BatchList />
+                      </RoleGuard>
+                    }
+                  />
+                  <Route
+                    path="/batches/new"
+                    element={
+                      <RoleGuard allowedRoles={['ADMINISTRATOR']}>
+                        <BatchCreatePage />
+                      </RoleGuard>
+                    }
+                  />
+                  <Route
+                    path="/batches/edit/:id"
+                    element={
+                      <RoleGuard allowedRoles={['ADMINISTRATOR']}>
+                        <BatchCreatePage />
                       </RoleGuard>
                     }
                   />
