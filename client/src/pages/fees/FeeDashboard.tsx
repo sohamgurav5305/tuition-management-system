@@ -200,13 +200,6 @@ export const FeeDashboard: React.FC = () => {
               Collect
             </Button>
           )}
-          <Button
-            variant="outline"
-            size="xs"
-            onClick={() => navigate(`/students/${s.id}`)}
-          >
-            Ledger
-          </Button>
         </div>
       ),
     },
@@ -347,30 +340,41 @@ export const FeeDashboard: React.FC = () => {
           searchPlaceholder="Search student by name, roll, batch, or student ID..."
           searchableFields={['firstName', 'lastName', 'studentId', 'rollNumber', 'phone', 'batch', 'course']}
           filters={
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedBatch}
-                onChange={(e) => setSelectedBatch(e.target.value)}
-                className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-700 dark:text-slate-300 font-medium"
-              >
-                <option value="">All Batches</option>
-                {batches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Batch:
+                </span>
+                <select
+                  value={selectedBatch}
+                  onChange={(e) => setSelectedBatch(e.target.value)}
+                  className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                >
+                  <option value="">All Batches</option>
+                  {batches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-700 dark:text-slate-300 font-medium"
-              >
-                <option value="">All Fee Statuses</option>
-                <option value="PAID">Paid in Full</option>
-                <option value="PARTIAL">Partial Dues</option>
-                <option value="PENDING">Pending Dues</option>
-              </select>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Fee Status:
+                </span>
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                >
+                  <option value="">All Fee Statuses</option>
+                  <option value="PAID">Paid in Full</option>
+                  <option value="PARTIAL">Partial Dues</option>
+                  <option value="PENDING">Pending Dues</option>
+                </select>
+              </div>
             </div>
           }
           emptyTitle="No Student Fee Records"
