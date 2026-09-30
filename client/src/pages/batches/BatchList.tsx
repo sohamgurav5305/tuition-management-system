@@ -1,20 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle, Edit, Trash2, Users, Clock, MapPin, Calendar, Layers, Filter } from 'lucide-react';
+import { PlusCircle, Users, Filter } from 'lucide-react';
 import { batchApi, courseApi } from '../../services/api';
 import { Batch, Course } from '../../types';
 import { DataTable, Column } from '../../components/common/DataTable';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/common/Button';
-import { Badge } from '../../components/common/Badge';
-import { ConfirmDialog } from '../../components/common/ConfirmDialog';
-import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
-import { BatchDetailModal } from './BatchDetailModal';
 
 export const BatchList: React.FC = () => {
   const navigate = useNavigate();
-  const { success, error } = useToast();
   const { user } = useAuth();
 
   const [batches, setBatches] = useState<Batch[]>([]);
@@ -24,13 +19,7 @@ export const BatchList: React.FC = () => {
   // Filters
   const [selectedCourse, setSelectedCourse] = useState<string>('');
 
-  // Modals
-  const [viewingBatch, setViewingBatch] = useState<Batch | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
   const canEdit = user?.role === 'ADMINISTRATOR';
-  const canDelete = user?.role === 'ADMINISTRATOR';
 
   const fetchBatches = async (showLoading = false) => {
     try {
@@ -64,37 +53,13 @@ export const BatchList: React.FC = () => {
     return () => clearInterval(interval);
   }, [selectedCourse]);
 
-  const handleDelete = async () => {
-    if (!deletingId) return;
-    setIsDeleting(true);
-    try {
-      await batchApi.delete(deletingId);
-      success('Batch Deleted', 'Batch class group removed from system');
-      fetchBatches();
-      setDeletingId(null);
-    } catch (err: any) {
-      error('Delete Failed', err.response?.data?.message || 'Cannot delete batch with enrolled students');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleOpenDetail = async (b: Batch) => {
-    try {
-      const res = await batchApi.getById(b.id);
-      setViewingBatch(res.data.data);
-    } catch {
-      setViewingBatch(b);
-    }
-  };
-
   const columns: Column<Batch>[] = [
     {
       header: 'Batch',
       cell: (b) => (
         <div>
           <span
-            onClick={() => handleOpenDetail(b)}
+            onClick={() => navigate(`/batches/edit/${b.id}`)}
             className="font-bold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer block text-xs sm:text-sm truncate"
           >
             {b.name}
@@ -170,49 +135,6 @@ export const BatchList: React.FC = () => {
         );
       },
     },
-    {
-      header: 'Details',
-      className: 'text-right',
-      cell: (b) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleOpenDetail(b);
-            }}
-            title="View Batch Details & Enrolled Students"
-            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800 transition-colors cursor-pointer"
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>Details</span>
-          </button>
-          {canEdit && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/batches/edit/${b.id}`);
-                }}
-                title="Edit Batch"
-                className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeletingId(b.id);
-                }}
-                title="Delete Batch"
-                className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </>
-          )}
-        </div>
-      ),
-    },
   ];
 
   return (
@@ -239,7 +161,7 @@ export const BatchList: React.FC = () => {
         data={batches}
         columns={columns}
         keyExtractor={(b) => b.id}
-        onRowClick={(b) => handleOpenDetail(b)}
+        onRowClick={(b) => navigate(`/batches/edit/${b.id}`)}
         searchPlaceholder="Search Batches"
         searchableFields={['name', 'batchId', 'course', 'faculty', 'subjectTeachers']}
         filters={
@@ -275,25 +197,6 @@ export const BatchList: React.FC = () => {
             : undefined
         }
         isLoading={loading}
-      />
-
-      {/* Detail Modal */}
-      {viewingBatch && (
-        <BatchDetailModal
-          isOpen={!!viewingBatch}
-          onClose={() => setViewingBatch(null)}
-          batch={viewingBatch}
-        />
-      )}
-
-      {/* Confirm Deletion */}
-      <ConfirmDialog
-        isOpen={!!deletingId}
-        onClose={() => setDeletingId(null)}
-        onConfirm={handleDelete}
-        title="Delete Batch"
-        message="Are you sure you want to delete this batch? All assigned student enrollments must be moved prior to deletion."
-        isLoading={isDeleting}
       />
     </div>
   );

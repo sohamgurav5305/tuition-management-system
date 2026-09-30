@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   Trash2,
   Check,
+  Users,
 } from 'lucide-react';
 import { batchApi, courseApi, facultyApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
@@ -550,6 +551,57 @@ export const BatchCreatePage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Section 4: Enrolled Students (When viewing/editing existing batch) */}
+        {isEditMode && (
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <Users className="w-4 h-4 text-blue-500" />
+                Enrolled Students ({existingBatch?.students?.length || 0})
+              </h2>
+            </div>
+
+            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden max-h-72 overflow-y-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 uppercase border-b border-slate-200 dark:border-slate-800 sticky top-0">
+                  <tr>
+                    <th className="px-4 py-2.5 font-bold">Student ID</th>
+                    <th className="px-4 py-2.5 font-bold">Name</th>
+                    <th className="px-4 py-2.5 font-bold">Contact Phone</th>
+                    <th className="px-4 py-2.5 font-bold">Parent / Guardian</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {existingBatch?.students && existingBatch.students.length > 0 ? (
+                    existingBatch.students.map((s) => (
+                      <tr
+                        key={s.id}
+                        onClick={() => navigate(`/students/${s.id}`)}
+                        className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+                      >
+                        <td className="px-4 py-2.5 font-mono font-bold text-blue-600 dark:text-blue-400">{s.studentId}</td>
+                        <td className="px-4 py-2.5 font-semibold text-slate-900 dark:text-slate-100">
+                          {s.firstName} {s.lastName}
+                        </td>
+                        <td className="px-4 py-2.5 text-slate-600 dark:text-slate-300">{s.phone || '—'}</td>
+                        <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">
+                          {s.guardianName ? `${s.guardianName} ${s.guardianPhone ? `(${s.guardianPhone})` : ''}` : '—'}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-6 text-center text-slate-400 dark:text-slate-500">
+                        No students enrolled in this batch yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Action Controls */}
         <div className="flex items-center justify-between gap-4 pt-2">

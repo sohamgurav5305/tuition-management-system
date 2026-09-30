@@ -153,9 +153,17 @@ export const App: React.FC = () => {
                     }
                   />
                   <Route
+                    path="/batches/:id"
+                    element={
+                      <RoleGuard allowedRoles={['ADMINISTRATOR', 'TEACHER']}>
+                        <BatchCreatePage />
+                      </RoleGuard>
+                    }
+                  />
+                  <Route
                     path="/batches/edit/:id"
                     element={
-                      <RoleGuard allowedRoles={['ADMINISTRATOR']}>
+                      <RoleGuard allowedRoles={['ADMINISTRATOR', 'TEACHER']}>
                         <BatchCreatePage />
                       </RoleGuard>
                     }
