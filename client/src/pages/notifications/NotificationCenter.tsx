@@ -307,28 +307,16 @@ export const NotificationCenter: React.FC = () => {
       <PageHeader
         title="Announcements & Alerts"
         actions={
-          <div className="flex items-center gap-2">
-            {unreadCount > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                leftIcon={CheckCheck}
-                onClick={handleMarkAllRead}
-              >
-                Mark All Read
-              </Button>
-            )}
-            {canBroadcast && (
-              <Button
-                variant="primary"
-                size="sm"
-                leftIcon={PlusCircle}
-                onClick={() => setIsBroadcastOpen(true)}
-              >
-                New Announcement
-              </Button>
-            )}
-          </div>
+          canBroadcast ? (
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={PlusCircle}
+              onClick={() => setIsBroadcastOpen(true)}
+            >
+              New Announcement
+            </Button>
+          ) : undefined
         }
       />
 
