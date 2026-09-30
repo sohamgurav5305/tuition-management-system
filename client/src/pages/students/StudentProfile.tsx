@@ -89,6 +89,71 @@ export const StudentProfile: React.FC = () => {
     percentage: student.attendancePercentage ?? 0,
   };
 
+  const subjectStatsList = React.useMemo(() => {
+    const map = new Map<string, { total: number; present: number; absent: number; percentage: number }>();
+
+    // First from attendanceStats.subjects if available from backend
+    if (attendanceStats && (attendanceStats as any).subjects) {
+      Object.entries((attendanceStats as any).subjects).forEach(([subj, st]: [string, any]) => {
+        if (subj) {
+          map.set(subj, {
+            total: st.total || 0,
+            present: st.present || 0,
+            absent: st.absent || 0,
+            percentage: st.percentage || 0,
+          });
+        }
+      });
+    }
+
+    // Also scan student.attendance records if present
+    if (student?.attendance && Array.isArray(student.attendance)) {
+      student.attendance.forEach((att: any) => {
+        const subj = att.subject || 'General';
+        if (!map.has(subj)) {
+          map.set(subj, { total: 0, present: 0, absent: 0, percentage: 0 });
+        }
+        if (!attendanceStats || !(attendanceStats as any).subjects || !(attendanceStats as any).subjects[subj]) {
+          const current = map.get(subj)!;
+          current.total += 1;
+          if (att.status === 'PRESENT') current.present += 1;
+          else if (att.status === 'ABSENT') current.absent += 1;
+          current.percentage = current.total > 0 ? Number(((current.present / current.total) * 100).toFixed(1)) : 0;
+        }
+      });
+    }
+
+    // Also include course/batch subjects if not yet in map
+    const potentialSubjects: string[] = [];
+    if (student?.course?.subjects) {
+      if (Array.isArray(student.course.subjects)) potentialSubjects.push(...student.course.subjects);
+      else if (typeof student.course.subjects === 'string') {
+        try {
+          const parsed = JSON.parse(student.course.subjects);
+          if (Array.isArray(parsed)) potentialSubjects.push(...parsed);
+        } catch {
+          potentialSubjects.push(student.course.subjects);
+        }
+      }
+    }
+    if (student?.batch?.subjectInstructors && Array.isArray(student.batch.subjectInstructors)) {
+      student.batch.subjectInstructors.forEach((s: any) => {
+        if (s.subject) potentialSubjects.push(s.subject);
+      });
+    }
+
+    potentialSubjects.forEach((s) => {
+      if (s && !map.has(s)) {
+        map.set(s, { total: 0, present: 0, absent: 0, percentage: 0 });
+      }
+    });
+
+    return Array.from(map.entries()).map(([name, stat]) => ({
+      name,
+      ...stat,
+    }));
+  }, [student, attendanceStats]);
+
 
   const tabs = [
     { id: 'overview', label: 'Overview' },
@@ -288,57 +353,76 @@ export const StudentProfile: React.FC = () => {
 
       {/* Tab 2: Attendance */}
       {!isAccountant && activeTab === 'attendance' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl text-center">
-              <span className="text-xs text-slate-500 dark:text-slate-400">Total Lectures</span>
-              <p className="text-lg font-black text-slate-900 dark:text-slate-100 mt-1 tabular-nums">{attendanceStats.total}</p>
-            </div>
-            <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-center">
-              <span className="text-xs text-emerald-600 dark:text-emerald-400">Present</span>
-              <p className="text-lg font-black text-emerald-700 dark:text-emerald-300 mt-1 tabular-nums">{attendanceStats.present}</p>
-            </div>
-            <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 rounded-xl text-center">
-              <span className="text-xs text-rose-600 dark:text-rose-400">Absent</span>
-              <p className="text-lg font-black text-rose-700 dark:text-rose-300 mt-1 tabular-nums">{attendanceStats.absent}</p>
+        <div className="space-y-6">
+          {/* Overall Attendance Summary */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Overall Attendance Summary
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 text-center">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Lectures</span>
+                <p className="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1 tabular-nums">{attendanceStats.total}</p>
+              </div>
+              <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200/60 dark:border-emerald-800/60 text-center">
+                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Present</span>
+                <p className="text-2xl font-black text-emerald-700 dark:text-emerald-300 mt-1 tabular-nums">{attendanceStats.present}</p>
+              </div>
+              <div className="p-4 bg-rose-50/80 dark:bg-rose-950/40 rounded-2xl border border-rose-200/60 dark:border-rose-800/60 text-center">
+                <span className="text-xs font-semibold text-rose-600 dark:text-rose-400">Absent</span>
+                <p className="text-2xl font-black text-rose-700 dark:text-rose-300 mt-1 tabular-nums">{attendanceStats.absent}</p>
+              </div>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-800">
-                <tr>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Topic / Subject</th>
-                  <th className="px-4 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {student.attendance && student.attendance.length > 0 ? (
-                  student.attendance.map((a: Attendance) => (
-                    <tr key={a.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                      <td className="px-4 py-3 font-mono text-slate-600 dark:text-slate-400">{formatDate(a.date)}</td>
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{(a as any).topic || a.subject || 'Class Session'}</td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant={a.status === 'PRESENT' ? 'success' : 'danger'}
-                          size="xs"
-                          dot
-                        >
-                          {a.status}
-                        </Badge>
-                      </td>
+          {/* Subject-wise Attendance */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Subject-wise Attendance
+            </h3>
+
+            {subjectStatsList.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-800">
+                    <tr>
+                      <th className="px-4 py-3">Subject</th>
+                      <th className="px-4 py-3 text-center">Total Lectures</th>
+                      <th className="px-4 py-3 text-center">Present</th>
+                      <th className="px-4 py-3 text-center">Absent</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
-                      No attendance sessions recorded yet for this session.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {subjectStatsList.map((subj) => (
+                      <tr key={subj.name} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-slate-100">
+                          {subj.name}
+                        </td>
+                        <td className="px-4 py-3.5 text-center font-bold text-slate-700 dark:text-slate-300 tabular-nums">
+                          <span className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                            {subj.total}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 text-center font-bold text-emerald-700 dark:text-emerald-300 tabular-nums">
+                          <span className="inline-block px-3 py-1 bg-emerald-50 dark:bg-emerald-950/50 rounded-xl border border-emerald-200/60 dark:border-emerald-800/60">
+                            {subj.present}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 text-center font-bold text-rose-700 dark:text-rose-300 tabular-nums">
+                          <span className="inline-block px-3 py-1 bg-rose-50 dark:bg-rose-950/50 rounded-xl border border-rose-200/60 dark:border-rose-800/60">
+                            {subj.absent}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="py-8 text-center text-xs text-slate-400 dark:text-slate-500">
+                No subject-wise attendance recorded yet.
+              </div>
+            )}
           </div>
         </div>
       )}
