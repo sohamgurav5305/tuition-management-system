@@ -290,9 +290,6 @@ export const FeeRecordsSection: React.FC<FeeRecordsSectionProps> = ({
               <Filter className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               Fee Records & Recovery Register
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Multi-filter student fee ledger with batch segmentation and official printable receipts.
-            </p>
           </div>
 
           <Button
@@ -302,7 +299,7 @@ export const FeeRecordsSection: React.FC<FeeRecordsSectionProps> = ({
             onClick={handlePrint}
             disabled={recordsData.length === 0}
           >
-            Print Fee Statement ({recordsData.length})
+            Print Fee Statement
           </Button>
         </div>
 
@@ -437,14 +434,7 @@ export const FeeRecordsSection: React.FC<FeeRecordsSectionProps> = ({
             <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
               Student Fee Ledger Records
             </h4>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
-              {recordsData.length} Records
-            </span>
           </div>
-
-          <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
-            {feeTypeLabel} • {statusLabel}
-          </span>
         </div>
 
         <div className="overflow-x-auto">
