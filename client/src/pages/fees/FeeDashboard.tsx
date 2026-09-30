@@ -279,8 +279,6 @@ export const FeeDashboard: React.FC = () => {
       {/* Top Banner */}
       <PageHeader
         title="Fee Ledger & Invoices"
-        subtitle=""
-        badge={`${studentsWithDues} Students with Dues`}
         actions={
           <div className="flex items-center gap-2">
             <Button

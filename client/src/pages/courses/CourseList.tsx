@@ -176,7 +176,6 @@ export const CourseList: React.FC = () => {
       {/* Top Banner */}
       <PageHeader
         title="Courses"
-        badge={`${courses.length} Courses`}
         actions={
           canEdit && (
             <Button

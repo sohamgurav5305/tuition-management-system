@@ -130,8 +130,6 @@ export const ReceiptsAuditPage: React.FC = () => {
       {/* Top Banner */}
       <PageHeader
         title="Payment Receipts"
-        subtitle=""
-        badge={`${payments.length} Receipts Processed`}
         actions={
           <div className="flex items-center gap-2">
             <Button
