@@ -127,12 +127,6 @@ export const MaterialList: React.FC = () => {
       {/* Top Banner */}
       <PageHeader
         title="Study Materials"
-        subtitle={
-          isStudent
-            ? ''
-            : ''
-        }
-        badge={`${materials.length} Documents`}
         actions={
           canUpload && (
             <Button
@@ -225,18 +219,15 @@ export const MaterialList: React.FC = () => {
                   <Badge variant={getBadgeVariant(m.materialType)} size="xs">
                     {m.materialType.replace('_', ' ')}
                   </Badge>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 font-bold">{m.materialId}</span>
-                    {canUpload && (
-                      <button
-                        onClick={() => setDeletingId(m.id)}
-                        title="Remove Document"
-                        className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
+                  {canUpload && (
+                    <button
+                      onClick={() => setDeletingId(m.id)}
+                      title="Remove Document"
+                      className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
 
                 <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2">
@@ -247,10 +238,6 @@ export const MaterialList: React.FC = () => {
                   <span className="font-semibold text-slate-700 dark:text-slate-300">{m.subject}</span>
                   {m.chapterName && <span>&bull; {m.chapterName}</span>}
                 </div>
-
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-2">
-                  {(m as any).description || `Official study material and practice problem sheets for ${m.chapterName || m.subject}.`}
-                </p>
               </div>
 
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
