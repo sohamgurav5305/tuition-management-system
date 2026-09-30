@@ -698,8 +698,8 @@ export const DoubtForum: React.FC = () => {
             className="px-3 py-2 text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100"
           >
             <option value="">All</option>
-            <option value="OPEN">Unresolved / Open</option>
-            <option value="RESOLVED">Resolved / Answered</option>
+            <option value="OPEN">Unresolved</option>
+            <option value="RESOLVED">Resolved</option>
           </select>
         </div>
       </div>
