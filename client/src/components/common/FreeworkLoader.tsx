@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, GraduationCap, Quote } from 'lucide-react';
+import React, { useState } from 'react';
+import { GraduationCap } from 'lucide-react';
 
 export interface EducationQuote {
   quote: string;
@@ -223,22 +223,14 @@ export const FreeworkLoader: React.FC<FreeworkLoaderProps> = ({
       {/* Inspirational Education Thought Banner */}
       {showQuote && (
         <div
-          className="animate-quote-fade max-w-md mx-auto mt-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-purple-50/70 dark:from-slate-800/80 dark:via-slate-800/50 dark:to-indigo-950/40 border border-blue-100/90 dark:border-slate-700/80 shadow-2xs transition-all"
+          className="animate-quote-fade max-w-lg mx-auto mt-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-purple-50/70 dark:from-slate-800/80 dark:via-slate-800/50 dark:to-indigo-950/40 border border-blue-100/90 dark:border-slate-700/80 shadow-2xs transition-all text-center"
         >
-          <div className="flex items-start gap-2.5 text-left">
-            <div className="p-1 rounded-lg bg-blue-100/80 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 mt-0.5 flex-shrink-0">
-              <Quote className="w-3.5 h-3.5" />
-            </div>
-            <div className="space-y-1 min-w-0">
-              <p className="text-xs font-medium text-slate-700 dark:text-slate-200 italic leading-relaxed">
-                "{activeQuote.quote}"
-              </p>
-              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-400">
-                <Sparkles className="w-2.5 h-2.5 text-amber-500" />
-                <span>{activeQuote.author}</span>
-              </div>
-            </div>
-          </div>
+          <p className="text-xs font-medium text-slate-700 dark:text-slate-200 italic leading-relaxed">
+            "{activeQuote.quote}"{' '}
+            <span className="not-italic font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+              — {activeQuote.author}
+            </span>
+          </p>
         </div>
       )}
     </div>
