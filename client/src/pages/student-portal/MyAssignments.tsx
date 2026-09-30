@@ -22,7 +22,7 @@ import {
   AlertTriangle,
   FileCheck,
 } from 'lucide-react';
-import { assignmentApi } from '../../services/api';
+import { assignmentApi, studentApi } from '../../services/api';
 import { Assignment, AssignmentSubmission } from '../../types';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { Badge } from '../../components/common/Badge';
@@ -35,9 +35,11 @@ export const MyAssignments: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [batchSubjects, setBatchSubjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSubject, setSelectedSubject] = useState<string>('ALL');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'SUBMITTED' | 'GRADED'>('ALL');
+  const [deadlineSort, setDeadlineSort] = useState<'OLDEST' | 'NEWEST'>('OLDEST');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'OVERDUE' | 'SUBMITTED' | 'GRADED'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Selected assignment for full page view
@@ -49,6 +51,37 @@ export const MyAssignments: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchStudentBatchInfo = async () => {
+    try {
+      const res = await studentApi.getMyProfile();
+      const profile = res.data?.data;
+      const subs: string[] = [];
+      if (profile?.batch?.subjectInstructors && Array.isArray(profile.batch.subjectInstructors)) {
+        profile.batch.subjectInstructors.forEach((inst: any) => {
+          if (inst.subject) subs.push(inst.subject);
+        });
+      }
+      if (profile?.batch?.faculty?.subjectTaught) {
+        subs.push(profile.batch.faculty.subjectTaught);
+      }
+      if (profile?.course?.subjects) {
+        if (Array.isArray(profile.course.subjects)) {
+          subs.push(...profile.course.subjects);
+        } else if (typeof profile.course.subjects === 'string') {
+          try {
+            const parsed = JSON.parse(profile.course.subjects);
+            if (Array.isArray(parsed)) subs.push(...parsed);
+          } catch {
+            subs.push(profile.course.subjects);
+          }
+        }
+      }
+      setBatchSubjects(Array.from(new Set(subs.filter(Boolean))));
+    } catch {
+      // ignore
+    }
+  };
 
   const fetchAssignments = async (showLoading = false) => {
     try {
@@ -74,6 +107,7 @@ export const MyAssignments: React.FC = () => {
 
   useEffect(() => {
     fetchAssignments(true);
+    fetchStudentBatchInfo();
     const interval = setInterval(() => {
       fetchAssignments(false);
     }, 8000);
@@ -155,26 +189,42 @@ export const MyAssignments: React.FC = () => {
     }
   };
 
-  const subjects = Array.from(new Set(assignments.map((a) => a.subject).filter(Boolean)));
+  const subjects = Array.from(
+    new Set([
+      ...batchSubjects,
+      ...assignments.map((a) => a.subject).filter(Boolean),
+    ])
+  ).filter(Boolean);
 
-  const filteredAssignments = assignments.filter((a) => {
-    const matchesSubject = selectedSubject === 'ALL' || a.subject === selectedSubject;
-    const isSubmitted = !!a.mySubmission;
-    const isGraded = a.mySubmission?.status === 'GRADED';
+  const filteredAssignments = assignments
+    .filter((a) => {
+      const matchesSubject = selectedSubject === 'ALL' || a.subject === selectedSubject;
+      const isSubmitted = !!a.mySubmission;
+      const isGraded = a.mySubmission?.status === 'GRADED';
+      const isDuePassed = new Date(a.dueDate) < new Date();
 
-    let matchesStatus = true;
-    if (statusFilter === 'PENDING') matchesStatus = !isSubmitted;
-    if (statusFilter === 'SUBMITTED') matchesStatus = isSubmitted && !isGraded;
-    if (statusFilter === 'GRADED') matchesStatus = isGraded;
+      let matchesStatus = true;
+      if (statusFilter === 'PENDING') matchesStatus = !isSubmitted && !isDuePassed;
+      if (statusFilter === 'OVERDUE') matchesStatus = !isSubmitted && isDuePassed;
+      if (statusFilter === 'SUBMITTED') matchesStatus = isSubmitted && !isGraded;
+      if (statusFilter === 'GRADED') matchesStatus = isGraded;
 
-    const matchesSearch =
-      !searchQuery.trim() ||
-      a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (a.assignmentId && a.assignmentId.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (a.subject && a.subject.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesSearch =
+        !searchQuery.trim() ||
+        a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (a.assignmentId && a.assignmentId.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (a.subject && a.subject.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    return matchesSubject && matchesStatus && matchesSearch;
-  });
+      return matchesSubject && matchesStatus && matchesSearch;
+    })
+    .sort((a, b) => {
+      const timeA = new Date(a.dueDate).getTime();
+      const timeB = new Date(b.dueDate).getTime();
+      if (deadlineSort === 'OLDEST') {
+        return timeA - timeB;
+      }
+      return timeB - timeA;
+    });
 
   if (loading && assignments.length === 0) {
     return <LoadingSkeleton count={5} />;
@@ -615,35 +665,23 @@ export const MyAssignments: React.FC = () => {
   return (
     <div className="space-y-6 max-w-6xl mx-auto animate-fadeIn pb-12">
       {/* Top Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-            My Assignments
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            Click on any assignment row to view full problem instructions, download materials, and submit solutions.
-          </p>
-        </div>
-
-        {/* Total stats pill */}
-        <div className="flex items-center gap-2">
-          <span className="px-3.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900 text-blue-700 dark:text-blue-300 text-xs font-bold shadow-2xs">
-            {assignments.length} Total Assignments
-          </span>
-        </div>
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+          My Assignments
+        </h1>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-xs space-y-3">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search Box */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search assignments by title, subject or code..."
+              placeholder="Search assignments..."
               className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-slate-100 placeholder-slate-400 font-medium"
             />
             {searchQuery && (
@@ -656,100 +694,61 @@ export const MyAssignments: React.FC = () => {
             )}
           </div>
 
-          {/* Status Filter Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-            <button
-              onClick={() => setStatusFilter('ALL')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                statusFilter === 'ALL'
-                  ? 'bg-blue-600 text-white shadow-2xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200/70'
-              }`}
+          {/* Subject Filter Dropdown */}
+          <div>
+            <select
+              value={selectedSubject}
+              onChange={(e) => setSelectedSubject(e.target.value)}
+              className="w-full px-3 py-2 text-xs font-semibold bg-slate-50 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-slate-100"
             >
-              All
-            </button>
-            <button
-              onClick={() => setStatusFilter('PENDING')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                statusFilter === 'PENDING'
-                  ? 'bg-amber-500 text-white shadow-2xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200/70'
-              }`}
+              <option value="ALL">All Subjects</option>
+              {subjects.map((sub) => (
+                <option key={sub} value={sub}>
+                  {sub}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Deadline Sort Dropdown */}
+          <div>
+            <select
+              value={deadlineSort}
+              onChange={(e) => setDeadlineSort(e.target.value as 'OLDEST' | 'NEWEST')}
+              className="w-full px-3 py-2 text-xs font-semibold bg-slate-50 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-slate-100"
             >
-              Pending
-            </button>
-            <button
-              onClick={() => setStatusFilter('SUBMITTED')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                statusFilter === 'SUBMITTED'
-                  ? 'bg-emerald-600 text-white shadow-2xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200/70'
-              }`}
+              <option value="OLDEST">Oldest First</option>
+              <option value="NEWEST">Newest First</option>
+            </select>
+          </div>
+
+          {/* Status Filter Dropdown */}
+          <div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="w-full px-3 py-2 text-xs font-semibold bg-slate-50 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-slate-100"
             >
-              Submitted
-            </button>
-            <button
-              onClick={() => setStatusFilter('GRADED')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                statusFilter === 'GRADED'
-                  ? 'bg-purple-600 text-white shadow-2xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200/70'
-              }`}
-            >
-              Graded
-            </button>
+              <option value="ALL">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="OVERDUE">Overdue</option>
+              <option value="SUBMITTED">Submitted</option>
+              <option value="GRADED">Graded</option>
+            </select>
           </div>
         </div>
-
-        {/* Subject Filter Pills */}
-        {subjects.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-            <span className="text-slate-400 dark:text-slate-500 font-bold flex items-center gap-1 mr-1 text-[11px]">
-              <Filter className="w-3 h-3" /> Subject:
-            </span>
-            <button
-              onClick={() => setSelectedSubject('ALL')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
-                selectedSubject === 'ALL'
-                  ? 'bg-blue-50 text-blue-700 border border-blue-200/80 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              All ({assignments.length})
-            </button>
-            {subjects.map((s) => {
-              const count = assignments.filter((a) => a.subject === s).length;
-              return (
-                <button
-                  key={s}
-                  onClick={() => setSelectedSubject(s)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
-                    selectedSubject === s
-                      ? 'bg-purple-50 text-purple-700 border border-purple-200/80 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {s} ({count})
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* Assignments Row Table */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[700px]">
-            <thead>
-              <tr className="border-b border-slate-200/90 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-50/70 dark:bg-slate-950/50 select-none">
+          <table className="w-full text-left border-collapse min-w-[600px]">
+            <thead className="bg-slate-50/70 dark:bg-slate-950/50 select-none">
+              <tr className="border-b border-slate-200/90 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 <th className="py-3 px-4">Code & Assignment</th>
                 <th className="py-3 px-4">Subject</th>
                 <th className="py-3 px-4">Deadline</th>
-                <th className="py-3 px-4">Max Marks</th>
-                <th className="py-3 px-4">Materials</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-right">Action</th>
+                <th className="py-3 px-4 text-right">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
@@ -759,7 +758,6 @@ export const MyAssignments: React.FC = () => {
                   const isSubmitted = !!sub;
                   const isGraded = sub?.status === 'GRADED';
                   const isDuePassed = new Date(a.dueDate) < new Date();
-                  const attachmentCount = (a.attachments?.length || 0) + (a.attachmentUrl ? 1 : 0);
                   const pct =
                     isGraded && sub?.score !== null && sub?.score !== undefined
                       ? Math.round((sub.score / a.totalMarks) * 100)
@@ -800,26 +798,8 @@ export const MyAssignments: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* Max Marks */}
-                      <td className="py-3.5 px-4">
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
-                          {a.totalMarks} pts
-                        </span>
-                      </td>
-
-                      {/* Materials */}
-                      <td className="py-3.5 px-4">
-                        {attachmentCount > 0 ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-                            <Paperclip className="w-3.5 h-3.5" /> {attachmentCount} {attachmentCount === 1 ? 'file' : 'files'}
-                          </span>
-                        ) : (
-                          <span className="text-[11px] text-slate-400">--</span>
-                        )}
-                      </td>
-
                       {/* Status */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 text-right">
                         {isGraded ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900">
                             <Award className="w-3 h-3 text-purple-600" />
@@ -839,23 +819,12 @@ export const MyAssignments: React.FC = () => {
                           </span>
                         )}
                       </td>
-
-                      {/* Action */}
-                      <td className="py-3.5 px-4 text-right">
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-blue-600 group-hover:text-white text-xs font-bold transition-all shadow-2xs"
-                        >
-                          <span>{isSubmitted ? 'View Solution' : 'Submit'}</span>
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        </button>
-                      </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} className="py-12 px-4 text-center">
+                  <td colSpan={4} className="py-12 px-4 text-center">
                     <div className="max-w-sm mx-auto space-y-2">
                       <FileText className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto" />
                       <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
