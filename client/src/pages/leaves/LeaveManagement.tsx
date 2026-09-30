@@ -15,6 +15,7 @@ import {
   FileText,
   Search,
   ShieldCheck,
+  ArrowLeft,
 } from 'lucide-react';
 import { leaveApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -154,6 +155,99 @@ export const LeaveManagement: React.FC = () => {
   const facultyLeavesCount = leaves.filter((l) => l.applicantType === 'FACULTY').length;
   const studentLeavesCount = leaves.filter((l) => l.applicantType !== 'FACULTY').length;
 
+  // -------------------------------------------------------------
+  // VIEW 2: DEDICATED FULL PAGE VIEW FOR APPLYING LEAVE
+  // -------------------------------------------------------------
+  if (isApplyOpen) {
+    return (
+      <div className="space-y-6 max-w-2xl mx-auto">
+        <div>
+          <Button
+            variant="ghost"
+            size="sm"
+            leftIcon={ArrowLeft}
+            onClick={() => setIsApplyOpen(false)}
+            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+          >
+            Back to Leave Applications
+          </Button>
+        </div>
+
+        <div className="p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl shadow-sm space-y-6">
+          <PageHeader
+            title={isTeacher ? 'Ask for Leave' : 'Apply for Leave of Absence'}
+          />
+
+          <form onSubmit={handleApply} className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100 font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100 font-medium"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                Reason for Absence
+              </label>
+              <textarea
+                required
+                rows={5}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="State the reason for your leave of absence..."
+                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100 font-medium placeholder-slate-400"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsApplyOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                isLoading={isSubmitting}
+              >
+                {isTeacher ? 'Submit Leave Request to Admin' : 'Submit Application'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // VIEW 1: MAIN LEAVES LIST & APPROVALS TABLE (DEFAULT VIEW)
+  // -------------------------------------------------------------
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Banner */}
@@ -173,7 +267,7 @@ export const LeaveManagement: React.FC = () => {
               leftIcon={PlusCircle}
               onClick={() => setIsApplyOpen(true)}
             >
-              + Apply for Leave
+              Apply for Leave
             </Button>
           ) : isTeacher ? (
             <Button
@@ -182,7 +276,7 @@ export const LeaveManagement: React.FC = () => {
               leftIcon={PlusCircle}
               onClick={() => setIsApplyOpen(true)}
             >
-              + Ask a Leave
+              Ask for Leave
             </Button>
           ) : undefined
         }
@@ -261,7 +355,7 @@ export const LeaveManagement: React.FC = () => {
                   leftIcon={PlusCircle}
                   onClick={() => setIsApplyOpen(true)}
                 >
-                  + Ask a Leave
+                  Ask for Leave
                 </Button>
               </div>
             ) : (
@@ -440,81 +534,6 @@ export const LeaveManagement: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Leave Application Modal (Students & Faculty) */}
-      <Modal
-        isOpen={isApplyOpen}
-        onClose={() => setIsApplyOpen(false)}
-        title={isTeacher ? 'Ask a Leave' : 'Apply for Leave of Absence'}
-        maxWidth="md"
-      >
-        <form onSubmit={handleApply} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Start Date
-              </label>
-              <input
-                type="date"
-                required
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 font-medium"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                End Date
-              </label>
-              <input
-                type="date"
-                required
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 font-medium"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Reason for Absence
-            </label>
-            <textarea
-              required
-              rows={3}
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder={
-                isTeacher
-                  ? ''
-                  : ''
-              }
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 font-medium"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsApplyOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="sm"
-              isLoading={isSubmitting}
-            >
-              {isTeacher ? 'Submit Leave Request to Admin' : 'Submit Application'}
-            </Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 };

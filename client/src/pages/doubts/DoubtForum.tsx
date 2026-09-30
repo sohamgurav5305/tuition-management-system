@@ -252,6 +252,174 @@ export const DoubtForum: React.FC = () => {
   };
 
   // -------------------------------------------------------------
+  // VIEW 3: DEDICATED FULL PAGE VIEW FOR ASKING A DOUBT (STUDENTS)
+  // -------------------------------------------------------------
+  if (isAskModalOpen) {
+    return (
+      <div className="space-y-6 max-w-3xl mx-auto">
+        <div>
+          <Button
+            variant="ghost"
+            size="sm"
+            leftIcon={ArrowLeft}
+            onClick={() => {
+              setIsAskModalOpen(false);
+              setAskFiles([]);
+            }}
+            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+          >
+            Back to All Discussions
+          </Button>
+        </div>
+
+        <div className="p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl shadow-sm space-y-6">
+          <PageHeader title="Ask Batch Faculty Mentor" />
+
+          <form onSubmit={handleAskDoubt} className="space-y-5">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+                Select Batch Faculty Mentor:
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {batchFaculty.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => handleFacultySelect(f)}
+                    className={`p-3.5 rounded-2xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
+                      selectedFacultyId === f.id
+                        ? 'border-blue-500 bg-blue-50/80 text-blue-900 dark:bg-blue-950/60 dark:text-blue-100 ring-2 ring-blue-500/20 shadow-xs'
+                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 flex items-center justify-center font-bold text-xs flex-shrink-0 overflow-hidden">
+                      {f.avatarUrl ? (
+                        <img src={getMediaUrl(f.avatarUrl)} alt="Mentor" className="w-full h-full object-cover" />
+                      ) : (
+                        `${f.firstName[0]}${f.lastName[0]}`
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold truncate">
+                        {f.firstName} {f.lastName}
+                      </p>
+                      <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                        {f.subjectTaught} Specialist
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                Chapter / Concept Topic:
+              </label>
+              <input
+                type="text"
+                required
+                value={newTopic}
+                onChange={(e) => setNewTopic(e.target.value)}
+                placeholder="e.g. Newton's 2nd Law Application"
+                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 font-medium"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                Detailed Question / Problem:
+              </label>
+              <textarea
+                required
+                rows={5}
+                value={newQuestion}
+                onChange={(e) => setNewQuestion(e.target.value)}
+                placeholder="State the exact question, problem set number, and where you are stuck..."
+                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 font-medium"
+              />
+            </div>
+
+            {/* File Attachment for Question */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 font-bold">
+                  <Paperclip className="w-3.5 h-3.5 text-blue-600" /> Attachments (Multiple Files Allowed):
+                </span>
+                <span className="text-[11px] text-slate-400 font-normal">PDF, Images, DOCX, ZIP (Max 25MB each)</span>
+              </label>
+              <input
+                type="file"
+                multiple
+                accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.zip"
+                onChange={handleAskFileChange}
+                className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950 dark:file:text-blue-300"
+              />
+              {askFiles.length > 0 && (
+                <div className="mt-2.5 space-y-1.5">
+                  <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                    Selected Question Attachments ({askFiles.length}):
+                  </p>
+                  <div className="flex flex-wrap gap-3 max-h-36 overflow-y-auto p-1 pt-2">
+                    {askFiles.map((file, idx) => (
+                      <div
+                        key={idx}
+                        className="relative group flex items-center gap-2 pl-3 pr-4 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800 text-blue-900 dark:text-blue-200 text-xs font-semibold shadow-sm"
+                      >
+                        <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                        <div className="flex flex-col">
+                          <span className="truncate max-w-[170px]" title={file.name}>
+                            {file.name}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-normal">
+                            {(file.size / 1024).toFixed(0)} KB
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeAskFile(idx)}
+                          className="absolute -top-2 -right-2 w-5 h-5 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white rounded-full flex items-center justify-center shadow-md transition-all cursor-pointer z-10"
+                          title="Delete attachment"
+                          aria-label={`Delete ${file.name}`}
+                        >
+                          <X className="w-3 h-3 stroke-[2.5]" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setIsAskModalOpen(false);
+                  setAskFiles([]);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                leftIcon={Send}
+                isLoading={isSubmitting}
+              >
+                Send Question
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------
   // VIEW 2: DEDICATED FULL DISCUSSION / THREAD VIEW
   // -------------------------------------------------------------
   if (selectedDoubt) {
@@ -826,156 +994,6 @@ export const DoubtForum: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Ask Doubt Modal */}
-      <Modal
-        isOpen={isAskModalOpen}
-        onClose={() => {
-          setIsAskModalOpen(false);
-          setAskFiles([]);
-        }}
-        title="Ask Batch Faculty Mentor"
-      >
-        <form onSubmit={handleAskDoubt} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-              Select Batch Faculty Mentor:
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {batchFaculty.map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => handleFacultySelect(f)}
-                  className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-colors ${
-                    selectedFacultyId === f.id
-                      ? 'border-blue-500 bg-blue-50/70 text-blue-900 dark:bg-blue-950/60 dark:text-blue-100 ring-2 ring-blue-500/20'
-                      : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 flex items-center justify-center font-bold text-xs flex-shrink-0 overflow-hidden">
-                    {f.avatarUrl ? (
-                      <img src={getMediaUrl(f.avatarUrl)} alt="Mentor" className="w-full h-full object-cover" />
-                    ) : (
-                      `${f.firstName[0]}${f.lastName[0]}`
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold truncate">
-                      {f.firstName} {f.lastName}
-                    </p>
-                    <p className="text-[10px] text-slate-400 truncate">
-                      {f.subjectTaught} Specialist
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Chapter / Concept Topic:
-            </label>
-            <input
-              type="text"
-              required
-              value={newTopic}
-              onChange={(e) => setNewTopic(e.target.value)}
-              placeholder="e.g. Newton's 2nd Law Application"
-              className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100 placeholder-slate-400"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Detailed Question / Problem:
-            </label>
-            <textarea
-              required
-              rows={4}
-              value={newQuestion}
-              onChange={(e) => setNewQuestion(e.target.value)}
-              placeholder="State the exact question, problem set number, and where you are stuck..."
-              className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100 placeholder-slate-400"
-            />
-          </div>
-
-          {/* File Attachment for Question */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
-              <span className="flex items-center gap-1.5 font-bold">
-                <Paperclip className="w-3.5 h-3.5 text-blue-600" /> Attachments (Multiple Files Allowed):
-              </span>
-              <span className="text-[11px] text-slate-400 font-normal">PDF, Images, DOCX, ZIP (Max 25MB each)</span>
-            </label>
-            <input
-              type="file"
-              multiple
-              accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.zip"
-              onChange={handleAskFileChange}
-              className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950 dark:file:text-blue-300"
-            />
-            {askFiles.length > 0 && (
-              <div className="mt-2.5 space-y-1.5">
-                <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                  Selected Question Attachments ({askFiles.length}):
-                </p>
-                <div className="flex flex-wrap gap-3 max-h-36 overflow-y-auto p-1 pt-2">
-                  {askFiles.map((file, idx) => (
-                    <div
-                      key={idx}
-                      className="relative group flex items-center gap-2 pl-3 pr-4 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800 text-blue-900 dark:text-blue-200 text-xs font-semibold shadow-sm"
-                    >
-                      <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                      <div className="flex flex-col">
-                        <span className="truncate max-w-[170px]" title={file.name}>
-                          {file.name}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-normal">
-                          {(file.size / 1024).toFixed(0)} KB
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeAskFile(idx)}
-                        className="absolute -top-2 -right-2 w-5 h-5 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white rounded-full flex items-center justify-center shadow-md transition-all cursor-pointer z-10"
-                        title="Delete attachment"
-                        aria-label={`Delete ${file.name}`}
-                      >
-                        <X className="w-3 h-3 stroke-[2.5]" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                setIsAskModalOpen(false);
-                setAskFiles([]);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="sm"
-              leftIcon={Send}
-              isLoading={isSubmitting}
-            >
-              Send Question
-            </Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 };
