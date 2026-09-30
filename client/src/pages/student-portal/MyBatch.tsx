@@ -63,20 +63,13 @@ export const MyBatch: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <PageHeader
-        title="My Batch & Class Schedule"
-        subtitle="Detailed class schedule, course syllabus, and all assigned faculty specialist instructors."
-        badge={batch ? `${batch.name}` : undefined}
-      />
+      <PageHeader title="My Batch & Class Schedule" />
 
       {batch ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800 gap-4">
             <div>
-              <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
-                {batch.batchId}
-              </span>
-              <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 mt-0.5">
+              <h2 className="text-xl font-black text-slate-900 dark:text-slate-100">
                 {batch.name}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
