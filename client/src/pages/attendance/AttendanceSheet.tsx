@@ -1,17 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  Save,
-  CheckCheck,
   BookOpen,
   Calendar,
   Users,
-  Info,
 } from 'lucide-react';
 import { attendanceApi, batchApi } from '../../services/api';
 import { Batch } from '../../types';
 import { PageHeader } from '../../components/common/PageHeader';
-import { Button } from '../../components/common/Button';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { useToast } from '../../context/ToastContext';
 
@@ -28,7 +24,7 @@ interface StudentInfo {
 type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'NA';
 
 export const AttendanceSheet: React.FC = () => {
-  const { success, error } = useToast();
+  const { error } = useToast();
   const [searchParams] = useSearchParams();
 
   const [batches, setBatches] = useState<Batch[]>([]);
@@ -53,9 +49,7 @@ export const AttendanceSheet: React.FC = () => {
   const [students, setStudents] = useState<StudentInfo[]>([]);
   // Map: studentId -> { 'YYYY-MM-DD': 'PRESENT' | 'ABSENT' | 'NA' }
   const [gridData, setGridData] = useState<Record<string, Record<string, AttendanceStatus>>>({});
-  const [initialGridData, setInitialGridData] = useState<Record<string, Record<string, AttendanceStatus>>>({});
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   // Compute days in the selected month
   const monthDays = useMemo(() => {
@@ -91,11 +85,6 @@ export const AttendanceSheet: React.FC = () => {
     const d = String(now.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
   }, []);
-
-  // Check unsaved changes
-  const hasUnsavedChanges = useMemo(() => {
-    return JSON.stringify(gridData) !== JSON.stringify(initialGridData);
-  }, [gridData, initialGridData]);
 
   // Load Batches
   useEffect(() => {
@@ -187,7 +176,6 @@ export const AttendanceSheet: React.FC = () => {
       });
 
       setGridData(newGrid);
-      setInitialGridData(JSON.parse(JSON.stringify(newGrid)));
     } catch (err: any) {
       if (showLoading) {
         error('Error', err.response?.data?.message || 'Failed to fetch monthly attendance roster');
@@ -203,123 +191,54 @@ export const AttendanceSheet: React.FC = () => {
     }
   }, [selectedBatchId, selectedMonth, selectedSubject]);
 
-  // Toggle cell in circular order: NA -> P -> A -> NA
-  const toggleCell = (studentId: string, dateStr: string) => {
-    setGridData((prev) => {
-      const currentStudentMap = prev[studentId] || {};
-      const currentStatus: AttendanceStatus = currentStudentMap[dateStr] || 'NA';
+  // Toggle cell in circular order: NA -> P -> A -> NA and automatically persist to backend
+  const toggleCell = async (studentId: string, dateStr: string) => {
+    const currentStudentMap = gridData[studentId] || {};
+    const currentStatus: AttendanceStatus = currentStudentMap[dateStr] || 'NA';
 
-      let nextStatus: AttendanceStatus = 'NA';
-      if (currentStatus === 'NA') {
-        nextStatus = 'PRESENT';
-      } else if (currentStatus === 'PRESENT') {
-        nextStatus = 'ABSENT';
-      } else if (currentStatus === 'ABSENT') {
-        nextStatus = 'NA';
-      }
-
-      return {
-        ...prev,
-        [studentId]: {
-          ...currentStudentMap,
-          [dateStr]: nextStatus,
-        },
-      };
-    });
-  };
-
-  // Mark all students Present for Today
-  const handleMarkTodayAllPresent = () => {
-    if (!monthDays.some((d) => d.dateStr === todayStr)) {
-      error('Out of Range', 'Today is not within the currently selected month.');
-      return;
+    let nextStatus: AttendanceStatus = 'NA';
+    if (currentStatus === 'NA') {
+      nextStatus = 'PRESENT';
+    } else if (currentStatus === 'PRESENT') {
+      nextStatus = 'ABSENT';
+    } else if (currentStatus === 'ABSENT') {
+      nextStatus = 'NA';
     }
 
-    setGridData((prev) => {
-      const updated = { ...prev };
-      students.forEach((st) => {
-        updated[st.id] = {
-          ...(updated[st.id] || {}),
-          [todayStr]: 'PRESENT',
-        };
-      });
-      return updated;
-    });
+    // Optimistically update grid data in UI
+    setGridData((prev) => ({
+      ...prev,
+      [studentId]: {
+        ...(prev[studentId] || {}),
+        [dateStr]: nextStatus,
+      },
+    }));
 
-    success('Marked', `All students marked Present for today (${todayStr})`);
-  };
-
-  // Save changes to backend
-  const handleSaveAttendance = async () => {
-    if (!selectedBatchId || !selectedSubject) return;
-
-    setSaving(true);
-    try {
-      // Collect records that differ or are explicitly marked
-      const recordsToSave: Array<{ studentId: string; date: string; status: 'PRESENT' | 'ABSENT' | 'NA' }> = [];
-
-      students.forEach((st) => {
-        const studentMap = gridData[st.id] || {};
-        const initialMap = initialGridData[st.id] || {};
-
-        monthDays.forEach((day) => {
-          const currentStatus = studentMap[day.dateStr] || 'NA';
-          const initStatus = initialMap[day.dateStr] || 'NA';
-
-          if (currentStatus !== initStatus || currentStatus !== 'NA') {
-            recordsToSave.push({
-              studentId: st.id,
-              date: day.dateStr,
-              status: currentStatus,
-            });
-          }
+    // Auto-save continuously to backend
+    if (selectedBatchId && selectedSubject) {
+      try {
+        await attendanceApi.saveMonthlyGrid({
+          batchId: selectedBatchId,
+          subject: selectedSubject,
+          records: [
+            {
+              studentId,
+              date: dateStr,
+              status: nextStatus,
+            },
+          ],
         });
-      });
-
-      await attendanceApi.saveMonthlyGrid({
-        batchId: selectedBatchId,
-        subject: selectedSubject,
-        records: recordsToSave,
-      });
-
-      setInitialGridData(JSON.parse(JSON.stringify(gridData)));
-      success('Attendance Saved', `Monthly attendance for ${selectedSubject} has been successfully recorded.`);
-    } catch (err: any) {
-      error('Save Failed', err.response?.data?.message || 'Could not save attendance records');
-    } finally {
-      setSaving(false);
+      } catch (err: any) {
+        console.error('Auto-save attendance error:', err);
+        error('Auto-save Failed', err.response?.data?.message || 'Could not update attendance status');
+      }
     }
   };
 
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <PageHeader
-        title="Attendance"
-        actions={
-          <div className="flex items-center gap-2.5">
-            <Button
-              variant="outline"
-              size="sm"
-              leftIcon={CheckCheck}
-              onClick={handleMarkTodayAllPresent}
-              disabled={loading || students.length === 0}
-            >
-              Mark Today All Present
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              leftIcon={Save}
-              onClick={handleSaveAttendance}
-              isLoading={saving}
-              disabled={loading || students.length === 0}
-            >
-              {hasUnsavedChanges ? 'Save Attendance *' : 'Save Attendance'}
-            </Button>
-          </div>
-        }
-      />
+      <PageHeader title="Attendance" />
 
       {/* Filter Bar */}
       <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs flex flex-wrap items-center justify-between gap-4">
@@ -590,14 +509,6 @@ export const AttendanceSheet: React.FC = () => {
             </table>
           </div>
         )}
-      </div>
-
-      {/* Helpful Hint Footer */}
-      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 px-2">
-        <Info className="w-4 h-4 text-blue-500 flex-shrink-0" />
-        <span>
-          Click on any cell to cycle in order: <strong>NA (grey)</strong> &rarr; <strong>P (green)</strong> &rarr; <strong>A (red)</strong> &rarr; <strong>NA (grey)</strong>. Click <strong>Save Attendance</strong> at the top right to store your changes.
-        </span>
       </div>
     </div>
   );
