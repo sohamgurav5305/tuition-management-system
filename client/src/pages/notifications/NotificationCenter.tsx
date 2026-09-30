@@ -410,29 +410,23 @@ export const NotificationCenter: React.FC = () => {
                     <tr
                       key={n.id}
                       onClick={() => handleOpenNotification(n)}
-                      className={`cursor-pointer transition-all group ${
+                      className={`cursor-pointer transition-colors group ${
                         isUnread
-                          ? 'bg-white dark:bg-slate-800/90 hover:bg-blue-50/50 dark:hover:bg-slate-700/60 font-semibold'
-                          : 'bg-slate-50/70 dark:bg-slate-950/60 hover:bg-slate-100/90 dark:hover:bg-slate-800/60 opacity-80 hover:opacity-100'
+                          ? 'bg-blue-50/70 hover:bg-blue-100/70 dark:bg-blue-950/40 dark:hover:bg-blue-900/40'
+                          : 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/70'
                       }`}
                     >
                       {/* Title & Preview snippet */}
                       <td className="px-5 py-3.5 max-w-lg">
                         <div className="flex items-center gap-2.5">
-                          {isUnread ? (
+                          {isUnread && (
                             <span
-                              className="w-2.5 h-2.5 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0 shadow-sm shadow-blue-500/50"
+                              className="w-2.5 h-2.5 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0 shadow-xs"
                               title="Unread Announcement"
                             />
-                          ) : (
-                            <span className="w-2.5 h-2.5 rounded-full bg-transparent flex-shrink-0" />
                           )}
                           <span
-                            className={`transition-colors truncate ${
-                              isUnread
-                                ? 'font-black text-slate-900 dark:text-white text-xs sm:text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400'
-                                : 'font-normal text-slate-600 dark:text-slate-400 text-xs group-hover:text-slate-900 dark:group-hover:text-slate-200'
-                            }`}
+                            className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate"
                           >
                             {n.title}
                           </span>
@@ -450,27 +444,15 @@ export const NotificationCenter: React.FC = () => {
                             </span>
                           )}
                         </div>
-                        <p
-                          className={`truncate mt-0.5 pl-5 ${
-                            isUnread
-                              ? 'text-slate-700 dark:text-slate-300 font-medium text-xs'
-                              : 'text-slate-400 dark:text-slate-500 font-normal text-xs'
-                          }`}
-                        >
+                        <p className="text-xs text-slate-600 dark:text-slate-300 truncate mt-0.5 pl-5">
                           {n.message}
                         </p>
                       </td>
 
                       {/* Date & Time */}
-                      <td className="px-5 py-3.5 text-right whitespace-nowrap font-mono text-xs">
-                        <span
-                          className={`inline-flex items-center gap-1.5 ${
-                            isUnread
-                              ? 'font-bold text-slate-900 dark:text-slate-200'
-                              : 'font-normal text-slate-400 dark:text-slate-500'
-                          }`}
-                        >
-                          <Clock className={`w-3.5 h-3.5 ${isUnread ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-600'}`} />
+                      <td className="px-5 py-3.5 text-right whitespace-nowrap font-mono text-xs text-slate-600 dark:text-slate-300">
+                        <span className="inline-flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                           {formatDateTime(n.createdAt)}
                         </span>
                       </td>
