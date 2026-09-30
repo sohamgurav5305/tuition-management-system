@@ -9,6 +9,7 @@ import { RealtimeProvider } from './context/RealtimeContext';
 import { ProtectedRoute } from './components/guards/ProtectedRoute';
 import { RoleGuard } from './components/guards/RoleGuard';
 import { MainLayout } from './components/layout/MainLayout';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { LoadingSkeleton } from './components/common/LoadingSkeleton';
 import { FreeworkLoader } from './components/common/FreeworkLoader';
 
@@ -58,8 +59,9 @@ export const App: React.FC = () => {
           <RealtimeProvider>
             <SettingsProvider>
               <BrowserRouter>
-                <Suspense fallback={<PageFallback />}>
-                  <Routes>
+                <ErrorBoundary>
+                  <Suspense fallback={<PageFallback />}>
+                    <Routes>
                     {/* Public Auth Route */}
                     <Route path="/login" element={<Login />} />
 
@@ -274,7 +276,8 @@ export const App: React.FC = () => {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
-          </BrowserRouter>
+          </ErrorBoundary>
+        </BrowserRouter>
         </SettingsProvider>
       </RealtimeProvider>
     </AuthProvider>

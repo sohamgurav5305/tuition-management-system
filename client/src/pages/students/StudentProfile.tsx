@@ -70,26 +70,15 @@ export const StudentProfile: React.FC = () => {
     return () => clearInterval(interval);
   }, [id]);
 
-  if (loading) return <LoadingSkeleton count={6} />;
-  if (!student) {
-    return (
-      <div className="text-center py-16 space-y-4">
-        <p className="text-sm font-semibold text-slate-500">Student record not found.</p>
-        <Button variant="secondary" size="sm" onClick={() => navigate('/students')}>
-          Back to Students
-        </Button>
-      </div>
-    );
-  }
-
-  const attendanceStats = student.attendanceStats || {
-    total: student.attendance?.length || 0,
-    present: student.attendance?.filter((a) => a.status === 'PRESENT').length || 0,
-    absent: student.attendance?.filter((a) => a.status === 'ABSENT').length || 0,
-    percentage: student.attendancePercentage ?? 0,
+  const attendanceStats = student?.attendanceStats || {
+    total: student?.attendance?.length || 0,
+    present: student?.attendance?.filter((a) => a.status === 'PRESENT').length || 0,
+    absent: student?.attendance?.filter((a) => a.status === 'ABSENT').length || 0,
+    percentage: student?.attendancePercentage ?? 0,
   };
 
   const subjectStatsList = React.useMemo(() => {
+    if (!student) return [];
     const map = new Map<string, { total: number; present: number; absent: number; percentage: number }>();
 
     // First from attendanceStats.subjects if available from backend
@@ -160,6 +149,17 @@ export const StudentProfile: React.FC = () => {
     }));
   }, [student, attendanceStats]);
 
+  if (loading) return <LoadingSkeleton count={6} />;
+  if (!student) {
+    return (
+      <div className="text-center py-16 space-y-4">
+        <p className="text-sm font-semibold text-slate-500">Student record not found.</p>
+        <Button variant="secondary" size="sm" onClick={() => navigate('/students')}>
+          Back to Students
+        </Button>
+      </div>
+    );
+  }
 
   const tabs = [
     { id: 'overview', label: 'Overview' },
