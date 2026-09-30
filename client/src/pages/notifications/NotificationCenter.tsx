@@ -476,7 +476,7 @@ export const NotificationCenter: React.FC = () => {
         <form onSubmit={handleBroadcast} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Notice Headline / Title:
+              Notice Title:
             </label>
             <input
               type="text"
@@ -488,40 +488,23 @@ export const NotificationCenter: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Notice Type:
-              </label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value as any)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100"
-              >
-                <option value="INFORMATION">Information / General</option>
-                <option value="WARNING">Important / Urgent</option>
-                <option value="SUCCESS">Success / Achievement</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Target Audience:
-              </label>
-              <select
-                value={targetRole}
-                onChange={(e) => setTargetRole(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100"
-              >
-                <option value="ALL">All Institute Users</option>
-                <option value="STUDENT">Students Only</option>
-                <option value="TEACHER">Faculty Only</option>
-                <option value="ACCOUNTANT">Accounts Desk Only</option>
-                <option value="TEACHER_STUDENT">Faculty + Student</option>
-                <option value="ACCOUNTANT_STUDENT">Accountant + Student</option>
-                <option value="TEACHER_ACCOUNTANT">Faculty + Accountant</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              Target Audience:
+            </label>
+            <select
+              value={targetRole}
+              onChange={(e) => setTargetRole(e.target.value)}
+              className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100"
+            >
+              <option value="ALL">All Institute Users</option>
+              <option value="STUDENT">Students Only</option>
+              <option value="TEACHER">Faculty Only</option>
+              <option value="ACCOUNTANT">Accounts Desk Only</option>
+              <option value="TEACHER_STUDENT">Faculty + Student</option>
+              <option value="ACCOUNTANT_STUDENT">Accountant + Student</option>
+              <option value="TEACHER_ACCOUNTANT">Faculty + Accountant</option>
+            </select>
           </div>
 
           <div>
