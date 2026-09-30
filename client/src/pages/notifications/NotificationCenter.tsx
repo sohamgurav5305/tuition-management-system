@@ -333,24 +333,24 @@ export const NotificationCenter: React.FC = () => {
       />
 
       {/* Search Bar & Filter Tabs */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="relative w-full sm:w-80">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-full sm:w-72">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search announcements..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400"
+            className="w-full pl-9 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-2xs"
           />
         </div>
 
         {/* Filter Pills */}
-        <div className="inline-flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200/70 dark:border-slate-700/70 self-start sm:self-auto">
+        <div className="inline-flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200/70 dark:border-slate-700/70">
           <button
             type="button"
             onClick={() => setFilterTab('ALL')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
+            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
               filterTab === 'ALL'
                 ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -361,7 +361,7 @@ export const NotificationCenter: React.FC = () => {
           <button
             type="button"
             onClick={() => setFilterTab('UNREAD')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
+            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
               filterTab === 'UNREAD'
                 ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
