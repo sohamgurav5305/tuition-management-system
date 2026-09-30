@@ -210,41 +210,6 @@ export const StudentList: React.FC = () => {
           },
         ]
       : []),
-    {
-      header: 'Actions',
-      cell: (s) => (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => navigate(`/students/${s.id}`)}
-            className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title="View Full Profile"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          {isAdmin && (
-            <>
-              <button
-                onClick={() => {
-                  setEditingStudent(s);
-                  setIsFormOpen(true);
-                }}
-                className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                title="Edit Record"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setDeletingId(s.id)}
-                className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                title="Delete Student"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </>
-          )}
-        </div>
-      ),
-    },
   ];
 
   const sortedStudents = React.useMemo(() => {
@@ -262,7 +227,6 @@ export const StudentList: React.FC = () => {
       {/* Top Banner */}
       <PageHeader
         title="Students"
-        badge={`${students.length} Students`}
         actions={
           isAdmin ? (
             <Button
@@ -285,6 +249,7 @@ export const StudentList: React.FC = () => {
         columns={columns}
         data={sortedStudents}
         keyExtractor={(s: Student) => s.id}
+        onRowClick={(s: Student) => navigate(`/students/${s.id}`)}
         isLoading={loading}
         searchPlaceholder="Search student name, roll number, batch, phone..."
         searchableFields={['firstName', 'lastName', 'studentId', 'rollNumber', 'phone', 'email', 'guardianName', 'course', 'batch']}
