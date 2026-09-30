@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Users,
   ShieldCheck,
@@ -13,9 +14,14 @@ import { CategoryDonutCard } from '../../components/charts/CategoryDonutCard';
 import { ComplianceGaugeCard } from '../../components/charts/ComplianceGaugeCard';
 import { RecentRecordsTable } from '../../components/dashboard/RecentRecordsTable';
 import { UpcomingActivitiesCard } from '../../components/dashboard/UpcomingActivitiesCard';
-import { reportApi, batchApi } from '../../services/api';
+import { FeeRecordsSection } from '../fees/FeeRecordsSection';
+import { CollectPaymentModal } from '../fees/CollectPaymentModal';
+import { reportApi, batchApi, studentApi } from '../../services/api';
+import { Student, Batch } from '../../types';
 
 export const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
+
   const [summaryData, setSummaryData] = useState<{
     totalStudents?: number;
     totalFaculty?: number;
@@ -34,6 +40,45 @@ export const AdminDashboard: React.FC = () => {
     { label: 'Olympiad Rankers', count: 12, color: '#f59e0b' },
     { label: 'Crash Revision', count: 8, color: '#8b5cf6' },
   ]);
+
+  // Fee records register state
+  const [students, setStudents] = useState<Student[]>([]);
+  const [batchesList, setBatchesList] = useState<Batch[]>([]);
+  const [loadingRecords, setLoadingRecords] = useState(false);
+  const [isCollectOpen, setIsCollectOpen] = useState(false);
+  const [selectedStudentForPay, setSelectedStudentForPay] = useState<Student | null>(null);
+
+  const fetchRecords = async () => {
+    try {
+      setLoadingRecords(true);
+      const [stuRes, batRes] = await Promise.all([
+        studentApi.getAll({}).catch(() => ({ data: { data: [] } })),
+        batchApi.getAll({ status: 'ACTIVE' }).catch(() => ({ data: { data: [] } })),
+      ]);
+      if (stuRes.data?.data) setStudents(stuRes.data.data);
+      if (batRes.data?.data) setBatchesList(batRes.data.data);
+    } catch (err) {
+      console.error('Failed to load fee records for dashboard', err);
+    } finally {
+      setLoadingRecords(false);
+    }
+  };
+
+  const handleOpenCollect = (student: Student) => {
+    setSelectedStudentForPay(student);
+    setIsCollectOpen(true);
+  };
+
+  const handlePaymentRecorded = (newPayment: any) => {
+    fetchRecords();
+    if (newPayment) {
+      navigate('/receipts/' + (newPayment.id || newPayment.receiptId));
+    }
+  };
+
+  useEffect(() => {
+    fetchRecords();
+  }, []);
 
   useEffect(() => {
     // 1. Fetch dashboard summary
@@ -211,6 +256,27 @@ export const AdminDashboard: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* 5. Comprehensive Fee Records & Register Section */}
+      <div className="pt-2">
+        <FeeRecordsSection
+          students={students}
+          batches={batchesList}
+          loading={loadingRecords}
+          onOpenCollect={handleOpenCollect}
+        />
+      </div>
+
+      {/* Payment Collection Modal */}
+      <CollectPaymentModal
+        isOpen={isCollectOpen}
+        onClose={() => {
+          setIsCollectOpen(false);
+          setSelectedStudentForPay(null);
+        }}
+        onSuccess={handlePaymentRecorded}
+        student={selectedStudentForPay}
+      />
     </div>
   );
 };
