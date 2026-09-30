@@ -206,23 +206,6 @@ export const FacultyCreatePage: React.FC = () => {
         </Button>
       </div>
 
-      {/* Main Page Title Header */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              {isEditMode ? `Edit Faculty Record` : `Add New Faculty Member`}
-            </h1>
-          </div>
-
-          {existingFaculty?.facultyId && (
-            <div className="px-3.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-900 text-purple-700 dark:text-purple-300 font-mono font-bold text-xs self-start sm:self-auto">
-              ID: {existingFaculty.facultyId}
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Faculty Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Section 1: Profile Photo & Account Status */}
