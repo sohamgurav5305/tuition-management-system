@@ -248,7 +248,6 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={initialBatch ? `Edit Batch: ${initialBatch.batchId}` : 'Create Batch'}
-      subtitle="Select course, assign faculty per subject, and set weekly schedule"
       maxWidth="2xl"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
