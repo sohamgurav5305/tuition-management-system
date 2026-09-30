@@ -289,23 +289,6 @@ export const BatchCreatePage: React.FC = () => {
         </Button>
       </div>
 
-      {/* Main Page Title Header */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              {isEditMode ? `Edit Batch` : `Create Batch`}
-            </h1>
-          </div>
-
-          {existingBatch?.batchId && (
-            <div className="px-3.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-300 font-mono font-bold text-xs self-start sm:self-auto">
-              ID: {existingBatch.batchId}
-            </div>
-          )}
-        </div>
-      </div>
-
       {conflictError && (
         <div className="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-2xl flex items-start gap-3 text-xs text-rose-800 dark:text-rose-300">
           <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
