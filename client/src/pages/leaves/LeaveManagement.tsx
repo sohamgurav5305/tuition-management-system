@@ -450,20 +450,10 @@ export const LeaveManagement: React.FC = () => {
       <Modal
         isOpen={isApplyOpen}
         onClose={() => setIsApplyOpen(false)}
-        title={isTeacher ? 'Ask a Leave (Faculty Absence Application)' : 'Apply for Leave of Absence'}
+        title={isTeacher ? 'Ask a Leave' : 'Apply for Leave of Absence'}
         maxWidth="md"
       >
         <form onSubmit={handleApply} className="space-y-4">
-          {isTeacher && (
-            <div className="p-3 bg-purple-50 border border-purple-200/80 rounded-xl text-xs text-purple-800 flex items-start gap-2">
-              <ShieldCheck className="w-4 h-4 flex-shrink-0 mt-0.5 text-purple-600" />
-              <span>
-                <strong>Faculty Notice:</strong> Your leave request will be routed directly to the{' '}
-                <strong>Institute Administrator</strong> for official review and approval.
-              </span>
-            </div>
-          )}
-
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
