@@ -241,9 +241,6 @@ export const AssignmentList: React.FC = () => {
                 <Users className="w-3.5 h-3.5" />
                 {selectedAssignment.batch?.name || 'All Batches'}
               </span>
-              <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
-                {selectedAssignment.assignmentId}
-              </span>
             </div>
 
             <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-mono">
@@ -670,15 +667,9 @@ export const AssignmentList: React.FC = () => {
     {
       header: 'Assignment Title',
       cell: (a) => (
-        <div
-          onClick={() => setSearchParams({ id: a.id })}
-          className="cursor-pointer group"
-        >
-          <p className="font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 text-xs sm:text-sm transition-colors">
-            {a.title}
-          </p>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{a.assignmentId}</span>
-        </div>
+        <p className="font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 text-xs sm:text-sm transition-colors">
+          {a.title}
+        </p>
       ),
     },
     {
@@ -799,6 +790,7 @@ export const AssignmentList: React.FC = () => {
         data={filteredAssignments}
         columns={columns}
         keyExtractor={(a) => a.id}
+        onRowClick={(a) => setSearchParams({ id: a.id })}
         searchPlaceholder="Search assignments by title, subject, batch, description..."
         searchableFields={['title', 'assignmentId', 'subject', 'description', 'batch', 'faculty']}
         emptyTitle="No Assignments posted yet"

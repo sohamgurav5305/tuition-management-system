@@ -25,6 +25,7 @@ interface DataTableProps<T> {
   emptyAction?: { label: string; onClick: () => void };
   actions?: ReactNode;
   filters?: ReactNode;
+  onRowClick?: (row: T) => void;
 }
 
 export function DataTable<T>({
@@ -40,6 +41,7 @@ export function DataTable<T>({
   emptyAction,
   actions,
   filters,
+  onRowClick,
 }: DataTableProps<T>) {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -277,7 +279,10 @@ export function DataTable<T>({
               paginatedData.map((row) => (
                 <tr
                   key={keyExtractor(row)}
-                  className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
+                  onClick={() => onRowClick && onRowClick(row)}
+                  className={`hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors ${
+                    onRowClick ? 'cursor-pointer' : ''
+                  }`}
                 >
                   {columns.map((col, colIdx) => (
                     <td key={colIdx} className={`px-5 py-3.5 ${col.className || ''}`}>
