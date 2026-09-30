@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { User, Phone, Mail, Award, BookOpen, Layers, Calendar, Clock, MapPin, CheckCircle2, Lock, KeyRound, ShieldCheck } from 'lucide-react';
+import { Phone, Mail, Award, Clock, Lock } from 'lucide-react';
 import { facultyApi } from '../../services/api';
 import { Faculty } from '../../types';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
+import { PageHeader } from '../../components/common/PageHeader';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { ChangePasswordModal } from '../../components/common/ChangePasswordModal';
-import { useToast } from '../../context/ToastContext';
-import { useAuth } from '../../context/AuthContext';
 import { formatDate } from '../../utils/date';
 import { getMediaUrl } from '../../utils/media';
 
@@ -39,7 +38,7 @@ export const FacultyProfile: React.FC = () => {
   if (loading) return <LoadingSkeleton count={4} />;
   if (!faculty) {
     return (
-      <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 max-w-4xl mx-auto">
+      <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 max-w-4xl mx-auto">
         <p className="text-slate-400 text-xs">Faculty mentor profile record not found.</p>
       </div>
     );
@@ -49,14 +48,20 @@ export const FacultyProfile: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-          My Profile
-        </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Faculty educator profile, contact particulars, and assigned classroom batches
-        </p>
-      </div>
+      <PageHeader
+        title="My Profile"
+        actions={
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            leftIcon={Lock}
+            onClick={() => setIsPasswordModalOpen(true)}
+          >
+            Change Password
+          </Button>
+        }
+      />
 
       {/* Main Profile Header Card */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
@@ -79,9 +84,6 @@ export const FacultyProfile: React.FC = () => {
               <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100">
                 {faculty.firstName} {faculty.lastName}
               </h2>
-              <span className="font-mono text-xs font-bold px-3 py-1 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 rounded-full border border-purple-200 dark:border-purple-800">
-                {faculty.facultyId}
-              </span>
               <Badge variant="success">Active Faculty Specialist</Badge>
             </div>
             <p className="text-sm font-bold text-purple-600 dark:text-purple-400 mt-1">
@@ -142,34 +144,6 @@ export const FacultyProfile: React.FC = () => {
                 </span>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Account Security & Password Management */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div className="bg-gradient-to-r from-purple-50/70 to-indigo-50/70 dark:from-purple-950/30 dark:to-indigo-950/30 p-5 rounded-2xl border border-purple-200/70 dark:border-purple-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 rounded-xl flex-shrink-0">
-                <KeyRound className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  Account Credentials & Password Security
-                </h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Update your faculty portal password and protect your educator account.
-                </p>
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              leftIcon={Lock}
-              onClick={() => setIsPasswordModalOpen(true)}
-            >
-              Change Password
-            </Button>
           </div>
         </div>
 
