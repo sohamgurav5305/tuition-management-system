@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PlusCircle, Edit, Trash2, Users, Clock, MapPin, Calendar, Layers } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Users, Clock, MapPin, Calendar, Layers, Filter } from 'lucide-react';
 import { batchApi, courseApi } from '../../services/api';
 import { Batch, Course } from '../../types';
 import { DataTable, Column } from '../../components/common/DataTable';
@@ -239,33 +239,6 @@ export const BatchList: React.FC = () => {
         }
       />
 
-      {/* Filter Bar */}
-      {courses.length > 0 && (
-        <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl flex items-center gap-3 shadow-xs">
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Filter Course:</span>
-          <select
-            value={selectedCourse}
-            onChange={(e) => setSelectedCourse(e.target.value)}
-            className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none"
-          >
-            <option value="">All Courses</option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          {selectedCourse && (
-            <button
-              onClick={() => setSelectedCourse('')}
-              className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-      )}
-
       {/* Main Batch Table */}
       <DataTable
         data={batches}
@@ -274,6 +247,28 @@ export const BatchList: React.FC = () => {
         onRowClick={(b) => handleOpenDetail(b)}
         searchPlaceholder="Search Batches"
         searchableFields={['name', 'batchId', 'course', 'faculty', 'subjectTeachers']}
+        filters={
+          courses.length > 0 ? (
+            <div className="flex items-center gap-1.5">
+              <Filter className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Course:
+              </span>
+              <select
+                value={selectedCourse}
+                onChange={(e) => setSelectedCourse(e.target.value)}
+                className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+              >
+                <option value="">All Courses</option>
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : undefined
+        }
         emptyTitle="No batches created yet"
         emptySubtitle="Create your first batch and assign faculty."
         emptyAction={

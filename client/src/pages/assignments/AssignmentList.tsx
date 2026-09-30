@@ -794,38 +794,6 @@ export const AssignmentList: React.FC = () => {
         }
       />
 
-      {/* Subject Filter Bar */}
-      {allSubjects.length > 0 && (
-        <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-3 text-xs shadow-xs">
-          <div className="flex items-center gap-2">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Filter Subject:
-            </span>
-            <select
-              value={subjectFilter}
-              onChange={(e) => setSubjectFilter(e.target.value)}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold focus:outline-none"
-            >
-              <option value="">All Subjects</option>
-              {allSubjects.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            {subjectFilter && (
-              <button
-                onClick={() => setSubjectFilter('')}
-                className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Main Table */}
       <DataTable
         data={filteredAssignments}
@@ -834,6 +802,28 @@ export const AssignmentList: React.FC = () => {
         onRowClick={(a) => setSearchParams({ id: a.id })}
         searchPlaceholder="Search assignments by title, subject, batch, description..."
         searchableFields={['title', 'assignmentId', 'subject', 'description', 'batch', 'faculty']}
+        filters={
+          allSubjects.length > 0 ? (
+            <div className="flex items-center gap-1.5">
+              <Filter className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Subject:
+              </span>
+              <select
+                value={subjectFilter}
+                onChange={(e) => setSubjectFilter(e.target.value)}
+                className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+              >
+                <option value="">All Subjects</option>
+                {allSubjects.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : undefined
+        }
         emptyTitle="No Assignments posted yet"
         emptySubtitle="Faculty can post daily practice assignments and problem sets for assigned batches."
         emptyAction={

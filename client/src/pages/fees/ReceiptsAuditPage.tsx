@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Receipt,
   PlusCircle,
+  Filter,
 } from 'lucide-react';
 import { paymentApi } from '../../services/api';
 import { Payment } from '../../types';
@@ -162,11 +163,15 @@ export const ReceiptsAuditPage: React.FC = () => {
         searchPlaceholder="Search receipt number, transaction ref, student name, or mode..."
         searchableFields={['receiptId', 'transactionReference', 'student', 'paymentMode', 'remarks']}
         filters={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <Filter className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Payment Mode:
+            </span>
             <select
               value={selectedMode}
               onChange={(e) => setSelectedMode(e.target.value)}
-              className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-slate-700 dark:text-slate-200 font-medium"
+              className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
             >
               <option value="">All Payment Modes</option>
               <option value="UPI">UPI / Digital</option>
