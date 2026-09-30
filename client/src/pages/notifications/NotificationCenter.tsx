@@ -42,6 +42,7 @@ export const NotificationCenter: React.FC = () => {
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [filterTab, setFilterTab] = useState<'ALL' | 'UNREAD'>('ALL');
   const [loading, setLoading] = useState(true);
 
   // Broadcast Modal state
@@ -161,6 +162,7 @@ export const NotificationCenter: React.FC = () => {
   };
 
   const filteredList = notifications.filter((n) => {
+    if (filterTab === 'UNREAD' && n.isRead) return false;
     if (searchQuery.trim()) {
       const words = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
       if (words.length > 0) {
@@ -304,7 +306,6 @@ export const NotificationCenter: React.FC = () => {
       {/* Top Banner */}
       <PageHeader
         title="Announcements & Alerts"
-        badge={`${unreadCount} Unread Messages`}
         actions={
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
@@ -331,8 +332,8 @@ export const NotificationCenter: React.FC = () => {
         }
       />
 
-      {/* Search Bar Toolbar - Left Aligned */}
-      <div className="flex items-center justify-start">
+      {/* Search Bar & Filter Tabs */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative w-full sm:w-80">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
           <input
@@ -342,6 +343,32 @@ export const NotificationCenter: React.FC = () => {
             placeholder="Search announcements..."
             className="w-full pl-9 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400"
           />
+        </div>
+
+        {/* Filter Pills */}
+        <div className="inline-flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200/70 dark:border-slate-700/70 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setFilterTab('ALL')}
+            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
+              filterTab === 'ALL'
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            All Messages
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterTab('UNREAD')}
+            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
+              filterTab === 'UNREAD'
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Unread Messages
+          </button>
         </div>
       </div>
 
@@ -355,10 +382,12 @@ export const NotificationCenter: React.FC = () => {
           <div className="p-12 text-center">
             <Bell className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-              No Announcements Found
+              {filterTab === 'UNREAD' ? 'No Unread Messages' : 'No Announcements Found'}
             </h3>
             <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-              You are completely up to date with all institute circulars.
+              {filterTab === 'UNREAD'
+                ? 'You have read all announcements.'
+                : 'You are completely up to date with all institute circulars.'}
             </p>
           </div>
         ) : (
