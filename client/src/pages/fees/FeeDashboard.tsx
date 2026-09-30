@@ -1,51 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   CreditCard,
   PlusCircle,
-  Receipt,
   Filter,
-  FileText,
 } from 'lucide-react';
-import { paymentApi, studentApi, reportApi, batchApi } from '../../services/api';
+import { studentApi, reportApi, batchApi } from '../../services/api';
 import { Student, Payment, Batch } from '../../types';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/common/Button';
 import { DataTable, Column } from '../../components/common/DataTable';
 import { Badge } from '../../components/common/Badge';
-import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { useSettings } from '../../context/SettingsContext';
 import { CollectPaymentModal } from './CollectPaymentModal';
 import { AssignFeeModal } from './AssignFeeModal';
 import { ReceiptModal } from '../../components/common/ReceiptModal';
-import { FeeRecordsSection } from './FeeRecordsSection';
 
 export const FeeDashboard: React.FC = () => {
   const { formatCurrency, formatDate } = useSettings();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
 
   const [summary, setSummary] = useState<any>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
-
-  const tabFromUrl = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState<'students' | 'records'>(
-    tabFromUrl === 'records' ? 'records' : 'students'
-  );
-
-  useEffect(() => {
-    const t = searchParams.get('tab');
-    if (t === 'records' || t === 'students') {
-      setActiveTab(t);
-    }
-  }, [searchParams]);
-
-  const handleTabChange = (tab: 'students' | 'records') => {
-    setActiveTab(tab);
-    setSearchParams(tab === 'students' ? {} : { tab });
-  };
 
   // Filters
   const [selectedBatch, setSelectedBatch] = useState<string>('');
@@ -62,7 +39,7 @@ export const FeeDashboard: React.FC = () => {
   const loadData = async (showLoading = false) => {
     try {
       if (showLoading) setLoading(true);
-      const [sumRes, stuRes, payRes, batRes] = await Promise.all([
+      const [sumRes, stuRes, batRes] = await Promise.all([
         reportApi.getDashboardSummary().catch((err) => {
           console.error('Failed summary fetch', err);
           return { data: { data: null } };
@@ -74,10 +51,6 @@ export const FeeDashboard: React.FC = () => {
           console.error('Failed students fetch', err);
           return { data: { data: [] } };
         }),
-        paymentApi.getAll({}).catch((err) => {
-          console.error('Failed payments fetch', err);
-          return { data: { data: [] } };
-        }),
         batchApi.getAll({ status: 'ACTIVE' }).catch((err) => {
           console.error('Failed batches fetch', err);
           return { data: { data: [] } };
@@ -85,7 +58,6 @@ export const FeeDashboard: React.FC = () => {
       ]);
       if (sumRes.data?.data) setSummary(sumRes.data.data);
       if (stuRes.data?.data) setStudents(stuRes.data.data);
-      if (payRes.data?.data) setPayments(payRes.data.data);
       if (batRes.data?.data) setBatches(batRes.data.data);
     } catch (err) {
       console.error('Failed to load fees data', err);
@@ -98,7 +70,7 @@ export const FeeDashboard: React.FC = () => {
     loadData(true);
     const interval = setInterval(() => {
       loadData(false);
-    }, 5000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [selectedBatch, selectedStatus]);
 
@@ -113,8 +85,6 @@ export const FeeDashboard: React.FC = () => {
       setSelectedReceipt(newPayment);
     }
   };
-
-  const studentsWithDues = students.filter((s) => s.pendingFee > 0).length;
 
   const studentColumns: Column<Student>[] = [
     {
@@ -232,93 +202,55 @@ export const FeeDashboard: React.FC = () => {
         }
       />
 
-      {/* Segmented Tabs (Student Fee Accounts Ledger vs Fee Records & Print Register) */}
-      <div className="flex items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-2">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleTabChange('students')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-              activeTab === 'students'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            Student Accounts Ledger
-          </button>
-          <button
-            onClick={() => handleTabChange('records')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-              activeTab === 'records'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            Fee Records & Print Register
-          </button>
-        </div>
-      </div>
-
-      {/* Tab 1: Student Fee Accounts Ledger */}
-      {activeTab === 'students' && (
-        <DataTable
-          columns={studentColumns}
-          data={students}
-          keyExtractor={(s: Student) => s.id}
-          isLoading={loading}
-          searchPlaceholder="Search student by name, roll, batch, or student ID..."
-          searchableFields={['firstName', 'lastName', 'studentId', 'rollNumber', 'phone', 'batch', 'course']}
-          filters={
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5">
-                <Filter className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Batch:
-                </span>
-                <select
-                  value={selectedBatch}
-                  onChange={(e) => setSelectedBatch(e.target.value)}
-                  className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
-                >
-                  <option value="">All Batches</option>
-                  {batches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Fee Status:
-                </span>
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
-                >
-                  <option value="">All Fee Statuses</option>
-                  <option value="PAID">Paid in Full</option>
-                  <option value="PARTIAL">Partial Dues</option>
-                  <option value="PENDING">Pending Dues</option>
-                </select>
-              </div>
+      {/* Main Student Fee Accounts Ledger */}
+      <DataTable
+        columns={studentColumns}
+        data={students}
+        keyExtractor={(s: Student) => s.id}
+        isLoading={loading}
+        searchPlaceholder="Search student by name, roll, batch, or student ID..."
+        searchableFields={['firstName', 'lastName', 'studentId', 'rollNumber', 'phone', 'batch', 'course']}
+        filters={
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <Filter className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Batch:
+              </span>
+              <select
+                value={selectedBatch}
+                onChange={(e) => setSelectedBatch(e.target.value)}
+                className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+              >
+                <option value="">All Batches</option>
+                {batches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          }
-          emptyTitle="No Student Fee Records"
-          emptySubtitle="No student fee accounts matched the current filters."
-        />
-      )}
 
-      {/* Tab 2: Fee Records & Print Register */}
-      {activeTab === 'records' && (
-        <FeeRecordsSection
-          students={students}
-          batches={batches}
-          loading={loading}
-          onOpenCollect={handleOpenCollect}
-        />
-      )}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Fee Status:
+              </span>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+              >
+                <option value="">All Fee Statuses</option>
+                <option value="PAID">Paid in Full</option>
+                <option value="PARTIAL">Partial Dues</option>
+                <option value="PENDING">Pending Dues</option>
+              </select>
+            </div>
+          </div>
+        }
+        emptyTitle="No Student Fee Records"
+        emptySubtitle="No student fee accounts matched the current filters."
+      />
 
       {/* Payment Collection Modal */}
       <CollectPaymentModal
@@ -339,11 +271,15 @@ export const FeeDashboard: React.FC = () => {
       />
 
       {/* Official A4 Receipt Modal */}
-      <ReceiptModal
-        isOpen={!!selectedReceipt}
-        onClose={() => setSelectedReceipt(null)}
-        payment={selectedReceipt}
-      />
+      {selectedReceipt && (
+        <ReceiptModal
+          isOpen={!!selectedReceipt}
+          onClose={() => setSelectedReceipt(null)}
+          payment={selectedReceipt}
+        />
+      )}
     </div>
   );
 };
+
+export default FeeDashboard;

@@ -215,7 +215,7 @@ export const AccountantDashboard: React.FC = () => {
                 <span className="text-xs font-bold">Collect Fee</span>
               </Link>
               <Link
-                to="/fees?tab=records"
+                to="/fee-records"
                 className="flex flex-col items-center justify-center p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-900 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100/70 dark:hover:bg-indigo-900/40 transition-all text-center group"
               >
                 <FileSpreadsheet className="w-5 h-5 mb-1.5 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform" />

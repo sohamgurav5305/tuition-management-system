@@ -70,6 +70,7 @@ const ADMIN_NAV_GROUPS: NavGroup[] = [
     title: 'FINANCE',
     items: [
       { label: 'Fee Ledger & Invoices', path: '/fees', icon: CreditCard },
+      { label: 'Fee Records & Register', path: '/fee-records', icon: FileSpreadsheet },
       { label: 'Payment Receipts', path: '/receipts', icon: Receipt },
     ],
   },
@@ -144,7 +145,7 @@ const ACCOUNTANT_NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Finance Dashboard', path: '/dashboard', icon: LayoutDashboard },
       { label: 'Fee Ledger & Invoices', path: '/fees', icon: CreditCard },
-      { label: 'Fee Records & Register', path: '/fees?tab=records', icon: FileSpreadsheet },
+      { label: 'Fee Records & Register', path: '/fee-records', icon: FileSpreadsheet },
       { label: 'Payment Receipts', path: '/receipts', icon: Receipt },
       { label: 'Student Accounts', path: '/students', icon: Users },
     ],
