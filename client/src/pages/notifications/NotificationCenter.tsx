@@ -334,7 +334,7 @@ export const NotificationCenter: React.FC = () => {
       {/* Top Banner */}
       <PageHeader
         title="Announcements & Alerts"
-        badge={`${unreadCount} Unread`}
+        badge={`${unreadCount} Unread Messages`}
         actions={
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (

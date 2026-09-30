@@ -26,7 +26,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             {title}
           </h1>
           {badge && (
-            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/80 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 shadow-2xs">
+            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200/80 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 shadow-2xs">
               {badge}
             </span>
           )}
