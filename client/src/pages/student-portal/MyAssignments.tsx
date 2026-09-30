@@ -425,15 +425,6 @@ export const MyAssignments: React.FC = () => {
                 My Solution & Submission
               </h3>
             </div>
-
-            {isSubmitted && !showUploadForm && a.status === 'OPEN' && !isGraded && (
-              <button
-                onClick={() => setShowUploadForm(true)}
-                className="px-4 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 text-xs font-bold border border-blue-200 dark:border-blue-900 transition-colors"
-              >
-                Re-upload / Update Solution
-              </button>
-            )}
           </div>
 
           {/* Already Submitted View */}
@@ -539,6 +530,19 @@ export const MyAssignments: React.FC = () => {
                   )}
                 </div>
               </div>
+
+              {/* Update Solution Action Button - Bottom Right */}
+              {isSubmitted && !showUploadForm && a.status === 'OPEN' && !isGraded && (
+                <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadForm(true)}
+                    className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 text-xs font-bold border border-rose-200/80 dark:border-rose-900 transition-colors shadow-2xs"
+                  >
+                    Update Solution
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             /* Upload / Submission Form */
