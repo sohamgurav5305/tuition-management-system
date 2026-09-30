@@ -165,16 +165,9 @@ export const LeaveManagement: React.FC = () => {
             ? 'Student Requests & My Leaves'
             : 'Leave Requests & Approvals'
         }
-        subtitle={
-          isStudent
-            ? ''
-            : isTeacher
-            ? ''
-            : ''
-        }
         badge={
           isStudent
-            ? `${leaves.length} Applications`
+            ? undefined
             : `${pendingCount} Pending Review`
         }
         actions={
@@ -201,78 +194,44 @@ export const LeaveManagement: React.FC = () => {
       />
 
       {/* Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        {/* Role / Applicant Category Pills (Admin & Teacher) */}
-        {!isStudent && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
-            <button
-              onClick={() => setApplicantTypeFilter('ALL')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-                applicantTypeFilter === 'ALL'
-                  ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/80'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              All Requests ({leaves.length})
-            </button>
-            <button
-              onClick={() => setApplicantTypeFilter('STUDENT')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-                applicantTypeFilter === 'STUDENT'
-                  ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/80'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              Student Leaves ({studentLeavesCount})
-            </button>
-            <button
-              onClick={() => setApplicantTypeFilter('FACULTY')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-                applicantTypeFilter === 'FACULTY'
-                  ? 'bg-purple-50 text-purple-700 font-bold border border-purple-200/80'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              {isTeacher ? `My Leaves (${facultyLeavesCount})` : `Faculty Leaves (${facultyLeavesCount})`}
-            </button>
-          </div>
-        )}
-
-        {/* Status Filters & Search Bar */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          {/* Status Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto">
-            {[
-              { label: 'All', value: '' },
-              { label: 'Pending', value: 'PENDING' },
-              { label: 'Approved', value: 'APPROVED' },
-              { label: 'Rejected', value: 'REJECTED' },
-            ].map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => setStatusFilter(tab.value)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-                  statusFilter === tab.value
-                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Search Box */}
-          <div className="relative flex-1 sm:w-48">
+          <div className="relative w-full sm:w-64">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search leaves..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-400"
+              className="w-full pl-8 pr-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-400 font-medium"
             />
           </div>
+
+          {/* Role / Applicant Category Dropdown (Admin & Teacher) */}
+          {!isStudent && (
+            <select
+              value={applicantTypeFilter}
+              onChange={(e) => setApplicantTypeFilter(e.target.value)}
+              className="px-3 py-2 text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100"
+            >
+              <option value="ALL">All Categories</option>
+              <option value="STUDENT">Student Leaves</option>
+              <option value="FACULTY">{isTeacher ? 'My Leaves' : 'Faculty Leaves'}</option>
+            </select>
+          )}
+
+          {/* Status Category Dropdown */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100"
+          >
+            <option value="">All Categories</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
         </div>
       </div>
 
