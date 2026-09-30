@@ -34,7 +34,7 @@ import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { formatDate, formatDateTime } from '../../utils/date';
 import { getMediaUrl, downloadMediaFile } from '../../utils/media';
-import { AssignmentFormModal } from './AssignmentFormModal';
+import { AssignmentFormView } from './AssignmentFormView';
 import { AssignmentSubmissionsModal } from './AssignmentSubmissionsModal';
 
 export const AssignmentList: React.FC = () => {
@@ -169,6 +169,29 @@ export const AssignmentList: React.FC = () => {
   const selectedAssignment = selectedAssignmentId
     ? assignments.find((a) => a.id === selectedAssignmentId)
     : null;
+
+  // -------------------------------------------------------------
+  // VIEW 3: DEDICATED FULL ASSIGNMENT CREATE / EDIT VIEW
+  // -------------------------------------------------------------
+  if (isFormOpen) {
+    return (
+      <AssignmentFormView
+        initialAssignment={editingAssignment}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingAssignment(null);
+        }}
+        onSuccess={() => {
+          setIsFormOpen(false);
+          setEditingAssignment(null);
+          fetchAssignments(true);
+          if (selectedAssignmentId) {
+            fetchDetailSubmissions(selectedAssignmentId);
+          }
+        }}
+      />
+    );
+  }
 
   // -------------------------------------------------------------
   // VIEW 2: DEDICATED FULL ASSIGNMENT DETAILS & SUBMISSIONS VIEW
@@ -665,17 +688,6 @@ export const AssignmentList: React.FC = () => {
           </Modal>
         )}
 
-        {/* Edit Modal */}
-        <AssignmentFormModal
-          isOpen={isFormOpen}
-          onClose={() => {
-            setIsFormOpen(false);
-            setEditingAssignment(null);
-          }}
-          onSuccess={fetchAssignments}
-          initialAssignment={editingAssignment}
-        />
-
         {/* Confirm Delete */}
         <ConfirmDialog
           isOpen={!!deletingId}
@@ -836,17 +848,6 @@ export const AssignmentList: React.FC = () => {
             : undefined
         }
         isLoading={loading}
-      />
-
-      {/* Form Modal */}
-      <AssignmentFormModal
-        isOpen={isFormOpen}
-        onClose={() => {
-          setIsFormOpen(false);
-          setEditingAssignment(null);
-        }}
-        onSuccess={fetchAssignments}
-        initialAssignment={editingAssignment}
       />
 
       {/* Submissions Modal (fallback) */}
