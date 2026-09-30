@@ -47,9 +47,6 @@ export const MyFees: React.FC = () => {
         <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
           Fees & Receipts
         </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Review your tuition installment schedule, fee balance, and official payment receipts.
-        </p>
       </div>
 
       {/* Fee Balance Cards */}
@@ -142,7 +139,7 @@ export const MyFees: React.FC = () => {
       {/* Transactions & Receipts Table */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm overflow-hidden">
         <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4">
-          Payment Receipts Ledger
+          Payment Receipts
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
