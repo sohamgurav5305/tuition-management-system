@@ -84,7 +84,6 @@ export const FacultyProfile: React.FC = () => {
               <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100">
                 {faculty.firstName} {faculty.lastName}
               </h2>
-              <Badge variant="success">Active Faculty Specialist</Badge>
             </div>
             <p className="text-sm font-bold text-purple-600 dark:text-purple-400 mt-1">
               Department: {faculty.subjectTaught}
