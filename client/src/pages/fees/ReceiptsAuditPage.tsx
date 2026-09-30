@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Receipt,
   PlusCircle,
   Filter,
 } from 'lucide-react';
@@ -61,7 +60,6 @@ export const ReceiptsAuditPage: React.FC = () => {
       header: 'Receipt No',
       cell: (p) => (
         <span
-          onClick={() => navigate(`/receipts/${p.id || p.receiptId}`)}
           className="text-xs font-mono font-bold text-blue-600 hover:underline cursor-pointer"
         >
           {p.receiptId}
@@ -99,29 +97,8 @@ export const ReceiptsAuditPage: React.FC = () => {
       ),
     },
     {
-      header: 'Txn Reference',
-      cell: (p) => (
-        <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-          {p.transactionReference || '—'}
-        </span>
-      ),
-    },
-    {
       header: 'Date',
       cell: (p) => <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">{formatDate(p.paymentDate)}</span>,
-    },
-    {
-      header: 'Receipt',
-      cell: (p) => (
-        <Button
-          variant="secondary"
-          size="xs"
-          leftIcon={Receipt}
-          onClick={() => navigate(`/receipts/${p.id || p.receiptId}`)}
-        >
-          View / Print
-        </Button>
-      ),
     },
   ];
 
@@ -158,6 +135,7 @@ export const ReceiptsAuditPage: React.FC = () => {
         data={payments}
         keyExtractor={(p: Payment) => p.id}
         isLoading={loading}
+        onRowClick={(p) => navigate(`/receipts/${p.id || p.receiptId}`)}
         searchPlaceholder="Search receipt number, transaction ref, student name, or mode..."
         searchableFields={['receiptId', 'transactionReference', 'student', 'paymentMode', 'remarks']}
         filters={
